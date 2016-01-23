@@ -212,6 +212,8 @@ public:
     size_t total(int i=-1) const;
     int type(int i=-1) const;
     int depth(int i=-1) const;
+    int bytes(int i=-1) const;
+    int bits(int i=-1) const;
     int channels(int i=-1) const;
     bool isContinuous(int i=-1) const;
     bool isSubmatrix(int i=-1) const;
@@ -1604,6 +1606,11 @@ public:
     -   CV_64F - 64-bit floating-point numbers ( -DBL_MAX..DBL_MAX, INF, NAN )
      */
     int depth() const;
+    
+    //! returns element type, similar to CV_MAT_DEPTH_BYTES(cvmat->type)
+    int bytes() const;
+    //! returns element type, similar to CV_MAT_DEPTH_BITS(cvmat->type)
+    int bits() const;
 
     /** @brief Returns the number of matrix channels.
 
@@ -1870,7 +1877,11 @@ public:
 #endif
 
     enum { MAGIC_VAL  = 0x42FF0000, AUTO_STEP = 0, CONTINUOUS_FLAG = CV_MAT_CONT_FLAG, SUBMATRIX_FLAG = CV_SUBMAT_FLAG };
-    enum { MAGIC_MASK = 0xFFFF0000, TYPE_MASK = 0x00000FFF, DEPTH_MASK = 7 };
+    enum { MAGIC_MASK = CV_MAGIC_MASK, // 0xFFFF0000,
+        TYPE_MASK = CV_MAT_TYPE_MASK, // 0x00000FFF,
+        DEPTH_MASK = CV_MAT_DEPTH_MASK // 7
+    };
+
 
     /*! includes several bit-fields:
          - the magic signature

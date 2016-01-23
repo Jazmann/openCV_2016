@@ -119,6 +119,21 @@ cvRound( double value )
 #endif
 }
 
+/** @brief Rounds floating-point number to the nearest integer
+ 
+ @param value floating-point number. If the value is outside of INT_MIN ... INT_MAX range, the
+ result is not defined.
+ */
+CV_INLINE CV_64S_TYPE cv64Round( CV_64F_TYPE value )
+{
+    double intpart, fractpart;
+    fractpart = modf(value, &intpart);
+    if ((fabs(fractpart) != 0.5) || ((((int)intpart) % 2) != 0))
+        return static_cast<CV_64S_TYPE>( value + (value >= 0 ? 0.5 : -0.5) );
+    else
+        return (CV_64S_TYPE)intpart;
+}
+
 
 /** @brief Rounds floating-point number to the nearest integer not larger than the original.
 

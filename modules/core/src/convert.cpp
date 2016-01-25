@@ -42,7 +42,7 @@
 //M*/
 
 #include "precomp.hpp"
-
+#include "opencv2/core/cvdef.h"
 #include "opencl_kernels_core.hpp"
 
 #ifdef __APPLE__
@@ -60,10 +60,14 @@ typedef void (*SplitFunc)(const uchar* src, uchar** dst, int len, int cn);
 static SplitFunc getSplitFunc(int depth)
 {
     static SplitFunc splitTab[] =
-    {
-        (SplitFunc)GET_OPTIMIZED(cv::hal::split8u), (SplitFunc)GET_OPTIMIZED(cv::hal::split8u), (SplitFunc)GET_OPTIMIZED(cv::hal::split16u), (SplitFunc)GET_OPTIMIZED(cv::hal::split16u),
-        (SplitFunc)GET_OPTIMIZED(cv::hal::split32s), (SplitFunc)GET_OPTIMIZED(cv::hal::split32s), (SplitFunc)GET_OPTIMIZED(cv::hal::split64s), 0
-    };
+    TYPE_TAB_ORDER(\
+               (SplitFunc)GET_OPTIMIZED(cv::hal::split8u),  (SplitFunc)GET_OPTIMIZED(cv::hal::split8u), \
+               (SplitFunc)GET_OPTIMIZED(cv::hal::split16u), (SplitFunc)GET_OPTIMIZED(cv::hal::split16u), \
+               (SplitFunc)GET_OPTIMIZED(cv::hal::split32s), (SplitFunc)GET_OPTIMIZED(cv::hal::split32s), \
+               (SplitFunc)GET_OPTIMIZED(cv::hal::split64s), (SplitFunc)GET_OPTIMIZED(cv::hal::split64s), \
+               (SplitFunc)GET_OPTIMIZED(cv::hal::split32s), (SplitFunc)GET_OPTIMIZED(cv::hal::split64s), \
+               0, 0, 0, 0, 0, 0 \
+               );
 
     return splitTab[depth];
 }
@@ -73,10 +77,14 @@ typedef void (*MergeFunc)(const uchar** src, uchar* dst, int len, int cn);
 static MergeFunc getMergeFunc(int depth)
 {
     static MergeFunc mergeTab[] =
-    {
-        (MergeFunc)GET_OPTIMIZED(cv::hal::merge8u), (MergeFunc)GET_OPTIMIZED(cv::hal::merge8u), (MergeFunc)GET_OPTIMIZED(cv::hal::merge16u), (MergeFunc)GET_OPTIMIZED(cv::hal::merge16u),
-        (MergeFunc)GET_OPTIMIZED(cv::hal::merge32s), (MergeFunc)GET_OPTIMIZED(cv::hal::merge32s), (MergeFunc)GET_OPTIMIZED(cv::hal::merge64s), 0
-    };
+    TYPE_TAB_ORDER(\
+               (MergeFunc)GET_OPTIMIZED(cv::hal::merge8u),  (MergeFunc)GET_OPTIMIZED(cv::hal::merge8u), \
+               (MergeFunc)GET_OPTIMIZED(cv::hal::merge16u), (MergeFunc)GET_OPTIMIZED(cv::hal::merge16u),\
+               (MergeFunc)GET_OPTIMIZED(cv::hal::merge32s), (MergeFunc)GET_OPTIMIZED(cv::hal::merge32s),\
+               (MergeFunc)GET_OPTIMIZED(cv::hal::merge64s), (MergeFunc)GET_OPTIMIZED(cv::hal::merge64s),\
+               (MergeFunc)GET_OPTIMIZED(cv::hal::merge32s), (MergeFunc)GET_OPTIMIZED(cv::hal::merge64s),\
+               0, 0, 0, 0, 0, 0 \
+               );
 
     return mergeTab[depth];
 }
@@ -421,11 +429,14 @@ typedef void (*MixChannelsFunc)( const uchar** src, const int* sdelta,
 static MixChannelsFunc getMixchFunc(int depth)
 {
     static MixChannelsFunc mixchTab[] =
-    {
-        (MixChannelsFunc)mixChannels8u, (MixChannelsFunc)mixChannels8u, (MixChannelsFunc)mixChannels16u,
-        (MixChannelsFunc)mixChannels16u, (MixChannelsFunc)mixChannels32s, (MixChannelsFunc)mixChannels32s,
-        (MixChannelsFunc)mixChannels64s, 0
-    };
+    TYPE_TAB_ORDER( \
+               (MixChannelsFunc)mixChannels8u, (MixChannelsFunc)mixChannels8u, \
+               (MixChannelsFunc)mixChannels16u,(MixChannelsFunc)mixChannels16u,\
+               (MixChannelsFunc)mixChannels32s,(MixChannelsFunc)mixChannels32s,\
+               (MixChannelsFunc)mixChannels64s,(MixChannelsFunc)mixChannels64s,\
+               (MixChannelsFunc)mixChannels32s,(MixChannelsFunc)mixChannels64s,\
+               0, 0, 0, 0, 0, 0 \
+               );
 
     return mixchTab[depth];
 }
@@ -4490,229 +4501,427 @@ static void cvt##suffix( const stype* src, size_t sstep, const uchar*, size_t, \
     cpy_(src, sstep, dst, dstep, size); \
 }
 
+// ***************  DEF_CVT_SCALE_ABS_FUNC  ***************
 
-DEF_CVT_SCALE_ABS_FUNC(8u, cvtScaleAbs_, uchar, uchar, float)
-DEF_CVT_SCALE_ABS_FUNC(8s8u, cvtScaleAbs_, schar, uchar, float)
-DEF_CVT_SCALE_ABS_FUNC(16u8u, cvtScaleAbs_, ushort, uchar, float)
-DEF_CVT_SCALE_ABS_FUNC(16s8u, cvtScaleAbs_, short, uchar, float)
-DEF_CVT_SCALE_ABS_FUNC(32s8u, cvtScaleAbs_, int, uchar, float)
-DEF_CVT_SCALE_ABS_FUNC(32f8u, cvtScaleAbs_, float, uchar, float)
-DEF_CVT_SCALE_ABS_FUNC(64f8u, cvtScaleAbs_, double, uchar, float)
+DEF_CVT_SCALE_ABS_FUNC(8u,    cvtScaleAbs_,  CV_8U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_ABS_FUNC(8s8u,  cvtScaleAbs_,  CV_8S_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_ABS_FUNC(16u8u, cvtScaleAbs_, CV_16U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_ABS_FUNC(16s8u, cvtScaleAbs_, CV_16S_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_ABS_FUNC(32u8u, cvtScaleAbs_, CV_32U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_ABS_FUNC(32s8u, cvtScaleAbs_, CV_32S_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_ABS_FUNC(64u8u, cvtScaleAbs_, CV_64U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_ABS_FUNC(64s8u, cvtScaleAbs_, CV_64S_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_ABS_FUNC(32f8u, cvtScaleAbs_, CV_32F_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_ABS_FUNC(64f8u, cvtScaleAbs_, CV_64F_TYPE, CV_8U_TYPE, CV_32F_TYPE);
 
-DEF_CVT_SCALE_FUNC(8u,     uchar, uchar, float)
-DEF_CVT_SCALE_FUNC(8s8u,   schar, uchar, float)
-DEF_CVT_SCALE_FUNC(16u8u,  ushort, uchar, float)
-DEF_CVT_SCALE_FUNC(16s8u,  short, uchar, float)
-DEF_CVT_SCALE_FUNC(32s8u,  int, uchar, float)
-DEF_CVT_SCALE_FUNC(32f8u,  float, uchar, float)
-DEF_CVT_SCALE_FUNC(64f8u,  double, uchar, float)
+// ***************  DEF_CVT_SCALE_FUNC  ***************
 
-DEF_CVT_SCALE_FUNC(8u8s,   uchar, schar, float)
-DEF_CVT_SCALE_FUNC(8s,     schar, schar, float)
-DEF_CVT_SCALE_FUNC(16u8s,  ushort, schar, float)
-DEF_CVT_SCALE_FUNC(16s8s,  short, schar, float)
-DEF_CVT_SCALE_FUNC(32s8s,  int, schar, float)
-DEF_CVT_SCALE_FUNC(32f8s,  float, schar, float)
-DEF_CVT_SCALE_FUNC(64f8s,  double, schar, float)
+DEF_CVT_SCALE_FUNC(8u,    CV_8U_TYPE,  CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(8s8u,  CV_8S_TYPE,  CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16u8u, CV_16U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16s8u, CV_16S_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32u8u, CV_32U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32s8u, CV_32S_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64u8u, CV_64U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64s8u, CV_64S_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32f8u, CV_32F_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64f8u, CV_64F_TYPE, CV_8U_TYPE, CV_32F_TYPE);
 
-DEF_CVT_SCALE_FUNC(8u16u,  uchar, ushort, float)
-DEF_CVT_SCALE_FUNC(8s16u,  schar, ushort, float)
-DEF_CVT_SCALE_FUNC(16u,    ushort, ushort, float)
-DEF_CVT_SCALE_FUNC(16s16u, short, ushort, float)
-DEF_CVT_SCALE_FUNC(32s16u, int, ushort, float)
-DEF_CVT_SCALE_FUNC(32f16u, float, ushort, float)
-DEF_CVT_SCALE_FUNC(64f16u, double, ushort, float)
+DEF_CVT_SCALE_FUNC(8u8s,  CV_8U_TYPE,  CV_8S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(8s,    CV_8S_TYPE,  CV_8S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16u8s, CV_16U_TYPE, CV_8S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16s8s, CV_16S_TYPE, CV_8S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32u8s, CV_32U_TYPE, CV_8S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32s8s, CV_32S_TYPE, CV_8S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64u8s, CV_64U_TYPE, CV_8S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64s8s, CV_64S_TYPE, CV_8S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32f8s, CV_32F_TYPE, CV_8S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64f8s, CV_64F_TYPE, CV_8S_TYPE, CV_32F_TYPE);
 
-DEF_CVT_SCALE_FUNC(8u16s,  uchar, short, float)
-DEF_CVT_SCALE_FUNC(8s16s,  schar, short, float)
-DEF_CVT_SCALE_FUNC(16u16s, ushort, short, float)
-DEF_CVT_SCALE_FUNC(16s,    short, short, float)
-DEF_CVT_SCALE_FUNC(32s16s, int, short, float)
-DEF_CVT_SCALE_FUNC(32f16s, float, short, float)
-DEF_CVT_SCALE_FUNC(64f16s, double, short, float)
+DEF_CVT_SCALE_FUNC(8u16u,  CV_8U_TYPE,  CV_16U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(8s16u,  CV_8S_TYPE,  CV_16U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16u,    CV_16U_TYPE, CV_16U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16s16u, CV_16S_TYPE, CV_16U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32u16u, CV_32U_TYPE, CV_16U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32s16u, CV_32S_TYPE, CV_16U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64u16u, CV_64U_TYPE, CV_16U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64s16u, CV_64S_TYPE, CV_16U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32f16u, CV_32F_TYPE, CV_16U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64f16u, CV_64F_TYPE, CV_16U_TYPE, CV_32F_TYPE);
 
-DEF_CVT_SCALE_FUNC(8u32s,  uchar, int, float)
-DEF_CVT_SCALE_FUNC(8s32s,  schar, int, float)
-DEF_CVT_SCALE_FUNC(16u32s, ushort, int, float)
-DEF_CVT_SCALE_FUNC(16s32s, short, int, float)
-DEF_CVT_SCALE_FUNC(32s,    int, int, double)
-DEF_CVT_SCALE_FUNC(32f32s, float, int, float)
-DEF_CVT_SCALE_FUNC(64f32s, double, int, double)
+DEF_CVT_SCALE_FUNC(8u16s,  CV_8U_TYPE,  CV_16S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(8s16s,  CV_8S_TYPE,  CV_16S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16u16s, CV_16U_TYPE, CV_16S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16s,    CV_16S_TYPE, CV_16S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32u16s, CV_32U_TYPE, CV_16S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32s16s, CV_32S_TYPE, CV_16S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64u16s, CV_64U_TYPE, CV_16S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64s16s, CV_64S_TYPE, CV_16S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32f16s, CV_32F_TYPE, CV_16S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64f16s, CV_64F_TYPE, CV_16S_TYPE, CV_32F_TYPE);
 
-DEF_CVT_SCALE_FUNC(8u32f,  uchar, float, float)
-DEF_CVT_SCALE_FUNC(8s32f,  schar, float, float)
-DEF_CVT_SCALE_FUNC(16u32f, ushort, float, float)
-DEF_CVT_SCALE_FUNC(16s32f, short, float, float)
-DEF_CVT_SCALE_FUNC(32s32f, int, float, double)
-DEF_CVT_SCALE_FUNC(32f,    float, float, float)
-DEF_CVT_SCALE_FUNC(64f32f, double, float, double)
+DEF_CVT_SCALE_FUNC(8u32u,  CV_8U_TYPE,  CV_32U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(8s32u,  CV_8S_TYPE,  CV_32U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16u32u, CV_16U_TYPE, CV_32U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16s32u, CV_16S_TYPE, CV_32U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32u,    CV_32U_TYPE, CV_32U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32s32u, CV_32S_TYPE, CV_32U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64u32u, CV_64U_TYPE, CV_32U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64s32u, CV_64S_TYPE, CV_32U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32f32u, CV_32F_TYPE, CV_32U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64f32u, CV_64F_TYPE, CV_32U_TYPE, CV_64F_TYPE);
 
-DEF_CVT_SCALE_FUNC(8u64f,  uchar, double, double)
-DEF_CVT_SCALE_FUNC(8s64f,  schar, double, double)
-DEF_CVT_SCALE_FUNC(16u64f, ushort, double, double)
-DEF_CVT_SCALE_FUNC(16s64f, short, double, double)
-DEF_CVT_SCALE_FUNC(32s64f, int, double, double)
-DEF_CVT_SCALE_FUNC(32f64f, float, double, double)
-DEF_CVT_SCALE_FUNC(64f,    double, double, double)
+DEF_CVT_SCALE_FUNC(8u32s,  CV_8U_TYPE,  CV_32S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(8s32s,  CV_8S_TYPE,  CV_32S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16u32s, CV_16U_TYPE, CV_32S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16s32s, CV_16S_TYPE, CV_32S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32u32s, CV_32U_TYPE, CV_32S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32s,    CV_32S_TYPE, CV_32S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64u32s, CV_64U_TYPE, CV_32S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64s32s, CV_64S_TYPE, CV_32S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32f32s, CV_32F_TYPE, CV_32S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64f32s, CV_64F_TYPE, CV_32S_TYPE, CV_64F_TYPE);
 
-DEF_CPY_FUNC(8u,     uchar)
-DEF_CVT_FUNC_F(8s8u,   schar, uchar, 8s8u_C1Rs)
-DEF_CVT_FUNC_F(16u8u,  ushort, uchar, 16u8u_C1R)
-DEF_CVT_FUNC_F(16s8u,  short, uchar, 16s8u_C1R)
-DEF_CVT_FUNC_F(32s8u,  int, uchar, 32s8u_C1R)
-DEF_CVT_FUNC_F2(32f8u,  float, uchar, 32f8u_C1RSfs)
-DEF_CVT_FUNC(64f8u,  double, uchar)
+DEF_CVT_SCALE_FUNC(8u64u,  CV_8U_TYPE,  CV_64U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(8s64u,  CV_8S_TYPE,  CV_64U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16u64u, CV_16U_TYPE, CV_64U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16s64u, CV_16S_TYPE, CV_64U_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32u64u, CV_32U_TYPE, CV_64U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32s64u, CV_32S_TYPE, CV_64U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64u,    CV_64U_TYPE, CV_64U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64s64u, CV_64S_TYPE, CV_64U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32f64u, CV_32F_TYPE, CV_64U_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64f64u, CV_64F_TYPE, CV_64U_TYPE, CV_64F_TYPE);
 
-DEF_CVT_FUNC_F2(8u8s,   uchar, schar, 8u8s_C1RSfs)
-DEF_CVT_FUNC_F2(16u8s,  ushort, schar, 16u8s_C1RSfs)
-DEF_CVT_FUNC_F2(16s8s,  short, schar, 16s8s_C1RSfs)
-DEF_CVT_FUNC_F(32s8s,  int, schar, 32s8s_C1R)
-DEF_CVT_FUNC_F2(32f8s,  float, schar, 32f8s_C1RSfs)
-DEF_CVT_FUNC(64f8s,  double, schar)
+DEF_CVT_SCALE_FUNC(8u64s,  CV_8U_TYPE,  CV_64S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(8s64s,  CV_8S_TYPE,  CV_64S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16u64s, CV_16U_TYPE, CV_64S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16s64s, CV_16S_TYPE, CV_64S_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32u64s, CV_32U_TYPE, CV_64S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32s64s, CV_32S_TYPE, CV_64S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64u64s, CV_64U_TYPE, CV_64S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64s,    CV_64S_TYPE, CV_64S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32f64s, CV_32F_TYPE, CV_64S_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64f64s, CV_64F_TYPE, CV_64S_TYPE, CV_64F_TYPE);
 
-DEF_CVT_FUNC_F(8u16u,  uchar, ushort, 8u16u_C1R)
-DEF_CVT_FUNC_F(8s16u,  schar, ushort, 8s16u_C1Rs)
-DEF_CPY_FUNC(16u,    ushort)
-DEF_CVT_FUNC_F(16s16u, short, ushort, 16s16u_C1Rs)
-DEF_CVT_FUNC_F2(32s16u, int, ushort, 32s16u_C1RSfs)
-DEF_CVT_FUNC_F2(32f16u, float, ushort, 32f16u_C1RSfs)
-DEF_CVT_FUNC(64f16u, double, ushort)
+DEF_CVT_SCALE_FUNC(8u32f,  CV_8U_TYPE,  CV_32F_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(8s32f,  CV_8S_TYPE,  CV_32F_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16u32f, CV_16U_TYPE, CV_32F_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(16s32f, CV_16S_TYPE, CV_32F_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(32u32f, CV_32U_TYPE, CV_32F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32s32f, CV_32S_TYPE, CV_32F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64u32f, CV_64U_TYPE, CV_32F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64s32f, CV_64S_TYPE, CV_32F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32f,    CV_32F_TYPE, CV_32F_TYPE, CV_32F_TYPE);
+DEF_CVT_SCALE_FUNC(64f32f, CV_64F_TYPE, CV_32F_TYPE, CV_64F_TYPE);
 
-DEF_CVT_FUNC_F(8u16s,  uchar, short, 8u16s_C1R)
-DEF_CVT_FUNC_F(8s16s,  schar, short, 8s16s_C1R)
-DEF_CVT_FUNC_F2(16u16s, ushort, short, 16u16s_C1RSfs)
-DEF_CVT_FUNC_F2(32s16s, int, short, 32s16s_C1RSfs)
-DEF_CVT_FUNC(32f16s, float, short)
-DEF_CVT_FUNC(64f16s, double, short)
+DEF_CVT_SCALE_FUNC(8u64f,  CV_8U_TYPE,  CV_64F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(8s64f,  CV_8S_TYPE,  CV_64F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(16u64f, CV_16U_TYPE, CV_64F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(16s64f, CV_16S_TYPE, CV_64F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32u64f, CV_32U_TYPE, CV_64F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32s64f, CV_32S_TYPE, CV_64F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64u64f, CV_64U_TYPE, CV_64F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64s64f, CV_64S_TYPE, CV_64F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(32f64f, CV_32F_TYPE, CV_64F_TYPE, CV_64F_TYPE);
+DEF_CVT_SCALE_FUNC(64f,    CV_64F_TYPE, CV_64F_TYPE, CV_64F_TYPE);
 
-DEF_CVT_FUNC_F(8u32s,  uchar, int, 8u32s_C1R)
-DEF_CVT_FUNC_F(8s32s,  schar, int, 8s32s_C1R)
-DEF_CVT_FUNC_F(16u32s, ushort, int, 16u32s_C1R)
-DEF_CVT_FUNC_F(16s32s, short, int, 16s32s_C1R)
-DEF_CPY_FUNC(32s,    int)
-DEF_CVT_FUNC_F2(32f32s, float, int, 32f32s_C1RSfs)
-DEF_CVT_FUNC(64f32s, double, int)
+// ***************  DEF_CVT_FUNC  ***************
 
-DEF_CVT_FUNC_F(8u32f,  uchar, float, 8u32f_C1R)
-DEF_CVT_FUNC_F(8s32f,  schar, float, 8s32f_C1R)
-DEF_CVT_FUNC_F(16u32f, ushort, float, 16u32f_C1R)
-DEF_CVT_FUNC_F(16s32f, short, float, 16s32f_C1R)
-DEF_CVT_FUNC_F(32s32f, int, float, 32s32f_C1R)
-DEF_CVT_FUNC(64f32f, double, float)
+DEF_CPY_FUNC(   8u,    CV_8U_TYPE);
+DEF_CVT_FUNC_F( 8s8u,  CV_8S_TYPE,  CV_8U_TYPE, 8s8u_C1Rs);
+DEF_CVT_FUNC_F( 16u8u, CV_16U_TYPE, CV_8U_TYPE, 16u8u_C1R);
+DEF_CVT_FUNC_F( 16s8u, CV_16S_TYPE, CV_8U_TYPE, 16s8u_C1R);
+DEF_CVT_FUNC(   32u8u, CV_32U_TYPE, CV_8U_TYPE);
+DEF_CVT_FUNC_F( 32s8u, CV_32S_TYPE, CV_8U_TYPE, 32s8u_C1R);
+DEF_CVT_FUNC(   64u8u, CV_64U_TYPE, CV_8U_TYPE);
+DEF_CVT_FUNC(   64s8u, CV_64S_TYPE, CV_8U_TYPE);
+DEF_CVT_FUNC_F2(32f8u, CV_32F_TYPE, CV_8U_TYPE, 32f8u_C1RSfs);
+DEF_CVT_FUNC(   64f8u, CV_64F_TYPE, CV_8U_TYPE);
 
-DEF_CVT_FUNC(8u64f,  uchar, double)
-DEF_CVT_FUNC(8s64f,  schar, double)
-DEF_CVT_FUNC(16u64f, ushort, double)
-DEF_CVT_FUNC(16s64f, short, double)
-DEF_CVT_FUNC(32s64f, int, double)
-DEF_CVT_FUNC(32f64f, float, double)
-DEF_CPY_FUNC(64s,    int64)
+DEF_CVT_FUNC_F2(8u8s,  CV_8U_TYPE,  CV_8S_TYPE, 8u8s_C1RSfs);
+DEF_CPY_FUNC(   8s,    CV_8S_TYPE);
+DEF_CVT_FUNC_F2(16u8s, CV_16U_TYPE, CV_8S_TYPE, 16u8s_C1RSfs);
+DEF_CVT_FUNC_F2(16s8s, CV_16S_TYPE, CV_8S_TYPE, 16s8s_C1RSfs);
+DEF_CVT_FUNC(   32u8s, CV_32U_TYPE, CV_8S_TYPE);
+DEF_CVT_FUNC_F( 32s8s, CV_32S_TYPE, CV_8S_TYPE, 32s8s_C1R);
+DEF_CVT_FUNC(   64u8s, CV_64U_TYPE, CV_8S_TYPE);
+DEF_CVT_FUNC(   64s8s, CV_64S_TYPE, CV_8S_TYPE);
+DEF_CVT_FUNC(   32f8s, CV_32F_TYPE, CV_8S_TYPE);
+DEF_CVT_FUNC(   64f8s, CV_64F_TYPE, CV_8S_TYPE);
+
+DEF_CVT_FUNC_F( 8u16u,  CV_8U_TYPE,  CV_16U_TYPE, 8u16u_C1R)
+DEF_CVT_FUNC_F( 8s16u,  CV_8S_TYPE,  CV_16U_TYPE, 8s16u_C1Rs)
+DEF_CPY_FUNC(   16u,    CV_16U_TYPE);
+DEF_CVT_FUNC_F( 16s16u, CV_16S_TYPE, CV_16U_TYPE, 16s16u_C1Rs);
+DEF_CVT_FUNC(   32u16u, CV_32U_TYPE, CV_16U_TYPE);
+DEF_CVT_FUNC_F2(32s16u, CV_32S_TYPE, CV_16U_TYPE, 32s16u_C1RSfs);
+DEF_CVT_FUNC(   64u16u, CV_64U_TYPE, CV_16U_TYPE);
+DEF_CVT_FUNC(   64s16u, CV_64S_TYPE, CV_16U_TYPE);
+DEF_CVT_FUNC_F2(32f16u, CV_32F_TYPE, CV_16U_TYPE, 32f16u_C1RSfs);
+DEF_CVT_FUNC(   64f16u, CV_64F_TYPE, CV_16U_TYPE);
+
+DEF_CVT_FUNC_F( 8u16s,  CV_8U_TYPE,  CV_16S_TYPE, 8u16s_C1R);
+DEF_CVT_FUNC_F( 8s16s,  CV_8S_TYPE,  CV_16S_TYPE, 8s16s_C1R);
+DEF_CVT_FUNC_F2(16u16s, CV_16U_TYPE, CV_16S_TYPE, 16u16s_C1RSfs);
+DEF_CPY_FUNC(   16s,    CV_16S_TYPE);
+DEF_CVT_FUNC(   32u16s, CV_32U_TYPE, CV_16S_TYPE);
+DEF_CVT_FUNC_F2(32s16s, CV_32S_TYPE, CV_16S_TYPE, 32s16s_C1RSfs);
+DEF_CVT_FUNC(   64u16s, CV_64U_TYPE, CV_16S_TYPE);
+DEF_CVT_FUNC(   64s16s, CV_64S_TYPE, CV_16S_TYPE);
+DEF_CVT_FUNC(   32f16s, CV_32F_TYPE, CV_16S_TYPE);
+DEF_CVT_FUNC(   64f16s, CV_64F_TYPE, CV_16S_TYPE);
+
+DEF_CVT_FUNC(   8u32u,  CV_8U_TYPE,  CV_32U_TYPE);
+DEF_CVT_FUNC(   8s32u,  CV_8S_TYPE,  CV_32U_TYPE);
+DEF_CVT_FUNC(   16u32u, CV_16U_TYPE, CV_32U_TYPE);
+DEF_CVT_FUNC(   16s32u, CV_16S_TYPE, CV_32U_TYPE);
+DEF_CPY_FUNC(   32u,    CV_32U_TYPE);
+DEF_CVT_FUNC(   32s32u, CV_32S_TYPE, CV_32U_TYPE);
+DEF_CVT_FUNC(   64u32u, CV_64U_TYPE, CV_32U_TYPE);
+DEF_CVT_FUNC(   64s32u, CV_64S_TYPE, CV_32U_TYPE);
+DEF_CVT_FUNC(   32f32u, CV_32F_TYPE, CV_32U_TYPE);
+DEF_CVT_FUNC(   64f32u, CV_64F_TYPE, CV_32U_TYPE);
+
+DEF_CVT_FUNC_F( 8u32s,  CV_8U_TYPE,  CV_32S_TYPE, 8u32s_C1R);
+DEF_CVT_FUNC_F( 8s32s,  CV_8S_TYPE,  CV_32S_TYPE, 8s32s_C1R);
+DEF_CVT_FUNC_F( 16u32s, CV_16U_TYPE, CV_32S_TYPE, 16u32s_C1R);
+DEF_CVT_FUNC_F( 16s32s, CV_16S_TYPE, CV_32S_TYPE, 16s32s_C1R);
+DEF_CVT_FUNC(   32u32s, CV_32U_TYPE, CV_32S_TYPE);
+DEF_CPY_FUNC(   32s,    CV_32S_TYPE);
+DEF_CVT_FUNC(   64u32s, CV_64U_TYPE, CV_32S_TYPE);
+DEF_CVT_FUNC(   64s32s, CV_64S_TYPE, CV_32S_TYPE);
+DEF_CVT_FUNC_F2(32f32s, CV_32F_TYPE, CV_32S_TYPE, 32f32s_C1RSfs);
+DEF_CVT_FUNC(   64f32s, CV_64F_TYPE, CV_32S_TYPE);
+
+DEF_CVT_FUNC(   8u64u,  CV_8U_TYPE,  CV_64U_TYPE);
+DEF_CVT_FUNC(   8s64u,  CV_8S_TYPE,  CV_64U_TYPE);
+DEF_CVT_FUNC(   16u64u, CV_16U_TYPE, CV_64U_TYPE);
+DEF_CVT_FUNC(   16s64u, CV_16S_TYPE, CV_64U_TYPE);
+DEF_CVT_FUNC(   32u64u, CV_32U_TYPE, CV_64U_TYPE);
+DEF_CVT_FUNC(   32s64u, CV_32S_TYPE, CV_64U_TYPE);
+DEF_CPY_FUNC(   64u,    CV_64U_TYPE);
+DEF_CVT_FUNC(   64s64u, CV_64S_TYPE, CV_64U_TYPE);
+DEF_CVT_FUNC(   32f64u, CV_32F_TYPE, CV_64U_TYPE);
+DEF_CVT_FUNC(   64f64u, CV_64F_TYPE, CV_64U_TYPE);
+
+DEF_CVT_FUNC(   8u64s,  CV_8U_TYPE,  CV_64S_TYPE);
+DEF_CVT_FUNC(   8s64s,  CV_8S_TYPE,  CV_64S_TYPE);
+DEF_CVT_FUNC(   16u64s, CV_16U_TYPE, CV_64S_TYPE);
+DEF_CVT_FUNC(   16s64s, CV_16S_TYPE, CV_64S_TYPE);
+DEF_CVT_FUNC(   32u64s, CV_32U_TYPE, CV_64S_TYPE);
+DEF_CVT_FUNC(   32s64s, CV_32S_TYPE, CV_64S_TYPE);
+DEF_CVT_FUNC(   64u64s, CV_64U_TYPE, CV_64S_TYPE);
+DEF_CPY_FUNC(   64s,    CV_64S_TYPE);
+DEF_CVT_FUNC(   32f64s, CV_32F_TYPE, CV_64S_TYPE);
+DEF_CVT_FUNC(   64f64s, CV_64F_TYPE, CV_64S_TYPE);
+
+DEF_CVT_FUNC_F( 8u32f,  CV_8U_TYPE,  CV_32F_TYPE,  8u32f_C1R);
+DEF_CVT_FUNC_F( 8s32f,  CV_8S_TYPE,  CV_32F_TYPE,  8s32f_C1R);
+DEF_CVT_FUNC_F( 16u32f, CV_16U_TYPE, CV_32F_TYPE, 16u32f_C1R);
+DEF_CVT_FUNC_F( 16s32f, CV_16S_TYPE, CV_32F_TYPE, 16s32f_C1R);
+DEF_CVT_FUNC(   32u32f, CV_32U_TYPE, CV_32F_TYPE);
+DEF_CVT_FUNC_F( 32s32f, CV_32S_TYPE, CV_32F_TYPE, 32s32f_C1R);
+DEF_CVT_FUNC(   64u32f, CV_64U_TYPE, CV_32F_TYPE);
+DEF_CVT_FUNC(   64s32f, CV_64S_TYPE, CV_32F_TYPE);
+DEF_CPY_FUNC(   32f,    CV_32F_TYPE);
+DEF_CVT_FUNC(   64f32f, CV_64F_TYPE, CV_32F_TYPE);
+
+DEF_CVT_FUNC(   8u64f,  CV_8U_TYPE, CV_64F_TYPE);
+DEF_CVT_FUNC(   8s64f,  CV_8S_TYPE, CV_64F_TYPE);
+DEF_CVT_FUNC(   16u64f, CV_16U_TYPE, CV_64F_TYPE);
+DEF_CVT_FUNC(   16s64f, CV_16S_TYPE, CV_64F_TYPE);
+DEF_CVT_FUNC(   32u64f, CV_32U_TYPE, CV_64F_TYPE);
+DEF_CVT_FUNC(   32s64f, CV_32S_TYPE, CV_64F_TYPE);
+DEF_CVT_FUNC(   64u64f, CV_64U_TYPE, CV_64F_TYPE);
+DEF_CVT_FUNC(   64s64f, CV_64S_TYPE, CV_64F_TYPE);
+DEF_CVT_FUNC(   32f64f, CV_32F_TYPE, CV_64F_TYPE);
+DEF_CPY_FUNC(   64f,    CV_64F_TYPE);
+
 
 static BinaryFunc getCvtScaleAbsFunc(int depth)
 {
     static BinaryFunc cvtScaleAbsTab[] =
-    {
-        (BinaryFunc)cvtScaleAbs8u, (BinaryFunc)cvtScaleAbs8s8u, (BinaryFunc)cvtScaleAbs16u8u,
-        (BinaryFunc)cvtScaleAbs16s8u, (BinaryFunc)cvtScaleAbs32s8u, (BinaryFunc)cvtScaleAbs32f8u,
-        (BinaryFunc)cvtScaleAbs64f8u, 0
-    };
+    TYPE_TAB_ORDER( \
+        (BinaryFunc)cvtScaleAbs8u,    (BinaryFunc)cvtScaleAbs8s8u, \
+        (BinaryFunc)cvtScaleAbs16u8u, (BinaryFunc)cvtScaleAbs16s8u, (BinaryFunc)cvtScaleAbs32u8u, (BinaryFunc)cvtScaleAbs32s8u, \
+        (BinaryFunc)cvtScaleAbs64u8u, (BinaryFunc)cvtScaleAbs64s8u, (BinaryFunc)cvtScaleAbs32f8u, (BinaryFunc)cvtScaleAbs64f8u, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
     return cvtScaleAbsTab[depth];
 }
 
 BinaryFunc getConvertFunc(int sdepth, int ddepth)
 {
-    static BinaryFunc cvtTab[][8] =
-    {
-        {
-            (BinaryFunc)(cvt8u), (BinaryFunc)GET_OPTIMIZED(cvt8s8u), (BinaryFunc)GET_OPTIMIZED(cvt16u8u),
-            (BinaryFunc)GET_OPTIMIZED(cvt16s8u), (BinaryFunc)GET_OPTIMIZED(cvt32s8u), (BinaryFunc)GET_OPTIMIZED(cvt32f8u),
-            (BinaryFunc)GET_OPTIMIZED(cvt64f8u), 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvt8u8s), (BinaryFunc)cvt8u, (BinaryFunc)GET_OPTIMIZED(cvt16u8s),
-            (BinaryFunc)GET_OPTIMIZED(cvt16s8s), (BinaryFunc)GET_OPTIMIZED(cvt32s8s), (BinaryFunc)GET_OPTIMIZED(cvt32f8s),
-            (BinaryFunc)GET_OPTIMIZED(cvt64f8s), 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvt8u16u), (BinaryFunc)GET_OPTIMIZED(cvt8s16u), (BinaryFunc)cvt16u,
-            (BinaryFunc)GET_OPTIMIZED(cvt16s16u), (BinaryFunc)GET_OPTIMIZED(cvt32s16u), (BinaryFunc)GET_OPTIMIZED(cvt32f16u),
-            (BinaryFunc)GET_OPTIMIZED(cvt64f16u), 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvt8u16s), (BinaryFunc)GET_OPTIMIZED(cvt8s16s), (BinaryFunc)GET_OPTIMIZED(cvt16u16s),
-            (BinaryFunc)cvt16u, (BinaryFunc)GET_OPTIMIZED(cvt32s16s), (BinaryFunc)GET_OPTIMIZED(cvt32f16s),
-            (BinaryFunc)GET_OPTIMIZED(cvt64f16s), 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvt8u32s), (BinaryFunc)GET_OPTIMIZED(cvt8s32s), (BinaryFunc)GET_OPTIMIZED(cvt16u32s),
-            (BinaryFunc)GET_OPTIMIZED(cvt16s32s), (BinaryFunc)cvt32s, (BinaryFunc)GET_OPTIMIZED(cvt32f32s),
-            (BinaryFunc)GET_OPTIMIZED(cvt64f32s), 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvt8u32f), (BinaryFunc)GET_OPTIMIZED(cvt8s32f), (BinaryFunc)GET_OPTIMIZED(cvt16u32f),
-            (BinaryFunc)GET_OPTIMIZED(cvt16s32f), (BinaryFunc)GET_OPTIMIZED(cvt32s32f), (BinaryFunc)cvt32s,
-            (BinaryFunc)GET_OPTIMIZED(cvt64f32f), 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvt8u64f), (BinaryFunc)GET_OPTIMIZED(cvt8s64f), (BinaryFunc)GET_OPTIMIZED(cvt16u64f),
-            (BinaryFunc)GET_OPTIMIZED(cvt16s64f), (BinaryFunc)GET_OPTIMIZED(cvt32s64f), (BinaryFunc)GET_OPTIMIZED(cvt32f64f),
-            (BinaryFunc)(cvt64s), 0
-        },
-        {
-            0, 0, 0, 0, 0, 0, 0, 0
-        }
-    };
+static BinaryFunc cvtTab[][CV_DEPTH_MAX] =
+    D_TYPE_TAB_ORDER( \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)(cvt8u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt8s8u), (BinaryFunc)GET_OPTIMIZED(cvt16u8u),(BinaryFunc)GET_OPTIMIZED(cvt16s8u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt32u8u),(BinaryFunc)GET_OPTIMIZED(cvt32s8u),(BinaryFunc)GET_OPTIMIZED(cvt64u8u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt64s8u),(BinaryFunc)GET_OPTIMIZED(cvt32f8u),(BinaryFunc)GET_OPTIMIZED(cvt64f8u), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvt8u8s), \
+            (BinaryFunc)(cvt8s),                (BinaryFunc)GET_OPTIMIZED(cvt16u8s),(BinaryFunc)GET_OPTIMIZED(cvt16s8s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt32u8s),(BinaryFunc)GET_OPTIMIZED(cvt32s8s),(BinaryFunc)GET_OPTIMIZED(cvt64u8s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt64s8s),(BinaryFunc)GET_OPTIMIZED(cvt32f8s),(BinaryFunc)GET_OPTIMIZED(cvt64f8s), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvt8u16u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt8s16u), (BinaryFunc)(cvt16u),                (BinaryFunc)GET_OPTIMIZED(cvt16s16u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt32u16u),(BinaryFunc)GET_OPTIMIZED(cvt32s16u),(BinaryFunc)GET_OPTIMIZED(cvt64u16u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt64s16u),(BinaryFunc)GET_OPTIMIZED(cvt32f16u),(BinaryFunc)GET_OPTIMIZED(cvt64f16u), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvt8u16s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt8s16s), (BinaryFunc)GET_OPTIMIZED(cvt16u16s),(BinaryFunc)(cvt16s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt32u16s),(BinaryFunc)GET_OPTIMIZED(cvt32s16s),(BinaryFunc)GET_OPTIMIZED(cvt64u16s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt64s16s),(BinaryFunc)GET_OPTIMIZED(cvt32f16s),(BinaryFunc)GET_OPTIMIZED(cvt64f16s), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvt8u32u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt8s32u), (BinaryFunc)GET_OPTIMIZED(cvt16u32u),(BinaryFunc)GET_OPTIMIZED(cvt16s32u), \
+            (BinaryFunc)(cvt32u),                (BinaryFunc)GET_OPTIMIZED(cvt32s32u),(BinaryFunc)GET_OPTIMIZED(cvt64u32u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt64s32u),(BinaryFunc)GET_OPTIMIZED(cvt32f32u),(BinaryFunc)GET_OPTIMIZED(cvt64f32u), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvt8u32s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt8s32s), (BinaryFunc)GET_OPTIMIZED(cvt16u32s),(BinaryFunc)GET_OPTIMIZED(cvt16s32s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt32u32s),(BinaryFunc)(cvt32s),                (BinaryFunc)GET_OPTIMIZED(cvt64u32s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt64s32s),(BinaryFunc)GET_OPTIMIZED(cvt32f32s),(BinaryFunc)GET_OPTIMIZED(cvt64f32s), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvt8u64u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt8s64u), (BinaryFunc)GET_OPTIMIZED(cvt16u64u),(BinaryFunc)GET_OPTIMIZED(cvt16s64u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt32u64u),(BinaryFunc)GET_OPTIMIZED(cvt32s64u),(BinaryFunc)(cvt64u), \
+            (BinaryFunc)GET_OPTIMIZED(cvt64s64u),(BinaryFunc)GET_OPTIMIZED(cvt32f64u),(BinaryFunc)GET_OPTIMIZED(cvt64f64u), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvt8u64s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt8s64s), (BinaryFunc)GET_OPTIMIZED(cvt16u64s),(BinaryFunc)GET_OPTIMIZED(cvt16s64s), \
+            (BinaryFunc)GET_OPTIMIZED(cvt32u64s),(BinaryFunc)GET_OPTIMIZED(cvt32s64s),(BinaryFunc)GET_OPTIMIZED(cvt64u64s), \
+            (BinaryFunc)(cvt64s),                (BinaryFunc)GET_OPTIMIZED(cvt32f64s),(BinaryFunc)GET_OPTIMIZED(cvt64f64s), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvt8u32f), \
+            (BinaryFunc)GET_OPTIMIZED(cvt8s32f), (BinaryFunc)GET_OPTIMIZED(cvt16u32f),(BinaryFunc)GET_OPTIMIZED(cvt16s32f), \
+            (BinaryFunc)GET_OPTIMIZED(cvt32u32f),(BinaryFunc)GET_OPTIMIZED(cvt32s32f),(BinaryFunc)GET_OPTIMIZED(cvt64u32f), \
+            (BinaryFunc)GET_OPTIMIZED(cvt64s32f),(BinaryFunc)(cvt32f),                (BinaryFunc)GET_OPTIMIZED(cvt64f32f), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvt8u64f), \
+            (BinaryFunc)GET_OPTIMIZED(cvt8s64f), (BinaryFunc)GET_OPTIMIZED(cvt16u64f),(BinaryFunc)GET_OPTIMIZED(cvt16s64f), \
+            (BinaryFunc)GET_OPTIMIZED(cvt32u64f),(BinaryFunc)GET_OPTIMIZED(cvt32s64f),(BinaryFunc)GET_OPTIMIZED(cvt64u64f), \
+            (BinaryFunc)GET_OPTIMIZED(cvt64s64f),(BinaryFunc)GET_OPTIMIZED(cvt32f64f),(BinaryFunc)(cvt64f), \
+            0, 0, 0, 0, 0, 0 \
+                      ), \
+        TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+        TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+        TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+        TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+        TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+        TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) \
+                 );
 
-    return cvtTab[CV_MAT_DEPTH(ddepth)][CV_MAT_DEPTH(sdepth)];
+return cvtTab[CV_MAT_DEPTH(ddepth)][CV_MAT_DEPTH(sdepth)];
 }
 
 static BinaryFunc getConvertScaleFunc(int sdepth, int ddepth)
 {
-    static BinaryFunc cvtScaleTab[][8] =
-    {
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u), (BinaryFunc)GET_OPTIMIZED(cvtScale8s8u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u8u),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s8u), (BinaryFunc)GET_OPTIMIZED(cvtScale32s8u), (BinaryFunc)GET_OPTIMIZED(cvtScale32f8u),
-            (BinaryFunc)cvtScale64f8u, 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u8s), (BinaryFunc)GET_OPTIMIZED(cvtScale8s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u8s),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s8s), (BinaryFunc)GET_OPTIMIZED(cvtScale32s8s), (BinaryFunc)GET_OPTIMIZED(cvtScale32f8s),
-            (BinaryFunc)cvtScale64f8s, 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u16u), (BinaryFunc)GET_OPTIMIZED(cvtScale8s16u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s16u), (BinaryFunc)GET_OPTIMIZED(cvtScale32s16u), (BinaryFunc)GET_OPTIMIZED(cvtScale32f16u),
-            (BinaryFunc)cvtScale64f16u, 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u16s), (BinaryFunc)GET_OPTIMIZED(cvtScale8s16s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u16s),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s), (BinaryFunc)GET_OPTIMIZED(cvtScale32s16s), (BinaryFunc)GET_OPTIMIZED(cvtScale32f16s),
-            (BinaryFunc)cvtScale64f16s, 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u32s), (BinaryFunc)GET_OPTIMIZED(cvtScale8s32s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32s),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s32s), (BinaryFunc)GET_OPTIMIZED(cvtScale32s), (BinaryFunc)GET_OPTIMIZED(cvtScale32f32s),
-            (BinaryFunc)cvtScale64f32s, 0
-        },
-        {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u32f), (BinaryFunc)GET_OPTIMIZED(cvtScale8s32f), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32f),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s32f), (BinaryFunc)GET_OPTIMIZED(cvtScale32s32f), (BinaryFunc)GET_OPTIMIZED(cvtScale32f),
-            (BinaryFunc)cvtScale64f32f, 0
-        },
-        {
-            (BinaryFunc)cvtScale8u64f, (BinaryFunc)cvtScale8s64f, (BinaryFunc)cvtScale16u64f,
-            (BinaryFunc)cvtScale16s64f, (BinaryFunc)cvtScale32s64f, (BinaryFunc)cvtScale32f64f,
-            (BinaryFunc)cvtScale64f, 0
-        },
-        {
-            0, 0, 0, 0, 0, 0, 0, 0
-        }
-    };
+static BinaryFunc cvtScaleTab[][CV_DEPTH_MAX] =
+    D_TYPE_TAB_ORDER( \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)(cvtScale8u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s8u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u8u),(BinaryFunc)GET_OPTIMIZED(cvtScale16s8u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u8u),(BinaryFunc)GET_OPTIMIZED(cvtScale32s8u),(BinaryFunc)GET_OPTIMIZED(cvtScale64u8u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s8u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f8u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f8u), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8u8s), \
+            (BinaryFunc)(cvtScale8s),                (BinaryFunc)GET_OPTIMIZED(cvtScale16u8s),(BinaryFunc)GET_OPTIMIZED(cvtScale16s8s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u8s),(BinaryFunc)GET_OPTIMIZED(cvtScale32s8s),(BinaryFunc)GET_OPTIMIZED(cvtScale64u8s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s8s),(BinaryFunc)GET_OPTIMIZED(cvtScale32f8s),(BinaryFunc)GET_OPTIMIZED(cvtScale64f8s), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8u16u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s16u), (BinaryFunc)(cvtScale16u),                (BinaryFunc)GET_OPTIMIZED(cvtScale16s16u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u16u),(BinaryFunc)GET_OPTIMIZED(cvtScale32s16u),(BinaryFunc)GET_OPTIMIZED(cvtScale64u16u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s16u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f16u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f16u), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8u16s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s16s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u16s),(BinaryFunc)(cvtScale16s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u16s),(BinaryFunc)GET_OPTIMIZED(cvtScale32s16s),(BinaryFunc)GET_OPTIMIZED(cvtScale64u16s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s16s),(BinaryFunc)GET_OPTIMIZED(cvtScale32f16s),(BinaryFunc)GET_OPTIMIZED(cvtScale64f16s), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8u32u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s32u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32u),(BinaryFunc)GET_OPTIMIZED(cvtScale16s32u), \
+            (BinaryFunc)(cvtScale32u),                (BinaryFunc)GET_OPTIMIZED(cvtScale32s32u),(BinaryFunc)GET_OPTIMIZED(cvtScale64u32u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s32u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f32u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f32u), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8u32s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s32s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32s),(BinaryFunc)GET_OPTIMIZED(cvtScale16s32s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u32s),(BinaryFunc)(cvtScale32s),                (BinaryFunc)GET_OPTIMIZED(cvtScale64u32s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s32s),(BinaryFunc)GET_OPTIMIZED(cvtScale32f32s),(BinaryFunc)GET_OPTIMIZED(cvtScale64f32s), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8u64u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s64u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u64u),(BinaryFunc)GET_OPTIMIZED(cvtScale16s64u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u64u),(BinaryFunc)GET_OPTIMIZED(cvtScale32s64u),(BinaryFunc)(cvtScale64u), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s64u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f64u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f64u), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8u64s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s64s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u64s),(BinaryFunc)GET_OPTIMIZED(cvtScale16s64s), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u64s),(BinaryFunc)GET_OPTIMIZED(cvtScale32s64s),(BinaryFunc)GET_OPTIMIZED(cvtScale64u64s), \
+            (BinaryFunc)(cvtScale64s),                (BinaryFunc)GET_OPTIMIZED(cvtScale32f64s),(BinaryFunc)GET_OPTIMIZED(cvtScale64f64s), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8u32f), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s32f), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32f),(BinaryFunc)GET_OPTIMIZED(cvtScale16s32f), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u32f),(BinaryFunc)GET_OPTIMIZED(cvtScale32s32f),(BinaryFunc)GET_OPTIMIZED(cvtScale64u32f), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s32f),(BinaryFunc)(cvtScale32f),                (BinaryFunc)GET_OPTIMIZED(cvtScale64f32f), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+        TYPE_TAB_ORDER( \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8u64f), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s64f), (BinaryFunc)GET_OPTIMIZED(cvtScale16u64f),(BinaryFunc)GET_OPTIMIZED(cvtScale16s64f), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u64f),(BinaryFunc)GET_OPTIMIZED(cvtScale32s64f),(BinaryFunc)GET_OPTIMIZED(cvtScale64u64f), \
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s64f),(BinaryFunc)GET_OPTIMIZED(cvtScale32f64f),(BinaryFunc)(cvtScale64f), \
+            0, 0, 0, 0, 0, 0 \
+            ), \
+            TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+            TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+            TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+            TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+            TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), \
+            TYPE_TAB_ORDER( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) \
+        );
 
-    return cvtScaleTab[CV_MAT_DEPTH(ddepth)][CV_MAT_DEPTH(sdepth)];
+return cvtScaleTab[CV_MAT_DEPTH(ddepth)][CV_MAT_DEPTH(sdepth)];
 }
+
 
 #ifdef HAVE_OPENCL
 
@@ -4852,6 +5061,13 @@ void cv::Mat::convertTo(OutputArray _dst, int _type, double alpha, double beta) 
 *                                    LUT Transform                                       *
 \****************************************************************************************/
 
+#define DEF_LUT_FUNC(suffix, dtype) \
+static void LUT8u_##suffix( const uchar* src, const dtype* lut, dtype* dst, int len, int cn, int lutcn) \
+{ \
+LUT8u_( src, lut, dst, len, cn, lutcn ); \
+}
+
+
 namespace cv
 {
 
@@ -4871,48 +5087,25 @@ LUT8u_( const uchar* src, const T* lut, T* dst, int len, int cn, int lutcn )
     }
 }
 
-static void LUT8u_8u( const uchar* src, const uchar* lut, uchar* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_8s( const uchar* src, const schar* lut, schar* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_16u( const uchar* src, const ushort* lut, ushort* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_16s( const uchar* src, const short* lut, short* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_32s( const uchar* src, const int* lut, int* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_32f( const uchar* src, const float* lut, float* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_64f( const uchar* src, const double* lut, double* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
+DEF_LUT_FUNC(8u,  CV_8U_TYPE);
+DEF_LUT_FUNC(8s,  CV_8S_TYPE);
+DEF_LUT_FUNC(16u, CV_16U_TYPE);
+DEF_LUT_FUNC(16s, CV_16S_TYPE);
+DEF_LUT_FUNC(32u, CV_32U_TYPE);
+DEF_LUT_FUNC(32s, CV_32S_TYPE);
+DEF_LUT_FUNC(64u, CV_64U_TYPE);
+DEF_LUT_FUNC(64s, CV_64S_TYPE);
+DEF_LUT_FUNC(32f, CV_32F_TYPE);
+DEF_LUT_FUNC(64f, CV_64F_TYPE);
 
 typedef void (*LUTFunc)( const uchar* src, const uchar* lut, uchar* dst, int len, int cn, int lutcn );
 
 static LUTFunc lutTab[] =
-{
-    (LUTFunc)LUT8u_8u, (LUTFunc)LUT8u_8s, (LUTFunc)LUT8u_16u, (LUTFunc)LUT8u_16s,
-    (LUTFunc)LUT8u_32s, (LUTFunc)LUT8u_32f, (LUTFunc)LUT8u_64f, 0
-};
+TYPE_TAB_ORDER( \
+               (LUTFunc)LUT8u_8u,  (LUTFunc)LUT8u_8s, (LUTFunc)LUT8u_16u, (LUTFunc)LUT8u_16s, \
+               (LUTFunc)LUT8u_32u, (LUTFunc)LUT8u_32s,(LUTFunc)LUT8u_64u, (LUTFunc)LUT8u_64s, \
+               (LUTFunc)LUT8u_32f, (LUTFunc)LUT8u_64f, 0, 0, 0, 0, 0, 0 \
+               );
 
 #ifdef HAVE_OPENCL
 

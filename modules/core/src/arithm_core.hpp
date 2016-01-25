@@ -207,6 +207,34 @@ void vBinOp(const T* src1, size_t step1, const T* src2, size_t step2, T* dst, si
     }
 }
 
+template<typename T, class Op>
+void vBinNOp(const T* src1, size_t step1, const T* src2, size_t step2, T* dst, size_t step, Size sz)
+{
+Op op;
+
+for( ; sz.height--; src1 += step1/sizeof(src1[0]),
+    src2 += step2/sizeof(src2[0]),
+    dst += step/sizeof(dst[0]) )
+{
+int x = 0;
+
+#if CV_ENABLE_UNROLLED
+for( ; x <= sz.width - 4; x += 4 )
+{
+T v0 = op(src1[x], src2[x]);
+T v1 = op(src1[x+1], src2[x+1]);
+dst[x] = v0; dst[x+1] = v1;
+v0 = op(src1[x+2], src2[x+2]);
+v1 = op(src1[x+3], src2[x+3]);
+dst[x+2] = v0; dst[x+3] = v1;
+}
+#endif
+
+for( ; x < sz.width; x++ )
+dst[x] = op(src1[x], src2[x]);
+}
+}
+
 template<typename T, class Op, class Op32>
 void vBinOp32(const T* src1, size_t step1, const T* src2, size_t step2,
               T* dst, size_t step, int width, int height)
@@ -301,6 +329,34 @@ void vBinOp32(const T* src1, size_t step1, const T* src2, size_t step2,
     }
 }
 
+template<typename T, class Op>
+void vBinNOp32(const T* src1, size_t step1, const T* src2, size_t step2,
+               T* dst, size_t step, Size sz)
+{
+Op op;
+
+for( ; sz.height--; src1 += step1/sizeof(src1[0]),
+    src2 += step2/sizeof(src2[0]),
+    dst += step/sizeof(dst[0]) )
+{
+int x = 0;
+
+#if CV_ENABLE_UNROLLED
+for( ; x <= sz.width - 4; x += 4 )
+{
+T v0 = op(src1[x], src2[x]);
+T v1 = op(src1[x+1], src2[x+1]);
+dst[x] = v0; dst[x+1] = v1;
+v0 = op(src1[x+2], src2[x+2]);
+v1 = op(src1[x+3], src2[x+3]);
+dst[x+2] = v0; dst[x+3] = v1;
+}
+#endif
+
+for( ; x < sz.width; x++ )
+dst[x] = op(src1[x], src2[x]);
+}
+}
 
 template<typename T, class Op, class Op64>
 void vBinOp64(const T* src1, size_t step1, const T* src2, size_t step2,
@@ -361,6 +417,32 @@ void vBinOp64(const T* src1, size_t step1, const T* src2, size_t step2,
         for( ; x < width; x++ )
             dst[x] = op(src1[x], src2[x]);
     }
+}
+
+template<typename T, class Op>
+void vBinNOp64(const T* src1, size_t step1, const T* src2, size_t step2,
+               T* dst, size_t step, Size sz)
+{
+Op op;
+
+for( ; sz.height--; src1 += step1/sizeof(src1[0]),
+    src2 += step2/sizeof(src2[0]),
+    dst += step/sizeof(dst[0]) )
+{
+int x = 0;
+for( ; x <= sz.width - 4; x += 4 )
+{
+T v0 = op(src1[x], src2[x]);
+T v1 = op(src1[x+1], src2[x+1]);
+dst[x] = v0; dst[x+1] = v1;
+v0 = op(src1[x+2], src2[x+2]);
+v1 = op(src1[x+3], src2[x+3]);
+dst[x+2] = v0; dst[x+3] = v1;
+}
+
+for( ; x < sz.width; x++ )
+dst[x] = op(src1[x], src2[x]);
+}
 }
 
 template<typename T> static void

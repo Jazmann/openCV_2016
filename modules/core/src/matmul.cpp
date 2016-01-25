@@ -1917,11 +1917,15 @@ typedef void (*TransformFunc)( const uchar* src, uchar* dst, const uchar* m, int
 static TransformFunc getTransformFunc(int depth)
 {
     static TransformFunc transformTab[] =
-    {
-        (TransformFunc)transform_8u, (TransformFunc)transform_8s, (TransformFunc)transform_16u,
-        (TransformFunc)transform_16s, (TransformFunc)transform_32s, (TransformFunc)transform_32f,
-        (TransformFunc)transform_64f, 0
-    };
+    TYPE_TAB_ORDER( \
+        (TransformFunc)transform_8u,  (TransformFunc)transform_8s, \
+        (TransformFunc)transform_16u, (TransformFunc)transform_16s, \
+        (TransformFunc)transform_32u, (TransformFunc)transform_32s, \
+        (TransformFunc)transform_64u, (TransformFunc)transform_64s, \
+        (TransformFunc)transform_32f, (TransformFunc)transform_64f, \
+        0, 0, 0, 0, 0, 0 \
+        );
+
 
     return transformTab[depth];
 }
@@ -1929,11 +1933,15 @@ static TransformFunc getTransformFunc(int depth)
 static TransformFunc getDiagTransformFunc(int depth)
 {
     static TransformFunc diagTransformTab[] =
-    {
-        (TransformFunc)diagtransform_8u, (TransformFunc)diagtransform_8s, (TransformFunc)diagtransform_16u,
-        (TransformFunc)diagtransform_16s, (TransformFunc)diagtransform_32s, (TransformFunc)diagtransform_32f,
-        (TransformFunc)diagtransform_64f, 0
-    };
+    TYPE_TAB_ORDER( \
+        (TransformFunc) diagtransform_8u,  (TransformFunc) diagtransform_8s, \
+        (TransformFunc) diagtransform_16u, (TransformFunc) diagtransform_16s, \
+        (TransformFunc) diagtransform_32u, (TransformFunc) diagtransform_32s, \
+        (TransformFunc) diagtransform_64u, (TransformFunc) diagtransform_64s, \
+        (TransformFunc) diagtransform_32f, (TransformFunc) diagtransform_64f, \
+        0, 0, 0, 0, 0, 0 \
+        );
+
 
     return diagTransformTab[depth];
 }
@@ -3226,12 +3234,14 @@ typedef double (*DotProdFunc)(const uchar* src1, const uchar* src2, int len);
 static DotProdFunc getDotProdFunc(int depth)
 {
     static DotProdFunc dotProdTab[] =
-    {
-        (DotProdFunc)GET_OPTIMIZED(dotProd_8u), (DotProdFunc)GET_OPTIMIZED(dotProd_8s),
-        (DotProdFunc)dotProd_16u, (DotProdFunc)dotProd_16s,
-        (DotProdFunc)dotProd_32s, (DotProdFunc)GET_OPTIMIZED(dotProd_32f),
-        (DotProdFunc)dotProd_64f, 0
-    };
+    TYPE_TAB_ORDER( \
+        (DotProdFunc)GET_OPTIMIZED(dotProd_8u),  (DotProdFunc)GET_OPTIMIZED(dotProd_8s), \
+        (DotProdFunc)dotProd_16u,                (DotProdFunc)dotProd_16s, \
+        (DotProdFunc)dotProd_32u,                (DotProdFunc)dotProd_32s, \
+        (DotProdFunc)dotProd_64u,                (DotProdFunc)dotProd_64s, \
+        (DotProdFunc)GET_OPTIMIZED(dotProd_32f), (DotProdFunc)dotProd_64f, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
     return dotProdTab[depth];
 }

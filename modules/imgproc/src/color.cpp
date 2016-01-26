@@ -281,115 +281,151 @@ static IppStatus CV_STDCALL ippiSwapChannels_32f_C3C4Rf(const Ipp32f* pSrc, int 
 }
 
 static ippiReorderFunc ippiSwapChannelsC3C4RTab[] =
-{
-    (ippiReorderFunc)ippiSwapChannels_8u_C3C4Rf, 0, (ippiReorderFunc)ippiSwapChannels_16u_C3C4Rf, 0,
-    0, (ippiReorderFunc)ippiSwapChannels_32f_C3C4Rf, 0, 0
-};
+TYPE_TAB_ORDER( \
+         (ippiReorderFunc)ippiSwapChannels_8u_C3C4Rf, 0, \
+         (ippiReorderFunc)ippiSwapChannels_16u_C3C4Rf, 0, 0, 0, \
+         0, 0, (ippiReorderFunc)ippiSwapChannels_32f_C3C4Rf, 0, \
+         0, 0, 0, 0, 0, 0 \
+         );
 
 static ippiGeneralFunc ippiCopyAC4C3RTab[] =
-{
-    (ippiGeneralFunc)ippiCopy_8u_AC4C3R, 0, (ippiGeneralFunc)ippiCopy_16u_AC4C3R, 0,
-    0, (ippiGeneralFunc)ippiCopy_32f_AC4C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiCopy_8u_AC4C3R, 0, \
+        (ippiGeneralFunc)ippiCopy_16u_AC4C3R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiCopy_32f_AC4C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiReorderFunc ippiSwapChannelsC4C3RTab[] =
-{
-    (ippiReorderFunc)ippiSwapChannels_8u_C4C3R, 0, (ippiReorderFunc)ippiSwapChannels_16u_C4C3R, 0,
-    0, (ippiReorderFunc)ippiSwapChannels_32f_C4C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiReorderFunc)ippiSwapChannels_8u_C4C3R, 0, \
+        (ippiReorderFunc)ippiSwapChannels_16u_C4C3R, 0, 0, 0, \
+        0, 0, (ippiReorderFunc)ippiSwapChannels_32f_C4C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiReorderFunc ippiSwapChannelsC3RTab[] =
-{
-    (ippiReorderFunc)ippiSwapChannels_8u_C3R, 0, (ippiReorderFunc)ippiSwapChannels_16u_C3R, 0,
-    0, (ippiReorderFunc)ippiSwapChannels_32f_C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiReorderFunc)ippiSwapChannels_8u_C3R, 0, \
+        (ippiReorderFunc)ippiSwapChannels_16u_C3R, 0, 0, 0, \
+        0, 0, (ippiReorderFunc)ippiSwapChannels_32f_C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
-#if IPP_VERSION_X100 >= 810
+#if IPP_VERSION_X100 >= 801
 static ippiReorderFunc ippiSwapChannelsC4RTab[] =
-{
-    (ippiReorderFunc)ippiSwapChannels_8u_C4R, 0, (ippiReorderFunc)ippiSwapChannels_16u_C4R, 0,
-    0, (ippiReorderFunc)ippiSwapChannels_32f_C4R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiReorderFunc)ippiSwapChannels_8u_C4R, 0, \
+        (ippiReorderFunc)ippiSwapChannels_16u_C4R, 0, 0, 0, \
+        0, 0, (ippiReorderFunc)ippiSwapChannels_32f_C4R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 #endif
 
 static ippiColor2GrayFunc ippiColor2GrayC3Tab[] =
-{
-    (ippiColor2GrayFunc)ippiColorToGray_8u_C3C1R, 0, (ippiColor2GrayFunc)ippiColorToGray_16u_C3C1R, 0,
-    0, (ippiColor2GrayFunc)ippiColorToGray_32f_C3C1R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiColor2GrayFunc)ippiColorToGray_8u_C3C1R, 0, \
+        (ippiColor2GrayFunc)ippiColorToGray_16u_C3C1R, 0, 0, 0, \
+        0, 0, (ippiColor2GrayFunc)ippiColorToGray_32f_C3C1R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiColor2GrayFunc ippiColor2GrayC4Tab[] =
-{
-    (ippiColor2GrayFunc)ippiColorToGray_8u_AC4C1R, 0, (ippiColor2GrayFunc)ippiColorToGray_16u_AC4C1R, 0,
-    0, (ippiColor2GrayFunc)ippiColorToGray_32f_AC4C1R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiColor2GrayFunc)ippiColorToGray_8u_AC4C1R, 0, \
+        (ippiColor2GrayFunc)ippiColorToGray_16u_AC4C1R, 0, 0, 0, \
+        0, 0, (ippiColor2GrayFunc)ippiColorToGray_32f_AC4C1R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiRGB2GrayC3Tab[] =
-{
-    (ippiGeneralFunc)ippiRGBToGray_8u_C3C1R, 0, (ippiGeneralFunc)ippiRGBToGray_16u_C3C1R, 0,
-    0, (ippiGeneralFunc)ippiRGBToGray_32f_C3C1R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiRGBToGray_8u_C3C1R, 0, \
+        (ippiGeneralFunc)ippiRGBToGray_16u_C3C1R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiRGBToGray_32f_C3C1R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiRGB2GrayC4Tab[] =
-{
-    (ippiGeneralFunc)ippiRGBToGray_8u_AC4C1R, 0, (ippiGeneralFunc)ippiRGBToGray_16u_AC4C1R, 0,
-    0, (ippiGeneralFunc)ippiRGBToGray_32f_AC4C1R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiRGBToGray_8u_AC4C1R, 0, \
+        (ippiGeneralFunc)ippiRGBToGray_16u_AC4C1R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiRGBToGray_32f_AC4C1R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiCopyP3C3RTab[] =
-{
-    (ippiGeneralFunc)ippiCopy_8u_P3C3R, 0, (ippiGeneralFunc)ippiCopy_16u_P3C3R, 0,
-    0, (ippiGeneralFunc)ippiCopy_32f_P3C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiCopy_8u_P3C3R, 0, \
+        (ippiGeneralFunc)ippiCopy_16u_P3C3R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiCopy_32f_P3C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiRGB2XYZTab[] =
-{
-    (ippiGeneralFunc)ippiRGBToXYZ_8u_C3R, 0, (ippiGeneralFunc)ippiRGBToXYZ_16u_C3R, 0,
-    0, (ippiGeneralFunc)ippiRGBToXYZ_32f_C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiRGBToXYZ_8u_C3R, 0, \
+        (ippiGeneralFunc)ippiRGBToXYZ_16u_C3R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiRGBToXYZ_32f_C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiXYZ2RGBTab[] =
-{
-    (ippiGeneralFunc)ippiXYZToRGB_8u_C3R, 0, (ippiGeneralFunc)ippiXYZToRGB_16u_C3R, 0,
-    0, (ippiGeneralFunc)ippiXYZToRGB_32f_C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiXYZToRGB_8u_C3R, 0, \
+        (ippiGeneralFunc)ippiXYZToRGB_16u_C3R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiXYZToRGB_32f_C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiRGB2HSVTab[] =
-{
-    (ippiGeneralFunc)ippiRGBToHSV_8u_C3R, 0, (ippiGeneralFunc)ippiRGBToHSV_16u_C3R, 0,
-    0, 0, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiRGBToHSV_8u_C3R, 0, \
+        (ippiGeneralFunc)ippiRGBToHSV_16u_C3R, 0, 0, 0, \
+        0, 0, 0, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiHSV2RGBTab[] =
-{
-    (ippiGeneralFunc)ippiHSVToRGB_8u_C3R, 0, (ippiGeneralFunc)ippiHSVToRGB_16u_C3R, 0,
-    0, 0, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiHSVToRGB_8u_C3R, 0, \
+        (ippiGeneralFunc)ippiHSVToRGB_16u_C3R, 0, 0, 0, \
+        0, 0, 0, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiRGB2HLSTab[] =
-{
-    (ippiGeneralFunc)ippiRGBToHLS_8u_C3R, 0, (ippiGeneralFunc)ippiRGBToHLS_16u_C3R, 0,
-    0, (ippiGeneralFunc)ippiRGBToHLS_32f_C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiRGBToHLS_8u_C3R, 0, \
+        (ippiGeneralFunc)ippiRGBToHLS_16u_C3R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiRGBToHLS_32f_C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiHLS2RGBTab[] =
-{
-    (ippiGeneralFunc)ippiHLSToRGB_8u_C3R, 0, (ippiGeneralFunc)ippiHLSToRGB_16u_C3R, 0,
-    0, (ippiGeneralFunc)ippiHLSToRGB_32f_C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiHLSToRGB_8u_C3R, 0, \
+        (ippiGeneralFunc)ippiHLSToRGB_16u_C3R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiHLSToRGB_32f_C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
-#if !defined(HAVE_IPP_ICV_ONLY) && IPP_DISABLE_BLOCK
+#if !defined(HAVE_IPP_ICV_ONLY) && 0
 static ippiGeneralFunc ippiRGBToLUVTab[] =
-{
-    (ippiGeneralFunc)ippiRGBToLUV_8u_C3R, 0, (ippiGeneralFunc)ippiRGBToLUV_16u_C3R, 0,
-    0, (ippiGeneralFunc)ippiRGBToLUV_32f_C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiRGBToLUV_8u_C3R, 0, \
+        (ippiGeneralFunc)ippiRGBToLUV_16u_C3R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiRGBToLUV_32f_C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
 static ippiGeneralFunc ippiLUVToRGBTab[] =
-{
-    (ippiGeneralFunc)ippiLUVToRGB_8u_C3R, 0, (ippiGeneralFunc)ippiLUVToRGB_16u_C3R, 0,
-    0, (ippiGeneralFunc)ippiLUVToRGB_32f_C3R, 0, 0
-};
+TYPE_TAB_ORDER( \
+        (ippiGeneralFunc)ippiLUVToRGB_8u_C3R, 0, \
+        (ippiGeneralFunc)ippiLUVToRGB_16u_C3R, 0, 0, 0, \
+        0, 0, (ippiGeneralFunc)ippiLUVToRGB_32f_C3R, 0, \
+        0, 0, 0, 0, 0, 0 \
+        );
 #endif
 
 struct IPPGeneralFunctor

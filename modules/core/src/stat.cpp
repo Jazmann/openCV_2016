@@ -480,13 +480,15 @@ typedef int (*SumFunc)(const uchar*, const uchar* mask, uchar*, int, int);
 static SumFunc getSumFunc(int depth)
 {
     static SumFunc sumTab[] =
-    {
-        (SumFunc)GET_OPTIMIZED(sum8u), (SumFunc)sum8s,
-        (SumFunc)sum16u, (SumFunc)sum16s,
-        (SumFunc)sum32s,
-        (SumFunc)GET_OPTIMIZED(sum32f), (SumFunc)sum64f,
-        0
-    };
+    TYPE_TAB_ORDER( \
+        (SumFunc)GET_OPTIMIZED(sum8u), (SumFunc)sum8s, \
+        (SumFunc)sum16u,               (SumFunc)sum16s, \
+        (SumFunc)sum32u,               (SumFunc)sum32s, \
+        (SumFunc)sum64u,               (SumFunc)sum64s, \
+        (SumFunc)GET_OPTIMIZED(sum32f),(SumFunc)sum64f, \
+        0, 0, 0, 0, 0, 0 \
+        );
+
 
     return sumTab[depth];
 }
@@ -726,12 +728,14 @@ typedef int (*CountNonZeroFunc)(const uchar*, int);
 static CountNonZeroFunc getCountNonZeroTab(int depth)
 {
     static CountNonZeroFunc countNonZeroTab[] =
-    {
-        (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u), (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u),
-        (CountNonZeroFunc)GET_OPTIMIZED(countNonZero16u), (CountNonZeroFunc)GET_OPTIMIZED(countNonZero16u),
-        (CountNonZeroFunc)GET_OPTIMIZED(countNonZero32s), (CountNonZeroFunc)GET_OPTIMIZED(countNonZero32f),
-        (CountNonZeroFunc)GET_OPTIMIZED(countNonZero64f), 0
-    };
+    TYPE_TAB_ORDER( \
+        (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u),  (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u), \
+        (CountNonZeroFunc)GET_OPTIMIZED(countNonZero16u), (CountNonZeroFunc)GET_OPTIMIZED(countNonZero16u), \
+        0,                                                (CountNonZeroFunc)GET_OPTIMIZED(countNonZero32s), \
+        (CountNonZeroFunc)GET_OPTIMIZED(countNonZero64u), (CountNonZeroFunc)GET_OPTIMIZED(countNonZero64u), \
+        (CountNonZeroFunc)GET_OPTIMIZED(countNonZero32f), (CountNonZeroFunc)(countNonZero64f), \
+        0, 0, 0, 0, 0, 0 \
+        );
 
     return countNonZeroTab[depth];
 }
@@ -1018,10 +1022,14 @@ typedef int (*SumSqrFunc)(const uchar*, const uchar* mask, uchar*, uchar*, int, 
 static SumSqrFunc getSumSqrTab(int depth)
 {
     static SumSqrFunc sumSqrTab[] =
-    {
-        (SumSqrFunc)GET_OPTIMIZED(sqsum8u), (SumSqrFunc)sqsum8s, (SumSqrFunc)sqsum16u, (SumSqrFunc)sqsum16s,
-        (SumSqrFunc)sqsum32s, (SumSqrFunc)GET_OPTIMIZED(sqsum32f), (SumSqrFunc)sqsum64f, 0
-    };
+    TYPE_TAB_ORDER( \
+        (SumSqrFunc)GET_OPTIMIZED(sqsum8u),  (SumSqrFunc)sqsum8s,  \
+        (SumSqrFunc)sqsum16u              ,  (SumSqrFunc)sqsum16s, \
+        (SumSqrFunc)sqsum32u               , (SumSqrFunc)sqsum32s, \
+        (SumSqrFunc)sqsum64u               , (SumSqrFunc)sqsum64s, \
+        (SumSqrFunc)GET_OPTIMIZED(sqsum32f), (SumSqrFunc)sqsum64f, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
     return sumSqrTab[depth];
 }
@@ -1942,13 +1950,14 @@ typedef void (*MinMaxIdxFunc)(const uchar*, const uchar*, int*, int*, size_t*, s
 static MinMaxIdxFunc getMinmaxTab(int depth)
 {
     static MinMaxIdxFunc minmaxTab[] =
-    {
-        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8s),
-        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_16u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_16s),
-        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32s),
-        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32f), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_64f),
-        0
-    };
+    TYPE_TAB_ORDER( \
+        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8u),  (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8s), \
+        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_16u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_16s), \
+        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32s), \
+        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_64u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_64s), \
+        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32f), (MinMaxIdxFunc)minMaxIdx_64f, \
+        0, 0, 0, 0, 0, 0 \
+        );
 
     return minmaxTab[depth];
 }
@@ -2564,20 +2573,32 @@ typedef int (*NormDiffFunc)(const uchar*, const uchar*, const uchar*, uchar*, in
 
 static NormFunc getNormFunc(int normType, int depth)
 {
-    static NormFunc normTab[3][8] =
+    static NormFunc normTab[3][CV_DEPTH_MAX] =
     {
-        {
-            (NormFunc)GET_OPTIMIZED(normInf_8u), (NormFunc)GET_OPTIMIZED(normInf_8s), (NormFunc)GET_OPTIMIZED(normInf_16u), (NormFunc)GET_OPTIMIZED(normInf_16s),
-            (NormFunc)GET_OPTIMIZED(normInf_32s), (NormFunc)GET_OPTIMIZED(normInf_32f), (NormFunc)normInf_64f, 0
-        },
-        {
-            (NormFunc)GET_OPTIMIZED(normL1_8u), (NormFunc)GET_OPTIMIZED(normL1_8s), (NormFunc)GET_OPTIMIZED(normL1_16u), (NormFunc)GET_OPTIMIZED(normL1_16s),
-            (NormFunc)GET_OPTIMIZED(normL1_32s), (NormFunc)GET_OPTIMIZED(normL1_32f), (NormFunc)normL1_64f, 0
-        },
-        {
-            (NormFunc)GET_OPTIMIZED(normL2_8u), (NormFunc)GET_OPTIMIZED(normL2_8s), (NormFunc)GET_OPTIMIZED(normL2_16u), (NormFunc)GET_OPTIMIZED(normL2_16s),
-            (NormFunc)GET_OPTIMIZED(normL2_32s), (NormFunc)GET_OPTIMIZED(normL2_32f), (NormFunc)normL2_64f, 0
-        }
+    TYPE_TAB_ORDER( \
+        (NormFunc)GET_OPTIMIZED(normInf_8u),  (NormFunc)GET_OPTIMIZED(normInf_8s), \
+        (NormFunc)GET_OPTIMIZED(normInf_16u), (NormFunc)GET_OPTIMIZED(normInf_16s), \
+        (NormFunc)GET_OPTIMIZED(normInf_32u), (NormFunc)GET_OPTIMIZED(normInf_32s), \
+        (NormFunc)GET_OPTIMIZED(normInf_64u), (NormFunc)GET_OPTIMIZED(normInf_64s), \
+        (NormFunc)GET_OPTIMIZED(normInf_32f), (NormFunc)normInf_64f, \
+        0, 0, 0, 0, 0, 0 \
+        ),
+    TYPE_TAB_ORDER( \
+        (NormFunc)GET_OPTIMIZED(normL1_8u),  (NormFunc)GET_OPTIMIZED(normL1_8s), \
+        (NormFunc)GET_OPTIMIZED(normL1_16u), (NormFunc)GET_OPTIMIZED(normL1_16s), \
+        (NormFunc)GET_OPTIMIZED(normL1_32u), (NormFunc)GET_OPTIMIZED(normL1_32s), \
+        (NormFunc)GET_OPTIMIZED(normL1_64u), (NormFunc)GET_OPTIMIZED(normL1_64s), \
+        (NormFunc)GET_OPTIMIZED(normL1_32f), (NormFunc)normL1_64f, \
+        0, 0, 0, 0, 0, 0 \
+        ),
+    TYPE_TAB_ORDER( \
+        (NormFunc)GET_OPTIMIZED(normL2_8u),  (NormFunc)GET_OPTIMIZED(normL2_8s), \
+        (NormFunc)GET_OPTIMIZED(normL2_16u), (NormFunc)GET_OPTIMIZED(normL2_16s), \
+        (NormFunc)GET_OPTIMIZED(normL2_32u), (NormFunc)GET_OPTIMIZED(normL2_32s), \
+        (NormFunc)GET_OPTIMIZED(normL2_64u), (NormFunc)GET_OPTIMIZED(normL2_64s), \
+        (NormFunc)GET_OPTIMIZED(normL2_32f), (NormFunc)normL2_64f, \
+        0, 0, 0, 0, 0, 0 \
+        )
     };
 
     return normTab[normType][depth];
@@ -2585,26 +2606,32 @@ static NormFunc getNormFunc(int normType, int depth)
 
 static NormDiffFunc getNormDiffFunc(int normType, int depth)
 {
-    static NormDiffFunc normDiffTab[3][8] =
+    static NormDiffFunc normDiffTab[3][CV_DEPTH_MAX] =
     {
-        {
-            (NormDiffFunc)GET_OPTIMIZED(normDiffInf_8u), (NormDiffFunc)normDiffInf_8s,
-            (NormDiffFunc)normDiffInf_16u, (NormDiffFunc)normDiffInf_16s,
-            (NormDiffFunc)normDiffInf_32s, (NormDiffFunc)GET_OPTIMIZED(normDiffInf_32f),
-            (NormDiffFunc)normDiffInf_64f, 0
-        },
-        {
-            (NormDiffFunc)GET_OPTIMIZED(normDiffL1_8u), (NormDiffFunc)normDiffL1_8s,
-            (NormDiffFunc)normDiffL1_16u, (NormDiffFunc)normDiffL1_16s,
-            (NormDiffFunc)normDiffL1_32s, (NormDiffFunc)GET_OPTIMIZED(normDiffL1_32f),
-            (NormDiffFunc)normDiffL1_64f, 0
-        },
-        {
-            (NormDiffFunc)GET_OPTIMIZED(normDiffL2_8u), (NormDiffFunc)normDiffL2_8s,
-            (NormDiffFunc)normDiffL2_16u, (NormDiffFunc)normDiffL2_16s,
-            (NormDiffFunc)normDiffL2_32s, (NormDiffFunc)GET_OPTIMIZED(normDiffL2_32f),
-            (NormDiffFunc)normDiffL2_64f, 0
-        }
+    TYPE_TAB_ORDER( \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffInf_8u),  (NormDiffFunc)GET_OPTIMIZED(normDiffInf_8s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffInf_16u), (NormDiffFunc)GET_OPTIMIZED(normDiffInf_16s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffInf_32u), (NormDiffFunc)GET_OPTIMIZED(normDiffInf_32s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffInf_64u), (NormDiffFunc)GET_OPTIMIZED(normDiffInf_64s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffInf_32f), (NormDiffFunc)normDiffInf_64f, \
+                   0, 0, 0, 0, 0, 0 \
+                   ),
+    TYPE_TAB_ORDER( \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL1_8u),  (NormDiffFunc)GET_OPTIMIZED(normDiffL1_8s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL1_16u), (NormDiffFunc)GET_OPTIMIZED(normDiffL1_16s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL1_32u), (NormDiffFunc)GET_OPTIMIZED(normDiffL1_32s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL1_64u), (NormDiffFunc)GET_OPTIMIZED(normDiffL1_64s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL1_32f), (NormDiffFunc)normDiffL1_64f, \
+                   0, 0, 0, 0, 0, 0 \
+                   ),
+    TYPE_TAB_ORDER( \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL2_8u),  (NormDiffFunc)GET_OPTIMIZED(normDiffL2_8s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL2_16u), (NormDiffFunc)GET_OPTIMIZED(normDiffL2_16s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL2_32u), (NormDiffFunc)GET_OPTIMIZED(normDiffL2_32s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL2_64u), (NormDiffFunc)GET_OPTIMIZED(normDiffL2_64s), \
+                   (NormDiffFunc)GET_OPTIMIZED(normDiffL2_32f), (NormDiffFunc)normDiffL2_64f, \
+                   0, 0, 0, 0, 0, 0 \
+                   )
     };
 
     return normDiffTab[normType][depth];

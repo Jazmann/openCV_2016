@@ -305,16 +305,24 @@ randf_64f( double* arr, int len, uint64* state, const Vec2d* p, bool )
 typedef void (*RandFunc)(uchar* arr, int len, uint64* state, const void* p, bool small_flag);
 
 
-static RandFunc randTab[][8] =
-{
-    {
-        (RandFunc)randi_8u, (RandFunc)randi_8s, (RandFunc)randi_16u, (RandFunc)randi_16s,
-        (RandFunc)randi_32s, (RandFunc)randf_32f, (RandFunc)randf_64f, 0
-    },
-    {
-        (RandFunc)randBits_8u, (RandFunc)randBits_8s, (RandFunc)randBits_16u, (RandFunc)randBits_16s,
-        (RandFunc)randBits_32s, 0, 0, 0
-    }
+static RandFunc randTab[][CV_DEPTH_MAX] = \
+{ \
+TYPE_TAB_ORDER( \
+    (RandFunc)randi_8u,      (RandFunc)randi_8s, \
+    (RandFunc)randi_16u,     (RandFunc)randi_16s, \
+    (RandFunc)randi_32u,     (RandFunc)randi_32s, \
+    (RandFunc)randi_64u,     (RandFunc)randi_64s, \
+    (RandFunc)randf_32f,     (RandFunc)randf_64f, \
+    0, 0, 0, 0, 0, 0 \
+    ),
+TYPE_TAB_ORDER( \
+    (RandFunc)randBits_8u,   (RandFunc)randBits_8s, \
+    (RandFunc)randBits_16u,  (RandFunc)randBits_16s, \
+    (RandFunc)randBits_32u,  (RandFunc)randBits_32s, \
+    (RandFunc)randBits_64u,  (RandFunc)randBits_64s, \
+    0,                       0, \
+    0, 0, 0, 0, 0, 0 \
+    )
 };
 
 /*
@@ -472,11 +480,15 @@ typedef void (*RandnScaleFunc)(const float* src, uchar* dst, int len, int cn,
                                const uchar*, const uchar*, bool);
 
 static RandnScaleFunc randnScaleTab[] =
-{
-    (RandnScaleFunc)randnScale_8u, (RandnScaleFunc)randnScale_8s, (RandnScaleFunc)randnScale_16u,
-    (RandnScaleFunc)randnScale_16s, (RandnScaleFunc)randnScale_32s, (RandnScaleFunc)randnScale_32f,
-    (RandnScaleFunc)randnScale_64f, 0
-};
+TYPE_TAB_ORDER( \
+    (RandnScaleFunc)randnScale_8u,      (RandnScaleFunc)randnScale_8s, \
+    (RandnScaleFunc)randnScale_16u,     (RandnScaleFunc)randnScale_16s, \
+    (RandnScaleFunc)randnScale_32u,     (RandnScaleFunc)randnScale_32s, \
+    (RandnScaleFunc)randnScale_64u,     (RandnScaleFunc)randnScale_64s, \
+    (RandnScaleFunc)randnScale_32f,     (RandnScaleFunc)randnScale_64f, \
+    0, 0, 0, 0, 0, 0 \
+    );
+
 
 void RNG::fill( InputOutputArray _mat, int disttype,
                 InputArray _param1arg, InputArray _param2arg, bool saturateRange )

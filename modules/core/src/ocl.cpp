@@ -5616,19 +5616,29 @@ void getPlatfomsInfo(std::vector<PlatformInfo>& platformsInfo)
         platformsInfo.push_back( PlatformInfo((void*)&platforms[i]) );
 }
 
+#define OCL_EXPAND_CHAN_STR(name) #name, #name "2", #name "3", #name "4", 0, 0, 0, #name "8", 0, 0, 0, 0, 0, 0, 0, #name "16"
+
 const char* typeToStr(int type)
 {
     static const char* tab[]=
-    {
-        "uchar", "uchar2", "uchar3", "uchar4", 0, 0, 0, "uchar8", 0, 0, 0, 0, 0, 0, 0, "uchar16",
-        "char", "char2", "char3", "char4", 0, 0, 0, "char8", 0, 0, 0, 0, 0, 0, 0, "char16",
-        "ushort", "ushort2", "ushort3", "ushort4",0, 0, 0, "ushort8", 0, 0, 0, 0, 0, 0, 0, "ushort16",
-        "short", "short2", "short3", "short4", 0, 0, 0, "short8", 0, 0, 0, 0, 0, 0, 0, "short16",
-        "int", "int2", "int3", "int4", 0, 0, 0, "int8", 0, 0, 0, 0, 0, 0, 0, "int16",
-        "float", "float2", "float3", "float4", 0, 0, 0, "float8", 0, 0, 0, 0, 0, 0, 0, "float16",
-        "double", "double2", "double3", "double4", 0, 0, 0, "double8", 0, 0, 0, 0, 0, 0, 0, "double16",
-        "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?"
-    };
+    TYPE_TAB_ORDER( \
+        OCL_EXPAND_CHAN_STR(uchar), \
+        OCL_EXPAND_CHAN_STR(char), \
+        OCL_EXPAND_CHAN_STR(ushort), \
+        OCL_EXPAND_CHAN_STR(short), \
+        OCL_EXPAND_CHAN_STR(uint), \
+        OCL_EXPAND_CHAN_STR(int), \
+        OCL_EXPAND_CHAN_STR(ulong), \
+        OCL_EXPAND_CHAN_STR(long), \
+        OCL_EXPAND_CHAN_STR(float), \
+        OCL_EXPAND_CHAN_STR(double), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?) \
+        );
     int cn = CV_MAT_CN(type), depth = CV_MAT_DEPTH(type);
     return cn > 16 ? "?" : tab[depth*16 + cn-1];
 }
@@ -5636,16 +5646,25 @@ const char* typeToStr(int type)
 const char* memopTypeToStr(int type)
 {
     static const char* tab[] =
-    {
-        "uchar", "uchar2", "uchar3", "uchar4", 0, 0, 0, "uchar8", 0, 0, 0, 0, 0, 0, 0, "uchar16",
-        "char", "char2", "char3", "char4", 0, 0, 0, "char8", 0, 0, 0, 0, 0, 0, 0, "char16",
-        "ushort", "ushort2", "ushort3", "ushort4",0, 0, 0, "ushort8", 0, 0, 0, 0, 0, 0, 0, "ushort16",
-        "short", "short2", "short3", "short4", 0, 0, 0, "short8", 0, 0, 0, 0, 0, 0, 0, "short16",
-        "int", "int2", "int3", "int4", 0, 0, 0, "int8", 0, 0, 0, 0, 0, 0, 0, "int16",
-        "int", "int2", "int3", "int4", 0, 0, 0, "int8", 0, 0, 0, 0, 0, 0, 0, "int16",
-        "ulong", "ulong2", "ulong3", "ulong4", 0, 0, 0, "ulong8", 0, 0, 0, 0, 0, 0, 0, "ulong16",
-        "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?"
-    };
+    TYPE_TAB_ORDER( \
+        OCL_EXPAND_CHAN_STR(uchar), \
+        OCL_EXPAND_CHAN_STR(char), \
+        OCL_EXPAND_CHAN_STR(ushort), \
+        OCL_EXPAND_CHAN_STR(short), \
+        OCL_EXPAND_CHAN_STR(uint), \
+        OCL_EXPAND_CHAN_STR(int), \
+        OCL_EXPAND_CHAN_STR(ulong), \
+        OCL_EXPAND_CHAN_STR(long), \
+        OCL_EXPAND_CHAN_STR(float), \
+        OCL_EXPAND_CHAN_STR(double), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?), \
+        OCL_EXPAND_CHAN_STR(?) \
+        );
+
     int cn = CV_MAT_CN(type), depth = CV_MAT_DEPTH(type);
     return cn > 16 ? "?" : tab[depth*16 + cn-1];
 }

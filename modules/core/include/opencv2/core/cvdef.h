@@ -44,9 +44,37 @@
 
 #ifndef __OPENCV_CORE_CVDEF_H__
 #define __OPENCV_CORE_CVDEF_H__
-
 //! @addtogroup core_utils
 //! @{
+
+/****************************************************************************************\
+ *                                    C++ Move semantics                                  *
+ \****************************************************************************************/
+
+#ifndef CV_CXX_MOVE_SEMANTICS
+#  if __cplusplus >= 201103L || defined(__GXX_EXPERIMENTAL_CXX0X__) || defined(_MSC_VER) && _MSC_VER >= 1600
+#    define CV_CXX_MOVE_SEMANTICS 1
+#  elif defined(__clang)
+#    if __has_feature(cxx_rvalue_references)
+#      define CV_CXX_MOVE_SEMANTICS 1
+#    endif
+#  endif
+#else
+#  if CV_CXX_MOVE_SEMANTICS == 0
+#    undef CV_CXX_MOVE_SEMANTICS
+#  endif
+#endif
+
+
+#ifdef CV_CXX_MOVE_SEMANTICS
+// Compiling in at least C++11 mode.
+#  define CV_LANG_CXX11 1
+#  define _STD
+# else
+#  define CV_LANG_CXX11 0
+#  define _STD std::
+# endif
+
 
 #if !defined _CRT_SECURE_NO_DEPRECATE && defined _MSC_VER && _MSC_VER > 1300
 #  define _CRT_SECURE_NO_DEPRECATE /* to avoid multiple Visual Studio warnings */
@@ -380,74 +408,74 @@ Cv64suf;
 #define D_TYPE_TAB_ORDER(cv8U, cv8S, cv16U, cv16S, cv32U, cv32S, cv64U, cv64S, cv32F, cv64F, cvUSRTYPE1, cvUSRTYPE2, cvUSRTYPE3, cvUSRTYPE4, cvUSRTYPE5, cvUSRTYPE6) {cv8U, cv8S, cv16U, cv16S, cv32S, cv32F, cv64F, cvUSRTYPE1}
 
 #define CV_8U   0
-#define CV_8U_DEPTH_BITS_LOG2 3
+#define CV_8U_DEPTH_BITS_LOG2  3
 #define CV_8U_DEPTH_BYTES_LOG2 0
-#define CV_8U_TYPE  std::uint8_t
-#define CV_8U_MAX   UINT8_MAX
-#define CV_8U_MIN   0
+#define CV_8U_TYPE             _STD uint8_t
+#define CV_8U_MAX              UINT8_MAX
+#define CV_8U_MIN              0
 
 #define CV_8S   1
-#define CV_8S_DEPTH_BITS_LOG2 3
+#define CV_8S_DEPTH_BITS_LOG2  3
 #define CV_8S_DEPTH_BYTES_LOG2 0
-#define CV_8S_TYPE  std::int8_t
-#define CV_8S_MAX   INT8_MAX
-#define CV_8S_MIN   INT8_MIN
+#define CV_8S_TYPE             _STD int8_t
+#define CV_8S_MAX              INT8_MAX
+#define CV_8S_MIN              INT8_MIN
 
 #define CV_16U  2
-#define CV_16U_DEPTH_BITS_LOG2 4
+#define CV_16U_DEPTH_BITS_LOG2  4
 #define CV_16U_DEPTH_BYTES_LOG2 1
-#define CV_16U_TYPE  std::uint16_t
-#define CV_16U_MAX   UINT16_MAX
-#define CV_16U_MIN   0
+#define CV_16U_TYPE             _STD uint16_t
+#define CV_16U_MAX              UINT16_MAX
+#define CV_16U_MIN              0
 
 #define CV_16S  3
-#define CV_16S_DEPTH_BITS_LOG2 4
+#define CV_16S_DEPTH_BITS_LOG2  4
 #define CV_16S_DEPTH_BYTES_LOG2 1
-#define CV_16S_TYPE  std::int16_t
-#define CV_16S_MAX   INT16_MAX
-#define CV_16S_MIN   INT16_MIN
+#define CV_16S_TYPE             _STD int16_t
+#define CV_16S_MAX              INT16_MAX
+#define CV_16S_MIN              INT16_MIN
 
 #define CV_32U  8
-#define CV_32U_DEPTH_BITS_LOG2 5
+#define CV_32U_DEPTH_BITS_LOG2  5
 #define CV_32U_DEPTH_BYTES_LOG2 2
-#define CV_32U_TYPE  std::uint32_t
-#define CV_32U_MAX   UINT32_MAX
-#define CV_32U_MIN   0
+#define CV_32U_TYPE             _STD uint32_t
+#define CV_32U_MAX              UINT32_MAX
+#define CV_32U_MIN              0
 
 #define CV_32S  4
-#define CV_32S_DEPTH_BITS_LOG2 5
+#define CV_32S_DEPTH_BITS_LOG2  5
 #define CV_32S_DEPTH_BYTES_LOG2 2
-#define CV_32S_TYPE  std::int32_t
-#define CV_32S_MAX   INT32_MAX
-#define CV_32S_MIN   INT32_MIN
+#define CV_32S_TYPE             _STD int32_t
+#define CV_32S_MAX              INT32_MAX
+#define CV_32S_MIN              INT32_MIN
 
 #define CV_64U  9
-#define CV_64U_DEPTH_BITS_LOG2 6
+#define CV_64U_DEPTH_BITS_LOG2  6
 #define CV_64U_DEPTH_BYTES_LOG2 3
-#define CV_64U_TYPE  std::uint64_t
-#define CV_64U_MAX   UINT64_MAX
-#define CV_64U_MIN   0
+#define CV_64U_TYPE             _STD uint64_t
+#define CV_64U_MAX              UINT64_MAX
+#define CV_64U_MIN              0
 
 #define CV_64S  10
-#define CV_64S_DEPTH_BITS_LOG2 6
+#define CV_64S_DEPTH_BITS_LOG2  6
 #define CV_64S_DEPTH_BYTES_LOG2 3
-#define CV_64S_TYPE  std::int64_t
-#define CV_64S_MAX   INT64_MAX
-#define CV_64S_MIN   INT64_MIN
+#define CV_64S_TYPE             _STD int64_t
+#define CV_64S_MAX              INT64_MAX
+#define CV_64S_MIN              INT64_MIN
 
 #define CV_32F  5
-#define CV_32F_DEPTH_BITS_LOG2 5
+#define CV_32F_DEPTH_BITS_LOG2  5
 #define CV_32F_DEPTH_BYTES_LOG2 2
-#define CV_32F_TYPE  float
-#define CV_32F_MAX   FLT_MAX
-#define CV_32F_MIN   FLT_MIN
+#define CV_32F_TYPE             float
+#define CV_32F_MAX              FLT_MAX
+#define CV_32F_MIN              FLT_MIN
 
 #define CV_64F  6
-#define CV_64F_DEPTH_BITS_LOG2 6
+#define CV_64F_DEPTH_BITS_LOG2  6
 #define CV_64F_DEPTH_BYTES_LOG2 3
-#define CV_64F_TYPE  double
-#define CV_64F_MAX   DBL_MAX
-#define CV_64F_MIN   DBL_MIN
+#define CV_64F_TYPE             double
+#define CV_64F_MAX              DBL_MAX
+#define CV_64F_MIN              DBL_MIN
 
 #define CV_USRTYPE1 7
 #define CV_USRTYPE2 11
@@ -602,23 +630,6 @@ Cv64suf;
 #endif
 
 
-/****************************************************************************************\
-*                                    C++ Move semantics                                  *
-\****************************************************************************************/
-
-#ifndef CV_CXX_MOVE_SEMANTICS
-#  if __cplusplus >= 201103L || defined(__GXX_EXPERIMENTAL_CXX0X__) || defined(_MSC_VER) && _MSC_VER >= 1600
-#    define CV_CXX_MOVE_SEMANTICS 1
-#  elif defined(__clang)
-#    if __has_feature(cxx_rvalue_references)
-#      define CV_CXX_MOVE_SEMANTICS 1
-#    endif
-#  endif
-#else
-#  if CV_CXX_MOVE_SEMANTICS == 0
-#    undef CV_CXX_MOVE_SEMANTICS
-#  endif
-#endif
 
 //! @}
 

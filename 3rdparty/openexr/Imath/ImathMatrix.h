@@ -37,6 +37,14 @@
 #ifndef INCLUDED_IMATHMATRIX_H
 #define INCLUDED_IMATHMATRIX_H
 
+#ifndef REGISTER
+# if defined __GXX_EXPERIMENTAL_CXX0X__ || __cplusplus >= 201103L
+#  define REGISTER
+# else
+#  define REGISTER register
+# endif
+#endif
+
 //----------------------------------------------------------------
 //
 //      2D (3x3) and 3D (4x4) transformation matrix templates.
@@ -2526,11 +2534,11 @@ Matrix44<T>::multiply (const Matrix44<T> &a,
                        const Matrix44<T> &b,
                        Matrix44<T> &c)
 {
-    register const T * IMATH_RESTRICT ap = &a.x[0][0];
-    register const T * IMATH_RESTRICT bp = &b.x[0][0];
-    register       T * IMATH_RESTRICT cp = &c.x[0][0];
+    REGISTER const T * IMATH_RESTRICT ap = &a.x[0][0];
+    REGISTER const T * IMATH_RESTRICT bp = &b.x[0][0];
+    REGISTER       T * IMATH_RESTRICT cp = &c.x[0][0];
 
-    register T a0, a1, a2, a3;
+    REGISTER T a0, a1, a2, a3;
 
     a0 = ap[0];
     a1 = ap[1];

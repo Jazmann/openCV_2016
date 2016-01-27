@@ -65,14 +65,15 @@
 #  endif
 #endif
 
-
 #ifdef CV_CXX_MOVE_SEMANTICS
 // Compiling in at least C++11 mode.
 #  define CV_LANG_CXX11 1
 #  define _STD
+#  define REGISTER
 # else
 #  define CV_LANG_CXX11 0
 #  define _STD std::
+#  define REGISTER register
 # endif
 
 

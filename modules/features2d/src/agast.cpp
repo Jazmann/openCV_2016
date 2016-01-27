@@ -67,24 +67,24 @@ static void AGAST_5_8(InputArray _img, std::vector<KeyPoint>& keypoints, int thr
     int xsize = img.cols;
     int ysize = img.rows;
     size_t nExpectedCorners = keypoints.capacity();
-    register int x, y;
-    register int xsizeB = xsize - 2;
-    register int ysizeB = ysize - 1;
-    register int width;
+    REGISTER int x, y;
+    REGISTER int xsizeB = xsize - 2;
+    REGISTER int ysizeB = ysize - 1;
+    REGISTER int width;
 
     keypoints.resize(0);
 
     int pixel_5_8_[16];
     makeAgastOffsets(pixel_5_8_, (int)img.step, AgastFeatureDetector::AGAST_5_8);
 
-    register short offset0 = (short) pixel_5_8_[0];
-    register short offset1 = (short) pixel_5_8_[1];
-    register short offset2 = (short) pixel_5_8_[2];
-    register short offset3 = (short) pixel_5_8_[3];
-    register short offset4 = (short) pixel_5_8_[4];
-    register short offset5 = (short) pixel_5_8_[5];
-    register short offset6 = (short) pixel_5_8_[6];
-    register short offset7 = (short) pixel_5_8_[7];
+    REGISTER short offset0 = (short) pixel_5_8_[0];
+    REGISTER short offset1 = (short) pixel_5_8_[1];
+    REGISTER short offset2 = (short) pixel_5_8_[2];
+    REGISTER short offset3 = (short) pixel_5_8_[3];
+    REGISTER short offset4 = (short) pixel_5_8_[4];
+    REGISTER short offset5 = (short) pixel_5_8_[5];
+    REGISTER short offset6 = (short) pixel_5_8_[6];
+    REGISTER short offset7 = (short) pixel_5_8_[7];
 
     width = xsize;
 
@@ -100,9 +100,9 @@ static void AGAST_5_8(InputArray _img, std::vector<KeyPoint>& keypoints, int thr
                 break;
             else
             {
-                register const unsigned char* const ptr = img.ptr() + y*width + x;
-                register const int cb = *ptr + threshold;
-                register const int c_b = *ptr - threshold;
+                REGISTER const unsigned char* const ptr = img.ptr() + y*width + x;
+                REGISTER const int cb = *ptr + threshold;
+                REGISTER const int c_b = *ptr - threshold;
                 if(ptr[offset0] > cb)
                   if(ptr[offset2] > cb)
                     if(ptr[offset3] > cb)
@@ -437,9 +437,9 @@ static void AGAST_5_8(InputArray _img, std::vector<KeyPoint>& keypoints, int thr
                 break;
             else
             {
-                register const unsigned char* const ptr = img.ptr() + y*width + x;
-                register const int cb = *ptr + threshold;
-                register const int c_b = *ptr - threshold;
+                REGISTER const unsigned char* const ptr = img.ptr() + y*width + x;
+                REGISTER const int cb = *ptr + threshold;
+                REGISTER const int c_b = *ptr - threshold;
                 if(ptr[offset0] > cb)
                   if(ptr[offset2] > cb)
                     if(ptr[offset3] > cb)
@@ -829,28 +829,28 @@ static void AGAST_7_12d(InputArray _img, std::vector<KeyPoint>& keypoints, int t
     int xsize = img.cols;
     int ysize = img.rows;
     size_t nExpectedCorners = keypoints.capacity();
-    register int x, y;
-    register int xsizeB = xsize - 4;
-    register int ysizeB = ysize - 3;
-    register int width;
+    REGISTER int x, y;
+    REGISTER int xsizeB = xsize - 4;
+    REGISTER int ysizeB = ysize - 3;
+    REGISTER int width;
 
     keypoints.resize(0);
 
     int pixel_7_12d_[16];
     makeAgastOffsets(pixel_7_12d_, (int)img.step, AgastFeatureDetector::AGAST_7_12d);
 
-    register short offset0 = (short) pixel_7_12d_[0];
-    register short offset1 = (short) pixel_7_12d_[1];
-    register short offset2 = (short) pixel_7_12d_[2];
-    register short offset3 = (short) pixel_7_12d_[3];
-    register short offset4 = (short) pixel_7_12d_[4];
-    register short offset5 = (short) pixel_7_12d_[5];
-    register short offset6 = (short) pixel_7_12d_[6];
-    register short offset7 = (short) pixel_7_12d_[7];
-    register short offset8 = (short) pixel_7_12d_[8];
-    register short offset9 = (short) pixel_7_12d_[9];
-    register short offset10 = (short) pixel_7_12d_[10];
-    register short offset11 = (short) pixel_7_12d_[11];
+    REGISTER short offset0 = (short) pixel_7_12d_[0];
+    REGISTER short offset1 = (short) pixel_7_12d_[1];
+    REGISTER short offset2 = (short) pixel_7_12d_[2];
+    REGISTER short offset3 = (short) pixel_7_12d_[3];
+    REGISTER short offset4 = (short) pixel_7_12d_[4];
+    REGISTER short offset5 = (short) pixel_7_12d_[5];
+    REGISTER short offset6 = (short) pixel_7_12d_[6];
+    REGISTER short offset7 = (short) pixel_7_12d_[7];
+    REGISTER short offset8 = (short) pixel_7_12d_[8];
+    REGISTER short offset9 = (short) pixel_7_12d_[9];
+    REGISTER short offset10 = (short) pixel_7_12d_[10];
+    REGISTER short offset11 = (short) pixel_7_12d_[11];
 
     width = xsize;
 
@@ -866,9 +866,9 @@ static void AGAST_7_12d(InputArray _img, std::vector<KeyPoint>& keypoints, int t
                 break;
             else
             {
-                register const unsigned char* const ptr = img.ptr() + y*width + x;
-                register const int cb = *ptr + threshold;
-                register const int c_b = *ptr - threshold;
+                REGISTER const unsigned char* const ptr = img.ptr() + y*width + x;
+                REGISTER const int cb = *ptr + threshold;
+                REGISTER const int c_b = *ptr - threshold;
                 if(ptr[offset0] > cb)
                   if(ptr[offset5] > cb)
                     if(ptr[offset2] > cb)
@@ -2048,9 +2048,9 @@ static void AGAST_7_12d(InputArray _img, std::vector<KeyPoint>& keypoints, int t
                 break;
             else
             {
-                register const unsigned char* const ptr = img.ptr() + y*width + x;
-                register const int cb = *ptr + threshold;
-                register const int c_b = *ptr - threshold;
+                REGISTER const unsigned char* const ptr = img.ptr() + y*width + x;
+                REGISTER const int cb = *ptr + threshold;
+                REGISTER const int c_b = *ptr - threshold;
                 if(ptr[offset0] > cb)
                   if(ptr[offset5] > cb)
                     if(ptr[offset2] > cb)
@@ -3274,28 +3274,28 @@ static void AGAST_7_12s(InputArray _img, std::vector<KeyPoint>& keypoints, int t
     int xsize = img.cols;
     int ysize = img.rows;
     size_t nExpectedCorners = keypoints.capacity();
-    register int x, y;
-    register int xsizeB=xsize - 3; //2, +1 due to faster test x>xsizeB
-    register int ysizeB=ysize - 2;
-    register int width;
+    REGISTER int x, y;
+    REGISTER int xsizeB=xsize - 3; //2, +1 due to faster test x>xsizeB
+    REGISTER int ysizeB=ysize - 2;
+    REGISTER int width;
 
     keypoints.resize(0);
 
     int pixel_7_12s_[16];
     makeAgastOffsets(pixel_7_12s_, (int)img.step, AgastFeatureDetector::AGAST_7_12s);
 
-    register short offset0 = (short) pixel_7_12s_[0];
-    register short offset1 = (short) pixel_7_12s_[1];
-    register short offset2 = (short) pixel_7_12s_[2];
-    register short offset3 = (short) pixel_7_12s_[3];
-    register short offset4 = (short) pixel_7_12s_[4];
-    register short offset5 = (short) pixel_7_12s_[5];
-    register short offset6 = (short) pixel_7_12s_[6];
-    register short offset7 = (short) pixel_7_12s_[7];
-    register short offset8 = (short) pixel_7_12s_[8];
-    register short offset9 = (short) pixel_7_12s_[9];
-    register short offset10 = (short) pixel_7_12s_[10];
-    register short offset11 = (short) pixel_7_12s_[11];
+    REGISTER short offset0 = (short) pixel_7_12s_[0];
+    REGISTER short offset1 = (short) pixel_7_12s_[1];
+    REGISTER short offset2 = (short) pixel_7_12s_[2];
+    REGISTER short offset3 = (short) pixel_7_12s_[3];
+    REGISTER short offset4 = (short) pixel_7_12s_[4];
+    REGISTER short offset5 = (short) pixel_7_12s_[5];
+    REGISTER short offset6 = (short) pixel_7_12s_[6];
+    REGISTER short offset7 = (short) pixel_7_12s_[7];
+    REGISTER short offset8 = (short) pixel_7_12s_[8];
+    REGISTER short offset9 = (short) pixel_7_12s_[9];
+    REGISTER short offset10 = (short) pixel_7_12s_[10];
+    REGISTER short offset11 = (short) pixel_7_12s_[11];
 
     width = xsize;
 
@@ -3311,9 +3311,9 @@ static void AGAST_7_12s(InputArray _img, std::vector<KeyPoint>& keypoints, int t
                 break;
             else
             {
-                register const unsigned char* const ptr = img.ptr() + y*width + x;
-                register const int cb = *ptr + threshold;
-                register const int c_b = *ptr - threshold;
+                REGISTER const unsigned char* const ptr = img.ptr() + y*width + x;
+                REGISTER const int cb = *ptr + threshold;
+                REGISTER const int c_b = *ptr - threshold;
                 if(ptr[offset0] > cb)
                   if(ptr[offset2] > cb)
                     if(ptr[offset5] > cb)
@@ -4349,9 +4349,9 @@ static void AGAST_7_12s(InputArray _img, std::vector<KeyPoint>& keypoints, int t
                 break;
             else
             {
-                register const unsigned char* const ptr = img.ptr() + y*width + x;
-                register const int cb = *ptr + threshold;
-                register const int c_b = *ptr - threshold;
+                REGISTER const unsigned char* const ptr = img.ptr() + y*width + x;
+                REGISTER const int cb = *ptr + threshold;
+                REGISTER const int c_b = *ptr - threshold;
                 if(ptr[offset0] > cb)
                   if(ptr[offset2] > cb)
                     if(ptr[offset5] > cb)
@@ -5355,32 +5355,32 @@ static void OAST_9_16(InputArray _img, std::vector<KeyPoint>& keypoints, int thr
     int xsize = img.cols;
     int ysize = img.rows;
     size_t nExpectedCorners = keypoints.capacity();
-    register int x, y;
-    register int xsizeB=xsize - 4;
-    register int ysizeB=ysize - 3;
-    register int width;
+    REGISTER int x, y;
+    REGISTER int xsizeB=xsize - 4;
+    REGISTER int ysizeB=ysize - 3;
+    REGISTER int width;
 
     keypoints.resize(0);
 
     int pixel_9_16_[16];
     makeAgastOffsets(pixel_9_16_, (int)img.step, AgastFeatureDetector::OAST_9_16);
 
-    register short offset0 = (short) pixel_9_16_[0];
-    register short offset1 = (short) pixel_9_16_[1];
-    register short offset2 = (short) pixel_9_16_[2];
-    register short offset3 = (short) pixel_9_16_[3];
-    register short offset4 = (short) pixel_9_16_[4];
-    register short offset5 = (short) pixel_9_16_[5];
-    register short offset6 = (short) pixel_9_16_[6];
-    register short offset7 = (short) pixel_9_16_[7];
-    register short offset8 = (short) pixel_9_16_[8];
-    register short offset9 = (short) pixel_9_16_[9];
-    register short offset10 = (short) pixel_9_16_[10];
-    register short offset11 = (short) pixel_9_16_[11];
-    register short offset12 = (short) pixel_9_16_[12];
-    register short offset13 = (short) pixel_9_16_[13];
-    register short offset14 = (short) pixel_9_16_[14];
-    register short offset15 = (short) pixel_9_16_[15];
+    REGISTER short offset0 = (short) pixel_9_16_[0];
+    REGISTER short offset1 = (short) pixel_9_16_[1];
+    REGISTER short offset2 = (short) pixel_9_16_[2];
+    REGISTER short offset3 = (short) pixel_9_16_[3];
+    REGISTER short offset4 = (short) pixel_9_16_[4];
+    REGISTER short offset5 = (short) pixel_9_16_[5];
+    REGISTER short offset6 = (short) pixel_9_16_[6];
+    REGISTER short offset7 = (short) pixel_9_16_[7];
+    REGISTER short offset8 = (short) pixel_9_16_[8];
+    REGISTER short offset9 = (short) pixel_9_16_[9];
+    REGISTER short offset10 = (short) pixel_9_16_[10];
+    REGISTER short offset11 = (short) pixel_9_16_[11];
+    REGISTER short offset12 = (short) pixel_9_16_[12];
+    REGISTER short offset13 = (short) pixel_9_16_[13];
+    REGISTER short offset14 = (short) pixel_9_16_[14];
+    REGISTER short offset15 = (short) pixel_9_16_[15];
 
     width = xsize;
 
@@ -5394,9 +5394,9 @@ static void OAST_9_16(InputArray _img, std::vector<KeyPoint>& keypoints, int thr
                 break;
             else
             {
-                register const unsigned char* const ptr = img.ptr() + y*width + x;
-                register const int cb = *ptr + threshold;
-                register const int c_b = *ptr - threshold;
+                REGISTER const unsigned char* const ptr = img.ptr() + y*width + x;
+                REGISTER const int cb = *ptr + threshold;
+                REGISTER const int c_b = *ptr - threshold;
                 if(ptr[offset0] > cb)
                   if(ptr[offset2] > cb)
                     if(ptr[offset4] > cb)
@@ -7817,10 +7817,10 @@ static void AGAST_ALL(InputArray _img, std::vector<KeyPoint>& keypoints, int thr
     int xsize = img.cols;
     int ysize = img.rows;
     size_t nExpectedCorners = keypoints.capacity();
-    register int x, y;
-    register int xsizeB = xsize - (agastbase + 2);
-    register int ysizeB = ysize - (agastbase + 1);
-    register int width;
+    REGISTER int x, y;
+    REGISTER int xsizeB = xsize - (agastbase + 2);
+    REGISTER int ysizeB = ysize - (agastbase + 1);
+    REGISTER int width;
 
     keypoints.resize(0);
 
@@ -7841,7 +7841,7 @@ static void AGAST_ALL(InputArray _img, std::vector<KeyPoint>& keypoints, int thr
                 break;
             else
             {
-                register const unsigned char* const ptr = img.ptr() + y*width + x;
+                REGISTER const unsigned char* const ptr = img.ptr() + y*width + x;
                 result = agast_tree_search(table_struct1, pixel, ptr, threshold);
                 switch (result)
                 {
@@ -7863,7 +7863,7 @@ static void AGAST_ALL(InputArray _img, std::vector<KeyPoint>& keypoints, int thr
                 break;
             else
             {
-                register const unsigned char* const ptr = img.ptr() + y*width + x;
+                REGISTER const unsigned char* const ptr = img.ptr() + y*width + x;
                 result = agast_tree_search(table_struct2, pixel, ptr, threshold);
                 switch (result)
                 {

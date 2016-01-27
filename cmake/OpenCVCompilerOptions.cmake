@@ -1,3 +1,16 @@
+if(COMPILER_SUPPORTS_CXX11 AND ENABLE_CXX11)
+message(STATUS "The compiler is set to C++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+elseif(COMPILER_SUPPORTS_CXX0X AND ENABLE_CXX11)
+message(STATUS "The compiler is set to C++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -stdlib=libc++")
+elseif(COMPILER_SUPPORTS_CXX98)
+message(STATUS "The compiler is set to C++98")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98 -stdlib=libstdc++")
+else()
+message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 or C++98 support. Please use a different C++ compiler.")
+endif()
+
 if(MINGW OR (X86 AND UNIX AND NOT APPLE))
   # mingw compiler is known to produce unstable SSE code with -O3 hence we are trying to use -O2 instead
   if(CMAKE_COMPILER_IS_GNUCXX)

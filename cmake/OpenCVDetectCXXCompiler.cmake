@@ -174,3 +174,10 @@ elseif(MINGW)
     set(OpenCV_ARCH x86)
   endif()
 endif()
+
+message(STATUS "The compiler is ${CMAKE_CXX_COMPILER}")
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+CHECK_CXX_COMPILER_FLAG("-std=c++98" COMPILER_SUPPORTS_CXX98)
+

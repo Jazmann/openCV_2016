@@ -408,6 +408,40 @@ Cv64suf;
 #define TYPE_TAB_ORDER(cv8U, cv8S, cv16U, cv16S, cv32U, cv32S, cv64U, cv64S, cv32F, cv64F, cvUSRTYPE1, cvUSRTYPE2, cvUSRTYPE3, cvUSRTYPE4, cvUSRTYPE5, cvUSRTYPE6) {cv8U, cv8S, cv16U, cv16S, cv32S, cv32F, cv64F, cvUSRTYPE1}
 #define D_TYPE_TAB_ORDER(cv8U, cv8S, cv16U, cv16S, cv32U, cv32S, cv64U, cv64S, cv32F, cv64F, cvUSRTYPE1, cvUSRTYPE2, cvUSRTYPE3, cvUSRTYPE4, cvUSRTYPE5, cvUSRTYPE6) {cv8U, cv8S, cv16U, cv16S, cv32S, cv32F, cv64F, cvUSRTYPE1}
 
+#define CV_8U_EXISTS 1
+#define CV_8S_EXISTS 1
+#define CV_16U_EXISTS 1
+#define CV_16S_EXISTS 1
+#define CV_32U_EXISTS 0
+#define CV_32S_EXISTS 1
+#define CV_64U_EXISTS 0
+#define CV_64S_EXISTS 0
+#define CV_32F_EXISTS 1
+#define CV_64F_EXISTS 1
+#define CV_USRTYPE1_EXISTS 0
+#define CV_USRTYPE2_EXISTS 0
+#define CV_USRTYPE3_EXISTS 0
+#define CV_USRTYPE4_EXISTS 0
+#define CV_USRTYPE5_EXISTS 0
+#define CV_USRTYPE6_EXISTS 0
+
+#define IF_CV_8U_EXISTS(body) body
+#define IF_CV_8S_EXISTS(body) body
+#define IF_CV_16U_EXISTS(body) body
+#define IF_CV_16S_EXISTS(body) body
+#define IF_CV_32U_EXISTS(body)
+#define IF_CV_32S_EXISTS(body) body
+#define IF_CV_64U_EXISTS(body)
+#define IF_CV_64S_EXISTS(body)
+#define IF_CV_32F_EXISTS(body) body
+#define IF_CV_64F_EXISTS(body) body
+#define IF_CV_USRTYPE1_EXISTS(body)
+#define IF_CV_USRTYPE2_EXISTS(body)
+#define IF_CV_USRTYPE3_EXISTS(body)
+#define IF_CV_USRTYPE4_EXISTS(body)
+#define IF_CV_USRTYPE5_EXISTS(body)
+#define IF_CV_USRTYPE6_EXISTS(body)
+
 #define CV_8U   0
 #define CV_8U_DEPTH_BITS_LOG2  3
 #define CV_8U_DEPTH_BYTES_LOG2 0

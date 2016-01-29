@@ -735,36 +735,41 @@ typedef void (*AccProdFunc)(const uchar*, const uchar*, uchar*, const uchar*, in
 typedef void (*AccWFunc)(const uchar*, uchar*, const uchar*, int, int, double);
 
 static AccFunc accTab[] =
-{
-    (AccFunc)acc_8u32f, (AccFunc)acc_8u64f,
-    (AccFunc)acc_16u32f, (AccFunc)acc_16u64f,
-    (AccFunc)acc_32f, (AccFunc)acc_32f64f,
-    (AccFunc)acc_64f
-};
+    TYPE_TAB_ORDER( \
+                   (AccFunc)acc_8u32f, (AccFunc)acc_8u64f, \
+                   (AccFunc)acc_16u32f,(AccFunc)acc_16u64f, \
+                   0,                  0, \
+                   0,                  (AccFunc)acc_32f, \
+                   (AccFunc)acc_32f64f,(AccFunc)acc_64f, \
+                   0,0,0,0,0,0);
+;
 
 static AccFunc accSqrTab[] =
-{
-    (AccFunc)accSqr_8u32f, (AccFunc)accSqr_8u64f,
-    (AccFunc)accSqr_16u32f, (AccFunc)accSqr_16u64f,
-    (AccFunc)accSqr_32f, (AccFunc)accSqr_32f64f,
-    (AccFunc)accSqr_64f
-};
+    TYPE_TAB_ORDER( \
+                   (AccFunc)accSqr_8u32f,  (AccFunc)accSqr_8u64f, \
+                   (AccFunc)accSqr_16u32f, (AccFunc)accSqr_16u64f, \
+                   0,                      0, \
+                   0,                      (AccFunc)accSqr_32f,
+                   (AccFunc)accSqr_32f64f, (AccFunc)accSqr_64f, \
+                   0,0,0,0,0,0);
 
 static AccProdFunc accProdTab[] =
-{
-    (AccProdFunc)accProd_8u32f, (AccProdFunc)accProd_8u64f,
-    (AccProdFunc)accProd_16u32f, (AccProdFunc)accProd_16u64f,
-    (AccProdFunc)accProd_32f, (AccProdFunc)accProd_32f64f,
-    (AccProdFunc)accProd_64f
-};
+    TYPE_TAB_ORDER( \
+                   (AccProdFunc)accProd_8u32f,  (AccProdFunc)accProd_8u64f, \
+                   (AccProdFunc)accProd_16u32f, (AccProdFunc)accProd_16u64f, \
+                   0,                           0, \
+                   0,                           (AccProdFunc)accProd_32f, \
+                   (AccProdFunc)accProd_32f64f, (AccProdFunc)accProd_64f, \
+                   0,0,0,0,0,0);
 
 static AccWFunc accWTab[] =
-{
-    (AccWFunc)accW_8u32f, (AccWFunc)accW_8u64f,
-    (AccWFunc)accW_16u32f, (AccWFunc)accW_16u64f,
-    (AccWFunc)accW_32f, (AccWFunc)accW_32f64f,
-    (AccWFunc)accW_64f
-};
+    TYPE_TAB_ORDER( \
+                   (AccWFunc)accW_8u32f,  (AccWFunc)accW_8u64f,
+                   (AccWFunc)accW_16u32f, (AccWFunc)accW_16u64f, \
+                   0,                     0, \
+                   0,                     (AccWFunc)accW_32f, \
+                   (AccWFunc)accW_32f64f, (AccWFunc)accW_64f, \
+                   0,0,0,0,0,0);
 
 inline int getAccTabIdx(int sdepth, int ddepth)
 {

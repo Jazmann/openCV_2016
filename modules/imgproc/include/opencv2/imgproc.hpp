@@ -3685,6 +3685,8 @@ border of the containing Mat element.
 @param points Input 2D point set, stored in std::vector\<\> or Mat
  */
 CV_EXPORTS_W RotatedRect fitEllipse( InputArray points );
+CV_EXPORTS_W RotatedRect fitEllipseAMS( InputArray points );
+CV_EXPORTS_W RotatedRect fitEllipseDirect( InputArray points );
 
 /** @brief Fits a line to a 2D or 3D point set.
 

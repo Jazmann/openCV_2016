@@ -30,7 +30,7 @@ static void help()
         "./fitellipse [image_name -- Default ../data/stuff.jpg]\n" << endl;
 }
 
-int sliderPos = 70;
+int sliderPos = 56;
 
 Mat image;
 
@@ -76,7 +76,8 @@ void processImage(int /*h*/, void*)
     findContours(bimage, contours, RETR_LIST, CHAIN_APPROX_NONE);
 
     Mat cimage = Mat::zeros(bimage.size(), CV_8UC3);
-
+    
+    fprintf (stdout, "dataSets = {};\n");
     for(size_t i = 0; i < contours.size(); i++)
     {
         size_t count = contours[i].size();
@@ -85,14 +86,47 @@ void processImage(int /*h*/, void*)
 
         Mat pointsf;
         Mat(contours[i]).convertTo(pointsf, CV_32F);
-        RotatedRect box = fitEllipse(pointsf);
+                RotatedRect box = fitEllipse(pointsf);
+        RotatedRect boxAMS = fitEllipseAMS(pointsf);
+        RotatedRect boxDirect = fitEllipseDirect(pointsf);
+        
 
         if( MAX(box.size.width, box.size.height) > MIN(box.size.width, box.size.height)*30 )
             continue;
+        
+        if (true) { // fabs(box.angle-boxDirect.angle)>3
+            fprintf (stdout, "(*-------------------------------------------------------*)\n");
+            fprintf (stdout, "(*contour %zu of %lu *)\n", i, contours.size());
+            fprintf (stdout, "AppendTo[dataSets, %lu ];\n", i);
+            fprintf (stdout, "(*Angle Wrong : %f - %f  = %f *)\n", box.angle, boxDirect.angle, box.angle-boxDirect.angle);
+            const Point* ptsi = pointsf.ptr<Point>();
+            const Point2f* ptsf = pointsf.ptr<Point2f>();
+            fprintf (stdout, "points%zuCpp={\n",i);
+            for( int j = 0; j < pointsf.checkVector(2); j++ )
+            {
+                Point2f p = (pointsf.depth() == CV_32F) ? ptsf[j] : Point2f((float)ptsi[j].x, (float)ptsi[j].y);
+                fprintf (stdout, "{ %f, %f }",p.x, p.y);
+                if (j<pointsf.checkVector(2)-1){fprintf (stdout, ",");};
+                if (fmod(pointsf.checkVector(2),5.0)==0){fprintf (stdout, "\n");};
+            }
+            fprintf (stdout, "};\n");
+            fprintf (stdout, "ellipse%zuCpp={ {%1.14e, %1.14e},{ %1.14e, %1.14e}, %1.14e };\n",i,box.center.x, box.center.y, box.size.width/2.0, box.size.height/2.0, box.angle);
+            fprintf (stdout, "ellipseAMS%zuCpp={ {%1.14e, %1.14e},{ %1.14e, %1.14e}, %1.14e };\n",i,boxAMS.center.x, boxAMS.center.y, boxAMS.size.width/2.0, boxAMS.size.height/2.0, boxAMS.angle);
+            fprintf (stdout, "ellipseDirect%zuCpp={ {%1.14e, %1.14e},{ %1.14e, %1.14e}, %1.14e };\n",i,boxDirect.center.x, boxDirect.center.y, boxDirect.size.width/2.0, boxDirect.size.height/2.0, boxDirect.angle);
+            fprintf (stdout, "(*-------------------------------------------------------*)\n");
+        }
+        
         drawContours(cimage, contours, (int)i, Scalar::all(255), 1, 8);
 
-        ellipse(cimage, box, Scalar(0,0,255), 1, LINE_AA);
+        ellipse(cimage, box, Scalar(0,255,255), 1, LINE_AA);
         ellipse(cimage, box.center, box.size*0.5f, box.angle, 0, 360, Scalar(0,255,255), 1, LINE_AA);
+        
+        ellipse(cimage, boxAMS, Scalar(0,0,255), 1, LINE_AA);
+        ellipse(cimage, boxAMS.center, boxAMS.size*0.5f, boxAMS.angle, 0, 360, Scalar(0,255,255), 1, LINE_AA);
+        
+        ellipse(cimage, boxDirect, Scalar(255,0,255), 1, LINE_AA);
+        ellipse(cimage, boxDirect.center, boxDirect.size*0.5f, boxDirect.angle, 0, 360, Scalar(255,0,255), 1, LINE_AA);
+        
         Point2f vtx[4];
         box.points(vtx);
         for( int j = 0; j < 4; j++ )

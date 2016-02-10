@@ -39,6 +39,8 @@
 //
 //M*/
 #include "precomp.hpp"
+#include "/Users/jaspershemilt/Developer/OpenCV_Dev/opencv-master/opencv/modules/core/include/opencv2/core/eigensystem.hpp"
+// #include "/Users/jaspershemilt/Developer/OpenCV_Dev/opencv-master/opencv/modules/calib3d/src/dls.h"
 
 namespace cv
 {
@@ -443,6 +445,536 @@ cv::RotatedRect cv::fitEllipse( InputArray _points )
     if( box.angle > 360 )
         box.angle -= 360;
 
+    return box;
+}
+
+cv::RotatedRect cv::fitEllipseAMS( InputArray _points )
+{
+    Mat points = _points.getMat();
+    int i, n = points.checkVector(2);
+    int depth = points.depth();
+    CV_Assert( n >= 0 && (depth == CV_32F || depth == CV_32S));
+    
+    RotatedRect box;
+    
+    if( n < 5 )
+        CV_Error( CV_StsBadSize, "There should be at least 5 points to fit the ellipse" );
+    
+    // New fitellipse algorithm, contributed by Dr. Daniel Weiss
+    Point2f c(0,0);
+    
+    bool is_float = depth == CV_32F;
+    const Point* ptsi = points.ptr<Point>();
+    const Point2f* ptsf = points.ptr<Point2f>();
+    
+    
+    AutoBuffer<double> _Ad(n*6);
+    double *Ad = _Ad;
+    Mat A( n, 6, CV_64F, Ad );
+    
+    AutoBuffer<double> _DMd(6*6);
+    double *DMd = _DMd;
+    Mat DM( 6, 6, CV_64F, DMd );
+    
+    AutoBuffer<double> _Md(5*5);
+    double  *Md = _Md;
+    Mat M( 5, 5, CV_64F, Md );
+    
+    AutoBuffer<double> _TMd(3*3);
+    double *TMd = _TMd;
+    Mat TM( 3, 3, CV_64F, TMd );
+    
+    AutoBuffer<double> _Qd(3*3);
+    double *Qd = _Qd;
+    Mat Q( 3, 3, CV_64F, Qd );
+    
+//    AutoBuffer<double> _eValD(5*5);
+//    double *eValD = _eValD;
+//    Mat eVal( 5, 5, CV_64F, eValD );
+//    
+//    AutoBuffer<double> _eVecD(5*5);
+//    double *eVecD = _eVecD;
+//    Mat eVec( 5, 5, CV_64F, eVecD );
+    
+    AutoBuffer<double> _pVecD(5*1);
+    double *pVecD = _pVecD;
+    Mat pVec( 5, 1, CV_64F, pVecD );
+    
+    AutoBuffer<double> _coeffsD(6*1);
+    double *coeffsD = _coeffsD;
+    Mat coeffs( 6, 1, CV_64F, coeffsD );
+    
+    double    x0, y0, a, b, theta;
+    
+// #define debugging(e) e
+ #define debugging(e)
+    
+    
+//    debugging(fprintf (stdout, "pointsCpp={\n");)
+    for( i = 0; i < n; i++ )
+    {
+        Point2f p = is_float ? ptsf[i] : Point2f((float)ptsi[i].x, (float)ptsi[i].y);
+//        debugging(fprintf (stdout, "{ %f, %f }",p.x, p.y);)
+//        debugging( if (i<n-1){fprintf (stdout, ",\n");}; )
+        c += p;
+    }
+//    debugging(fprintf (stdout, "};\n");)
+    debugging( fprintf (stdout, "cTotal = { %1.14e, %1.14e };\n",c.x,c.y); )
+    c.x /= (double)n;
+    c.y /= (double)n;
+    debugging( fprintf (stdout, "cCpp = { %1.14e, %1.14e };\n",c.x,c.y); )
+    
+    debugging( fprintf (stdout, "DMatCpp ={\n"); )
+    for( i = 0; i < n; i++ )
+    {
+        Point2f p = is_float ? ptsf[i] : Point2f((float)ptsi[i].x, (float)ptsi[i].y);
+        p -= c;
+        
+        Ad[i*6]   = (double)p.x * p.x;
+        Ad[i*6+1] = (double)(p.x)*(p.y);
+        Ad[i*6+2] = (double)p.y * p.y;
+        Ad[i*6+3] = (double)p.x;
+        Ad[i*6+4] = (double)p.y;
+        Ad[i*6+5] = 1.0;
+        debugging( fprintf (stdout, "     { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e }",Ad[i*6+0], Ad[i*6+1], Ad[i*6+2], Ad[i*6+3], Ad[i*6+4], Ad[i*6+5]); )
+        debugging( if (i<n-1){fprintf (stdout, ",\n");}; )
+    }
+    debugging( fprintf (stdout, "};\n"); )
+    cv::mulTransposed( A, DM, true, noArray(), 1.0, -1 );
+    DM = DM/n;
+    
+    debugging( fprintf (stdout, "DMCpp ={{ %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[0*6+0], DMd[0*6+1], DMd[0*6+2], DMd[0*6+3], DMd[0*6+4], DMd[0*6+5]); )
+    debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[1*6+0], DMd[1*6+1], DMd[1*6+2], DMd[1*6+3], DMd[1*6+4], DMd[1*6+5]); )
+    debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[2*6+0], DMd[2*6+1], DMd[2*6+2], DMd[2*6+3], DMd[2*6+4], DMd[2*6+5]); )
+    debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[3*6+0], DMd[3*6+1], DMd[3*6+2], DMd[3*6+3], DMd[3*6+4], DMd[3*6+5]); )
+    debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[4*6+0], DMd[4*6+1], DMd[4*6+2], DMd[4*6+3], DMd[4*6+4], DMd[4*6+5]); )
+    debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e }};\n",DMd[5*6+0], DMd[5*6+1], DMd[5*6+2], DMd[5*6+3], DMd[5*6+4], DMd[5*6+5]); )
+
+    
+    Md[0*5+0]=((-DMd[0*6+0] + DMd[0*6+2] + DMd[0*6+5]*DMd[0*6+5])*(DMd[1*6+5]*DMd[1*6+5]) + (-2*DMd[0*6+1]*DMd[1*6+5] + DMd[0*6+5]*(DMd[0*6+0] - (DMd[0*6+5]*DMd[0*6+5]) + (DMd[1*6+5]*DMd[1*6+5])))*DMd[2*6+5] + (DMd[0*6+0] - (DMd[0*6+5]*DMd[0*6+5]))*(DMd[2*6+5]*DMd[2*6+5]))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[0*5+1]=((DMd[1*6+5]*DMd[1*6+5])*(-DMd[0*6+1] + DMd[1*6+2] + DMd[0*6+5]*DMd[1*6+5]) + (DMd[0*6+1]*DMd[0*6+5] - ((DMd[0*6+5]*DMd[0*6+5]) + 2*DMd[1*6+1])*DMd[1*6+5] + (DMd[1*6+5]*DMd[1*6+5]*DMd[1*6+5]))*DMd[2*6+5] + (DMd[0*6+1] - DMd[0*6+5]*DMd[1*6+5])*(DMd[2*6+5]*DMd[2*6+5]))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[0*5+2]=(-2*DMd[1*6+2]*DMd[1*6+5]*DMd[2*6+5] - DMd[0*6+5]*(DMd[2*6+5]*DMd[2*6+5])*(DMd[0*6+5] + DMd[2*6+5]) + DMd[0*6+2]*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[2*6+5]*(DMd[0*6+5] + DMd[2*6+5])) + (DMd[1*6+5]*DMd[1*6+5])*(DMd[2*6+2] + DMd[2*6+5]*(DMd[0*6+5] + DMd[2*6+5])))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[0*5+3]=(DMd[1*6+5]*(DMd[1*6+5]*DMd[2*6+3] - 2*DMd[1*6+3]*DMd[2*6+5]) + DMd[0*6+3]*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[2*6+5]*(DMd[0*6+5] + DMd[2*6+5])))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[0*5+4]=(DMd[1*6+5]*(DMd[1*6+5]*DMd[2*6+4] - 2*DMd[1*6+4]*DMd[2*6+5]) + DMd[0*6+4]*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[2*6+5]*(DMd[0*6+5] + DMd[2*6+5])))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[1*5+0]=(-(DMd[0*6+2]*DMd[0*6+5]*DMd[1*6+5]) + (2*DMd[0*6+1]*DMd[0*6+5] - DMd[0*6+0]*DMd[1*6+5])*DMd[2*6+5])/(2.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[1*5+1]=(-(DMd[0*6+1]*DMd[1*6+5]*DMd[2*6+5]) + DMd[0*6+5]*(-(DMd[1*6+2]*DMd[1*6+5]) + 2*DMd[1*6+1]*DMd[2*6+5]))/(2.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[1*5+2]=(-(DMd[0*6+2]*DMd[1*6+5]*DMd[2*6+5]) + DMd[0*6+5]*(-(DMd[1*6+5]*DMd[2*6+2]) + 2*DMd[1*6+2]*DMd[2*6+5]))/(2.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[1*5+3]=(-(DMd[0*6+3]*DMd[1*6+5]*DMd[2*6+5]) + DMd[0*6+5]*(-(DMd[1*6+5]*DMd[2*6+3]) + 2*DMd[1*6+3]*DMd[2*6+5]))/(2.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[1*5+4]=(-(DMd[0*6+4]*DMd[1*6+5]*DMd[2*6+5]) + DMd[0*6+5]*(-(DMd[1*6+5]*DMd[2*6+4]) + 2*DMd[1*6+4]*DMd[2*6+5]))/(2.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[2*5+0]=(-2*DMd[0*6+1]*DMd[0*6+5]*DMd[1*6+5] + (DMd[0*6+0] + (DMd[0*6+5]*DMd[0*6+5]))*(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*(-(DMd[0*6+5]*DMd[0*6+5]) + (DMd[1*6+5]*DMd[1*6+5]))*DMd[2*6+5] - (DMd[0*6+5]*DMd[0*6+5])*(DMd[2*6+5]*DMd[2*6+5]) + DMd[0*6+2]*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*(DMd[0*6+5] + DMd[2*6+5])))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[2*5+1]=((DMd[0*6+5]*DMd[0*6+5])*(DMd[1*6+2] - DMd[1*6+5]*DMd[2*6+5]) + (DMd[1*6+5]*DMd[1*6+5])*(DMd[0*6+1] - DMd[1*6+2] + DMd[1*6+5]*DMd[2*6+5]) + DMd[0*6+5]*(DMd[1*6+2]*DMd[2*6+5] + DMd[1*6+5]*(-2*DMd[1*6+1] + (DMd[1*6+5]*DMd[1*6+5]) - (DMd[2*6+5]*DMd[2*6+5]))))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[2*5+2]=((DMd[0*6+5]*DMd[0*6+5])*(DMd[2*6+2] - (DMd[2*6+5]*DMd[2*6+5])) + (DMd[1*6+5]*DMd[1*6+5])*(DMd[0*6+2] - DMd[2*6+2] + (DMd[2*6+5]*DMd[2*6+5])) + DMd[0*6+5]*(-2*DMd[1*6+2]*DMd[1*6+5] + DMd[2*6+5]*((DMd[1*6+5]*DMd[1*6+5]) + DMd[2*6+2] - (DMd[2*6+5]*DMd[2*6+5]))))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[2*5+3]=((DMd[1*6+5]*DMd[1*6+5])*(DMd[0*6+3] - DMd[2*6+3]) + (DMd[0*6+5]*DMd[0*6+5])*DMd[2*6+3] + DMd[0*6+5]*(-2*DMd[1*6+3]*DMd[1*6+5] + DMd[2*6+3]*DMd[2*6+5]))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[2*5+4]=((DMd[1*6+5]*DMd[1*6+5])*(DMd[0*6+4] - DMd[2*6+4]) + (DMd[0*6+5]*DMd[0*6+5])*DMd[2*6+4] + DMd[0*6+5]*(-2*DMd[1*6+4]*DMd[1*6+5] + DMd[2*6+4]*DMd[2*6+5]))/(4.*(DMd[0*6+5] + DMd[2*6+5])*(-(DMd[1*6+5]*DMd[1*6+5]) + DMd[0*6+5]*DMd[2*6+5]));
+    Md[3*5+0]=DMd[0*6+3];
+    Md[3*5+1]=DMd[1*6+3];
+    Md[3*5+2]=DMd[2*6+3];
+    Md[3*5+3]=DMd[3*6+3];
+    Md[3*5+4]=DMd[3*6+4];
+    Md[4*5+0]=DMd[0*6+4];
+    Md[4*5+1]=DMd[1*6+4];
+    Md[4*5+2]=DMd[2*6+4];
+    Md[4*5+3]=DMd[3*6+4];
+    Md[4*5+4]=DMd[4*6+4];
+    
+
+    
+debugging( fprintf (stdout, "MCpp = {{ %1.14e, %1.14e, %1.14e, %1.14e, %1.14e  }, \n",Md[0*5+0], Md[0*5+1], Md[0*5+2], Md[0*5+3], Md[0*5+4]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e  }, \n",Md[1*5+0], Md[1*5+1], Md[1*5+2], Md[1*5+3], Md[1*5+4]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e  }, \n",Md[2*5+0], Md[2*5+1], Md[2*5+2], Md[2*5+3], Md[2*5+4]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e  }, \n",Md[3*5+0], Md[3*5+1], Md[3*5+2], Md[3*5+3], Md[3*5+4]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e  }};\n",Md[4*5+0], Md[4*5+1], Md[4*5+2], Md[4*5+3], Md[4*5+4]); )
+    if (fabs(cv::determinant(M)) > 1.0e-10) {
+        EigenvalueDecomposition es(M);
+        Mat eVal = es.eigenvalues();
+        Mat eVec = es.eigenvectors();
+        
+debugging( fprintf (stdout, "eValCpp={  %1.14e, %1.14e, %1.14e, %1.14e, %1.14e };\n",eVal.at<double>(0,0), eVal.at<double>(0,1), eVal.at<double>(0,2), eVal.at<double>(0,3), eVal.at<double>(0,4)); )
+debugging( fprintf (stdout, "eVecCpp={{ %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",eVec.at<double>(0,0), eVec.at<double>(0,1), eVec.at<double>(0,2), eVec.at<double>(0,3), eVec.at<double>(0,4)); )
+debugging( fprintf (stdout, "         { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",eVec.at<double>(1,0), eVec.at<double>(1,1), eVec.at<double>(1,2), eVec.at<double>(1,3), eVec.at<double>(1,4)); )
+debugging( fprintf (stdout, "         { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",eVec.at<double>(2,0), eVec.at<double>(2,1), eVec.at<double>(2,2), eVec.at<double>(2,3), eVec.at<double>(2,4)); )
+debugging( fprintf (stdout, "         { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",eVec.at<double>(3,0), eVec.at<double>(3,1), eVec.at<double>(3,2), eVec.at<double>(3,3), eVec.at<double>(3,4)); )
+debugging( fprintf (stdout, "         { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e }};\n",eVec.at<double>(4,0), eVec.at<double>(4,1), eVec.at<double>(4,2), eVec.at<double>(4,3), eVec.at<double>(4,4)); )
+    
+    // Select the eigen vector {a,b,c,d,e} which has the lowest eigenvalue
+        int minpos = 0;
+        double normi, normEVali, normMinpos, normEValMinpos;
+        normMinpos = sqrt(eVec.at<double>(0,minpos)*eVec.at<double>(0,minpos) + eVec.at<double>(1,minpos)*eVec.at<double>(1,minpos) + \
+                          eVec.at<double>(2,minpos)*eVec.at<double>(2,minpos) + eVec.at<double>(3,minpos)*eVec.at<double>(3,minpos) + \
+                          eVec.at<double>(4,minpos)*eVec.at<double>(4,minpos) );
+        normEValMinpos = eVal.at<double>(0,minpos) * normMinpos;
+        for (i=1; i<5; i++) {
+            normi = sqrt(eVec.at<double>(0,i)*eVec.at<double>(0,i) + eVec.at<double>(1,i)*eVec.at<double>(1,i) + \
+                         eVec.at<double>(2,i)*eVec.at<double>(2,i) + eVec.at<double>(3,i)*eVec.at<double>(3,i) + \
+                         eVec.at<double>(4,i)*eVec.at<double>(4,i) );
+            normEVali = eVal.at<double>(0,i) * normi;
+            if (normEVali < normEValMinpos) {
+                minpos = i;
+                normMinpos=normi;
+                normEValMinpos=normEVali;
+            }
+        };
+debugging( fprintf (stdout, " pos = %d;\n",minpos); )
+
+        pVecD[0] =eVec.at<double>(0,minpos) / normMinpos;
+        pVecD[1] =eVec.at<double>(1,minpos) / normMinpos;
+        pVecD[2] =eVec.at<double>(2,minpos) / normMinpos;
+        pVecD[3] =eVec.at<double>(3,minpos) / normMinpos;
+        pVecD[4] =eVec.at<double>(4,minpos) / normMinpos;
+        
+debugging( fprintf (stdout, " pVecCpp = { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e };\n",pVecD[0],pVecD[1],pVecD[2],pVecD[3],pVecD[4],pVecD[5]); )
+
+        coeffsD[0]=pVecD[0];
+        coeffsD[1]=pVecD[1];
+        coeffsD[2]=pVecD[2];
+        coeffsD[3]=pVecD[3];
+        coeffsD[4]=pVecD[4];
+        coeffsD[5]=-pVecD[0]*DMd[0*6+5]-pVecD[1]*DMd[1*6+5]-coeffsD[2]*DMd[2*6+5];
+    
+debugging( fprintf (stdout, " coeffsCpp = { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e };\n",coeffsD[0],coeffsD[1],coeffsD[2],coeffsD[3],coeffsD[4],coeffsD[5]); )
+
+        
+//    // Adjust to the center c
+//    double A4 = coeffsD[3] - 2.0 * coeffsD[0] * c.x - coeffsD[1] * c.y;
+//    double A5 = coeffsD[4] - 2.0 * coeffsD[2] * c.y - coeffsD[1] * c.x;
+//    double A6 = coeffsD[5] + coeffsD[0] * c.x * c.x  + coeffsD[2] * c.y * c.y + coeffsD[1] * c.x * c.y - coeffsD[3] * c.x - coeffsD[4] * c.y;
+//    
+//    // Normalise the coefficients
+//    double norm =std::sqrt(coeffsD[0]*coeffsD[0] + coeffsD[1]*coeffsD[1] + coeffsD[2]*coeffsD[2] + A4*A4 + A5*A5 + A6*A6);
+//    
+//    coeffsD[0]=coeffsD[0]/norm;
+//    coeffsD[1]=coeffsD[1]/norm;
+//    coeffsD[2]=coeffsD[2]/norm;
+//    coeffsD[3]=A4/norm;
+//    coeffsD[4]=A5/norm;
+//    coeffsD[5]=A6/norm;
+        
+debugging( fprintf (stdout, " coeffsACpp = { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e };\n",coeffsD[0],coeffsD[1],coeffsD[2],coeffsD[3],coeffsD[4],coeffsD[5]); )
+
+    // Check that an elliptical solution has been found. AMS sometimes produces Parabolic solutions.
+    bool is_ellipse=(coeffsD[0] < 0 && coeffsD[2] < (coeffsD[1]*coeffsD[1])/(4.*coeffsD[0]) &&
+     coeffsD[5] > (-(coeffsD[2]*(coeffsD[3]*coeffsD[3])) + coeffsD[1]*coeffsD[3]*coeffsD[4] - coeffsD[0]*(coeffsD[4]*coeffsD[4]))/
+     ((coeffsD[1]*coeffsD[1]) - 4*coeffsD[0]*coeffsD[2])) ||
+    (coeffsD[0] > 0 && coeffsD[2] > (coeffsD[1]*coeffsD[1])/(4.*coeffsD[0]) &&
+     coeffsD[5] < (-(coeffsD[2]*(coeffsD[3]*coeffsD[3])) + coeffsD[1]*coeffsD[3]*coeffsD[4] - coeffsD[0]*(coeffsD[4]*coeffsD[4]))/
+     ((coeffsD[1]*coeffsD[1]) - 4*coeffsD[0]*coeffsD[2]));
+    if (is_ellipse) {
+        
+        double    u1 = pVecD[2]*pVecD[3]*pVecD[3] - pVecD[1]*pVecD[3]*pVecD[4] + pVecD[0]*pVecD[4]*pVecD[4] + pVecD[1]*pVecD[1]*coeffsD[5];
+        double    u2 = pVecD[0]*pVecD[2]*coeffsD[5];
+        double    l1 = sqrt(pVecD[1]*pVecD[1] + (pVecD[0] - pVecD[2])*(pVecD[0] - pVecD[2]));
+        double    l2 = pVecD[0] + pVecD[2];
+        double    l3 = pVecD[1]*pVecD[1] - 4.0*pVecD[0]*pVecD[2];
+        double    p1 = 2.0*pVecD[2]*pVecD[3] - pVecD[1]*pVecD[4];
+        double    p2 = 2.0*pVecD[0]*pVecD[4]-(pVecD[1]*pVecD[3]);
+        
+        debugging( fprintf (stdout, "interCpp={ %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e };\n",u1, u2, l1, l2, l3, p1,p2); )
+        
+        x0 = p1/l3 + c.x;
+        y0 = p2/l3 + c.y;
+        a = sqrt(2)*sqrt((u1 - 4.0*u2)/((l1 - l2)*l3));
+        b = sqrt(2)*sqrt(-1.0*((u1 - 4.0*u2)/((l1 + l2)*l3)));
+        if (pVecD[1] == 0) {
+            if (pVecD[0] < pVecD[2]) {
+                theta = 0;
+            } else {
+                theta = CV_PI/2.;
+            }
+        } else {
+            theta = CV_PI/2. + 0.5*std::atan2(pVecD[1], (pVecD[0] - pVecD[2]));
+        }
+        debugging( fprintf (stdout, "interCpp={ %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e };\n",u1, u2, l1, l2, l3, p1,p2); )
+        debugging( fprintf (stdout, "ellipseCpp={ {%1.14e, %1.14e},{ %1.14e, %1.14e}, %1.14e };\n",x0, y0, a, b, theta); )
+        
+//        x0 = (2*coeffsD[2]*coeffsD[3] - coeffsD[1]*coeffsD[4])/((coeffsD[1]*coeffsD[1]) - 4*coeffsD[0]*coeffsD[2]);
+//        y0 = (-(coeffsD[1]*coeffsD[3]) + 2*coeffsD[0]*coeffsD[4])/((coeffsD[1]*coeffsD[1]) - 4*coeffsD[0]*coeffsD[2]);
+//        a = sqrt(2)*sqrt((coeffsD[2]*(coeffsD[3]*coeffsD[3]) - coeffsD[1]*coeffsD[3]*coeffsD[4] + coeffsD[0]*(coeffsD[4]*coeffsD[4]) + (coeffsD[1]*coeffsD[1])*coeffsD[5] - 4*coeffsD[0]*coeffsD[2]*coeffsD[5])/((-coeffsD[0] + sqrt((coeffsD[1]*coeffsD[1]) + (coeffsD[0] - coeffsD[2])*(coeffsD[0] - coeffsD[2])) - coeffsD[2])*((coeffsD[1]*coeffsD[1]) - 4*coeffsD[0]*coeffsD[2])));
+//        b = sqrt(2)*sqrt((coeffsD[2]*(coeffsD[3]*coeffsD[3]) - coeffsD[1]*coeffsD[3]*coeffsD[4] + coeffsD[0]*(coeffsD[4]*coeffsD[4]) + (coeffsD[1]*coeffsD[1])*coeffsD[5] - 4*coeffsD[0]*coeffsD[2]*coeffsD[5])/((coeffsD[0] + sqrt((coeffsD[1]*coeffsD[1]) + (coeffsD[0] - coeffsD[2])*(coeffsD[0] - coeffsD[2])) + coeffsD[2])*(-(coeffsD[1]*coeffsD[1]) + 4*coeffsD[0]*coeffsD[2])));
+//        if (coeffsD[1] == 0) {
+//            if (coeffsD[0] < coeffsD[2]) {
+//                theta = 0;
+//            } else {
+//                theta = CV_PI/2.;
+//            }
+//        } else {
+//            if (coeffsD[0] < coeffsD[2]) {
+//                theta = 0.5*std::atan2(coeffsD[1], (coeffsD[0] - coeffsD[2]));
+//            } else {
+//                theta = CV_PI/2. + 0.5*std::atan2(coeffsD[1], (coeffsD[0] - coeffsD[2]));
+//            }
+//        }
+        
+        box.center.x = x0; // +c.x;
+        box.center.y = y0; // +c.y;
+        box.size.width = 2.0*a;
+        box.size.height = 2.0*b;
+        if( box.size.width > box.size.height )
+        {
+            float tmp;
+            CV_SWAP( box.size.width, box.size.height, tmp );
+            box.angle = (float)(90 + theta*180/CV_PI);
+        } else {
+            box.angle = (float)(fmod(theta*180/CV_PI,180.0));
+        };
+        
+
+    } else {
+        debugging( fprintf (stdout, "Not an Ellipse USING : cv::fitEllipse( points );\n"); )
+        box = cv::fitEllipse( points );
+
+    }    } else {
+        //        box.center.x = c.x;
+        //        box.center.y = c.y;
+        //        box.size.width = 1.0;
+        //        box.size.height = 1.0;
+        //        box.angle =0.0;
+debugging( fprintf (stdout, "USING : cv::fitEllipse( points );\n"); )
+        box = cv::fitEllipse( points );
+    }
+
+    return box;
+}
+
+cv::RotatedRect cv::fitEllipseDirect( InputArray _points )
+{
+    Mat points = _points.getMat();
+    int i, n = points.checkVector(2);
+    int depth = points.depth();
+    CV_Assert( n >= 0 && (depth == CV_32F || depth == CV_32S));
+    
+    RotatedRect box;
+    
+    if( n < 5 )
+        CV_Error( CV_StsBadSize, "There should be at least 5 points to fit the ellipse" );
+    
+    // New fitellipse algorithm, contributed by Dr. Daniel Weiss
+    Point2f c(0,0);
+    
+    bool is_float = depth == CV_32F;
+    const Point* ptsi = points.ptr<Point>();
+    const Point2f* ptsf = points.ptr<Point2f>();
+    
+    AutoBuffer<double> _Ad(n*6);
+    double *Ad = _Ad;
+    Mat A( n, 6, CV_64F, Ad );
+    
+    AutoBuffer<double> _DMd(6*6);
+    double *DMd = _DMd;
+    Mat DM( 6, 6, CV_64F, DMd );
+    
+    AutoBuffer<double> _Md(3*3);
+    double  *Md = _Md;
+    Mat M( 3, 3, CV_64F, Md );
+    
+    AutoBuffer<double> _TMd(3*3);
+    double *TMd = _TMd;
+    Mat TM( 3, 3, CV_64F, TMd );
+    
+    AutoBuffer<double> _Qd(3*3);
+    double *Qd = _Qd;
+    Mat Q( 3, 3, CV_64F, Qd );
+    
+    double Ts;
+    
+    AutoBuffer<double> _pVecD(3*1);
+    double *pVecD = _pVecD;
+    Mat pVec( 3, 1, CV_64F, pVecD );
+    
+    AutoBuffer<double> _coeffsD(6*1);
+    double *coeffsD = _coeffsD;
+    Mat coeffs( 6, 1, CV_64F, coeffsD );
+ 
+    
+    double    x0, y0, a, b, theta;
+    
+// #define debugging(e) e
+ #define debugging(e)
+
+    
+debugging(fprintf (stdout, "pointsCpp={\n");)
+    for( i = 0; i < n; i++ )
+    {
+        Point2f p = is_float ? ptsf[i] : Point2f((float)ptsi[i].x, (float)ptsi[i].y);
+debugging(fprintf (stdout, "{ %f, %f }",p.x, p.y);)
+debugging( if (i<n-1){fprintf (stdout, ",\n");}; )
+        c += p;
+    }
+    debugging(fprintf (stdout, "};\n");)
+    debugging( fprintf (stdout, "cTotal = { %1.14e, %1.14e };\n",c.x,c.y); )
+    c.x /= (double)n;
+    c.y /= (double)n;
+    debugging( fprintf (stdout, "cCpp = { %1.14e, %1.14e };\n",c.x,c.y); )
+    
+debugging( fprintf (stdout, "ACpp ={\n"); )
+    for( i = 0; i < n; i++ )
+    {
+        Point2f p = is_float ? ptsf[i] : Point2f((float)ptsi[i].x, (float)ptsi[i].y);
+        p -= c;
+        
+        Ad[i*6]   = (double)p.x * p.x;
+        Ad[i*6+1] = (double)(p.x)*(p.y);
+        Ad[i*6+2] = (double)p.y * p.y;
+        Ad[i*6+3] = (double)p.x;
+        Ad[i*6+4] = (double)p.y;
+        Ad[i*6+5] = 1.0;
+        debugging( fprintf (stdout, "     { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e }",Ad[i*6+0], Ad[i*6+1], Ad[i*6+2], Ad[i*6+3], Ad[i*6+4], Ad[i*6+5]); )
+        debugging( if (i<n-1){fprintf (stdout, ",\n");}; )
+    }
+debugging( fprintf (stdout, "};\n"); )
+    cv::mulTransposed( A, DM, true, noArray(), 1.0, -1 );
+    DM = DM/n;
+    
+debugging( fprintf (stdout, "DMCpp ={{ %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[0*6+0], DMd[0*6+1], DMd[0*6+2], DMd[0*6+3], DMd[0*6+4], DMd[0*6+5]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[1*6+0], DMd[1*6+1], DMd[1*6+2], DMd[1*6+3], DMd[1*6+4], DMd[1*6+5]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[2*6+0], DMd[2*6+1], DMd[2*6+2], DMd[2*6+3], DMd[2*6+4], DMd[2*6+5]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[3*6+0], DMd[3*6+1], DMd[3*6+2], DMd[3*6+3], DMd[3*6+4], DMd[3*6+5]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[4*6+0], DMd[4*6+1], DMd[4*6+2], DMd[4*6+3], DMd[4*6+4], DMd[4*6+5]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e }};\n",DMd[5*6+0], DMd[5*6+1], DMd[5*6+2], DMd[5*6+3], DMd[5*6+4], DMd[5*6+5]); )
+    
+    TMd[0*3+0] = DMd[0*6+5]*DMd[3*6+5]*DMd[4*6+4] - DMd[0*6+5]*DMd[3*6+4]*DMd[4*6+5] - DMd[0*6+4]*DMd[3*6+5]*DMd[5*6+4] + \
+                 DMd[0*6+3]*DMd[4*6+5]*DMd[5*6+4] + DMd[0*6+4]*DMd[3*6+4]*DMd[5*6+5] - DMd[0*6+3]*DMd[4*6+4]*DMd[5*6+5];
+    TMd[0*3+1] = DMd[1*6+5]*DMd[3*6+5]*DMd[4*6+4] - DMd[1*6+5]*DMd[3*6+4]*DMd[4*6+5] - DMd[1*6+4]*DMd[3*6+5]*DMd[5*6+4] + \
+                 DMd[1*6+3]*DMd[4*6+5]*DMd[5*6+4] + DMd[1*6+4]*DMd[3*6+4]*DMd[5*6+5] - DMd[1*6+3]*DMd[4*6+4]*DMd[5*6+5];
+    TMd[0*3+2] = DMd[2*6+5]*DMd[3*6+5]*DMd[4*6+4] - DMd[2*6+5]*DMd[3*6+4]*DMd[4*6+5] - DMd[2*6+4]*DMd[3*6+5]*DMd[5*6+4] + \
+                 DMd[2*6+3]*DMd[4*6+5]*DMd[5*6+4] + DMd[2*6+4]*DMd[3*6+4]*DMd[5*6+5] - DMd[2*6+3]*DMd[4*6+4]*DMd[5*6+5];
+    TMd[1*3+0] = DMd[0*6+5]*DMd[3*6+3]*DMd[4*6+5] - DMd[0*6+5]*DMd[3*6+5]*DMd[4*6+3] + DMd[0*6+4]*DMd[3*6+5]*DMd[5*6+3] - \
+                 DMd[0*6+3]*DMd[4*6+5]*DMd[5*6+3] - DMd[0*6+4]*DMd[3*6+3]*DMd[5*6+5] + DMd[0*6+3]*DMd[4*6+3]*DMd[5*6+5];
+    TMd[1*3+1] = DMd[1*6+5]*DMd[3*6+3]*DMd[4*6+5] - DMd[1*6+5]*DMd[3*6+5]*DMd[4*6+3] + DMd[1*6+4]*DMd[3*6+5]*DMd[5*6+3] - \
+                 DMd[1*6+3]*DMd[4*6+5]*DMd[5*6+3] - DMd[1*6+4]*DMd[3*6+3]*DMd[5*6+5] + DMd[1*6+3]*DMd[4*6+3]*DMd[5*6+5];
+    TMd[1*3+2] = DMd[2*6+5]*DMd[3*6+3]*DMd[4*6+5] - DMd[2*6+5]*DMd[3*6+5]*DMd[4*6+3] + DMd[2*6+4]*DMd[3*6+5]*DMd[5*6+3] - \
+                 DMd[2*6+3]*DMd[4*6+5]*DMd[5*6+3] - DMd[2*6+4]*DMd[3*6+3]*DMd[5*6+5] + DMd[2*6+3]*DMd[4*6+3]*DMd[5*6+5];
+    TMd[2*3+0] = DMd[0*6+5]*DMd[3*6+4]*DMd[4*6+3] - DMd[0*6+5]*DMd[3*6+3]*DMd[4*6+4] - DMd[0*6+4]*DMd[3*6+4]*DMd[5*6+3] + \
+                 DMd[0*6+3]*DMd[4*6+4]*DMd[5*6+3] + DMd[0*6+4]*DMd[3*6+3]*DMd[5*6+4] - DMd[0*6+3]*DMd[4*6+3]*DMd[5*6+4];
+    TMd[2*3+1] = DMd[1*6+5]*DMd[3*6+4]*DMd[4*6+3] - DMd[1*6+5]*DMd[3*6+3]*DMd[4*6+4] - DMd[1*6+4]*DMd[3*6+4]*DMd[5*6+3] + \
+                 DMd[1*6+3]*DMd[4*6+4]*DMd[5*6+3] + DMd[1*6+4]*DMd[3*6+3]*DMd[5*6+4] - DMd[1*6+3]*DMd[4*6+3]*DMd[5*6+4];
+    TMd[2*3+2] = DMd[2*6+5]*DMd[3*6+4]*DMd[4*6+3] - DMd[2*6+5]*DMd[3*6+3]*DMd[4*6+4] - DMd[2*6+4]*DMd[3*6+4]*DMd[5*6+3] + \
+                 DMd[2*6+3]*DMd[4*6+4]*DMd[5*6+3] + DMd[2*6+4]*DMd[3*6+3]*DMd[5*6+4] - DMd[2*6+3]*DMd[4*6+3]*DMd[5*6+4];
+    
+debugging( fprintf (stdout, "TMCpp ={{ %1.14e, %1.14e, %1.14e },\n",TMd[0*3+0], TMd[0*3+1], TMd[0*3+2]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e },\n",TMd[1*3+0], TMd[1*3+1], TMd[1*3+2]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e }};\n",TMd[2*3+0], TMd[2*3+1], TMd[2*3+2]); )
+    
+    Ts=(-(DMd[3*6+5]*DMd[4*6+4]*DMd[5*6+3]) + DMd[3*6+4]*DMd[4*6+5]*DMd[5*6+3] + DMd[3*6+5]*DMd[4*6+3]*DMd[5*6+4] -
+          DMd[3*6+3]*DMd[4*6+5]*DMd[5*6+4]  - DMd[3*6+4]*DMd[4*6+3]*DMd[5*6+5] + DMd[3*6+3]*DMd[4*6+4]*DMd[5*6+5]);
+//    if (fabs(Ts) < 1.0) {
+//             fprintf (stdout, "----------------------------------------------\n");
+//             fprintf (stdout, "Low Determinant\n");
+//             fprintf (stdout, "Ts = %f : abs( %e )\n",fabs(Ts),Ts);
+//             for( i = 0; i < n; i++ )
+//             {
+//                Point2f p = is_float ? ptsf[i] : Point2f((float)ptsi[i].x, (float)ptsi[i].y);
+//                fprintf (stdout, "{ %f, %f },\n",p.x, p.y);
+//             }
+//             fprintf (stdout, "DM ={{ %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[0*6+0], DMd[0*6+1], DMd[0*6+2], DMd[0*6+3], DMd[0*6+4], DMd[0*6+5]);
+//             fprintf (stdout, "     { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[1*6+0], DMd[1*6+1], DMd[1*6+2], DMd[1*6+3], DMd[1*6+4], DMd[1*6+5]);
+//             fprintf (stdout, "     { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[2*6+0], DMd[2*6+1], DMd[2*6+2], DMd[2*6+3], DMd[2*6+4], DMd[2*6+5]);
+//             fprintf (stdout, "     { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[3*6+0], DMd[3*6+1], DMd[3*6+2], DMd[3*6+3], DMd[3*6+4], DMd[3*6+5]);
+//             fprintf (stdout, "     { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e },\n",DMd[4*6+0], DMd[4*6+1], DMd[4*6+2], DMd[4*6+3], DMd[4*6+4], DMd[4*6+5]);
+//             fprintf (stdout, "     { %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e }};\n",DMd[5*6+0], DMd[5*6+1], DMd[5*6+2], DMd[5*6+3], DMd[5*6+4], DMd[5*6+5]);
+//             fprintf (stdout, "----------------------------------------------\n");
+//     }
+    
+
+        
+    Md[0*3+0] = (DMd[2*6+0] + (DMd[2*6+3]*TMd[0*3+0] + DMd[2*6+4]*TMd[1*3+0] + DMd[2*6+5]*TMd[2*3+0])/Ts)/2.;
+    Md[0*3+1] = (DMd[2*6+1] + (DMd[2*6+3]*TMd[0*3+1] + DMd[2*6+4]*TMd[1*3+1] + DMd[2*6+5]*TMd[2*3+1])/Ts)/2.;
+    Md[0*3+2] = (DMd[2*6+2] + (DMd[2*6+3]*TMd[0*3+2] + DMd[2*6+4]*TMd[1*3+2] + DMd[2*6+5]*TMd[2*3+2])/Ts)/2.;
+    Md[1*3+0] = -DMd[1*6+0] - (DMd[1*6+3]*TMd[0*3+0] + DMd[1*6+4]*TMd[1*3+0] + DMd[1*6+5]*TMd[2*3+0])/Ts;
+    Md[1*3+1] = -DMd[1*6+1] - (DMd[1*6+3]*TMd[0*3+1] + DMd[1*6+4]*TMd[1*3+1] + DMd[1*6+5]*TMd[2*3+1])/Ts;
+    Md[1*3+2] = -DMd[1*6+2] - (DMd[1*6+3]*TMd[0*3+2] + DMd[1*6+4]*TMd[1*3+2] + DMd[1*6+5]*TMd[2*3+2])/Ts;
+    Md[2*3+0] = (DMd[0*6+0] + (DMd[0*6+3]*TMd[0*3+0] + DMd[0*6+4]*TMd[1*3+0] + DMd[0*6+5]*TMd[2*3+0])/Ts)/2.;
+    Md[2*3+1] = (DMd[0*6+1] + (DMd[0*6+3]*TMd[0*3+1] + DMd[0*6+4]*TMd[1*3+1] + DMd[0*6+5]*TMd[2*3+1])/Ts)/2.;
+    Md[2*3+2] = (DMd[0*6+2] + (DMd[0*6+3]*TMd[0*3+2] + DMd[0*6+4]*TMd[1*3+2] + DMd[0*6+5]*TMd[2*3+2])/Ts)/2.;
+    
+    
+debugging( fprintf (stdout, "MCpp = {{ %1.14e, %1.14e, %1.14e },\n",Md[0*3+0], Md[0*3+1], Md[0*3+2]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e },\n",Md[1*3+0], Md[1*3+1], Md[1*3+2]); )
+debugging( fprintf (stdout, "        { %1.14e, %1.14e, %1.14e }};\n",Md[2*3+0], Md[2*3+1], Md[2*3+2]); )
+    if (fabs(cv::determinant(M)) > 1.0e-10) {
+    EigenvalueDecomposition es(M);
+    Mat eVal = es.eigenvalues();
+    Mat eVec = es.eigenvectors();
+    
+debugging( fprintf (stdout, "eValCpp={  %1.14e, %1.14e, %1.14e };\n",eVal.at<double>(0,0), eVal.at<double>(0,1), eVal.at<double>(0,2)); )
+debugging( fprintf (stdout, "eVecCpp={{ %1.14e, %1.14e, %1.14e },\n",eVec.at<double>(0,0), eVec.at<double>(0,1), eVec.at<double>(0,2)); )
+debugging( fprintf (stdout, "         { %1.14e, %1.14e, %1.14e },\n",eVec.at<double>(1,0), eVec.at<double>(1,1), eVec.at<double>(1,2)); )
+debugging( fprintf (stdout, "         { %1.14e, %1.14e, %1.14e }};\n",eVec.at<double>(2,0), eVec.at<double>(2,1), eVec.at<double>(2,2)); )
+    
+    // Select the eigen vector {a,b,c} which satisfies 4ac-b^2 > 0
+    double cond[3];
+    cond[0]=(4.0 * eVec.at<double>(0,0) * eVec.at<double>(2,0) - eVec.at<double>(1,0) * eVec.at<double>(1,0));
+    cond[1]=(4.0 * eVec.at<double>(0,1) * eVec.at<double>(2,1) - eVec.at<double>(1,1) * eVec.at<double>(1,1));
+    cond[2]=(4.0 * eVec.at<double>(0,2) * eVec.at<double>(2,2) - eVec.at<double>(1,2) * eVec.at<double>(1,2));
+    if (cond[0]<cond[1]) {
+        (cond[1]<cond[2]) ? i=2 : i=1;
+    } else {
+        (cond[0]<cond[2]) ? i=2 : i=0;
+    }
+    double norm =std::sqrt(eVec.at<double>(0,i)*eVec.at<double>(0,i) + eVec.at<double>(1,i)*eVec.at<double>(1,i) + eVec.at<double>(2,i)*eVec.at<double>(2,i));        if (((eVec.at<double>(0,i)<0.0  ? -1 : 1) * (eVec.at<double>(1,i)<0.0  ? -1 : 1) * (eVec.at<double>(2,i)<0.0  ? -1 : 1)) <= 0.0) {
+            norm=-1.0*norm;
+        }
+    pVecD[0]=eVec.at<double>(0,i)/norm; pVecD[1]=eVec.at<double>(1,i)/norm;pVecD[2]=eVec.at<double>(2,i)/norm;
+    
+//  Q = (TM . pVec)/Ts;
+    Qd[0]= (TMd[0*3+0]*pVecD[0]+TMd[0*3+1]*pVecD[1]+TMd[0*3+2]*pVecD[2])/Ts;
+    Qd[1]= (TMd[1*3+0]*pVecD[0]+TMd[1*3+1]*pVecD[1]+TMd[1*3+2]*pVecD[2])/Ts;
+    Qd[2]= (TMd[2*3+0]*pVecD[0]+TMd[2*3+1]*pVecD[1]+TMd[2*3+2]*pVecD[2])/Ts;
+
+    
+debugging( fprintf (stdout, "TsCpp = %1.14e \n",(1.0/Ts)); )
+debugging( fprintf (stdout, "pVecCpp={ %1.14e, %1.14e, %1.14e };\n",pVecD[0], pVecD[1], pVecD[2]); )
+debugging( fprintf (stdout, "QCpp={ %1.14e, %1.14e, %1.14e };\n",Qd[0], Qd[1], Qd[2]); )
+//    
+debugging( fprintf (stdout, "coeffsCpp={ %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e };\n",pVecD[0], pVecD[1], pVecD[2], Qd[0], Qd[1], Qd[2]); )
+    
+// We compute the ellipse properties in the shifted coordinates as doing so improves the numerical accuracy.
+    
+    double    u1 = pVecD[2]*Qd[0]*Qd[0] - pVecD[1]*Qd[0]*Qd[1] + pVecD[0]*Qd[1]*Qd[1] + pVecD[1]*pVecD[1]*Qd[2];
+    double    u2 = pVecD[0]*pVecD[2]*Qd[2];
+    double    l1 = sqrt(pVecD[1]*pVecD[1] + (pVecD[0] - pVecD[2])*(pVecD[0] - pVecD[2]));
+    double    l2 = pVecD[0] + pVecD[2];
+    double    l3 = pVecD[1]*pVecD[1] - 4*pVecD[0]*pVecD[2];
+    double    p1 = 2*pVecD[2]*Qd[0] - pVecD[1]*Qd[1];
+    double    p2 = -(pVecD[1]*Qd[0]) + 2*pVecD[0]*Qd[1];
+    
+debugging( fprintf (stdout, "interCpp={ %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e, %1.14e };\n",u1, u2, l1, l2, l3, p1,p2); )
+    
+    x0 = p1/l3 + c.x;
+    y0 = p2/l3 + c.y;
+    a = sqrt(2)*sqrt((u1 - 4.0*u2)/((l1 - l2)*l3));
+    b = sqrt(2)*sqrt(-1.0*((u1 - 4.0*u2)/((l1 + l2)*l3)));
+    if (pVecD[1] == 0) {
+        if (pVecD[0] < pVecD[2]) {
+            theta = 0;
+        } else {
+            theta = CV_PI/2.;
+        }
+    } else {
+            theta = CV_PI/2. + 0.5*std::atan2(pVecD[1], (pVecD[0] - pVecD[2]));
+    }
+debugging( fprintf (stdout, "ellipseCpp={ {%1.14e, %1.14e},{ %1.14e, %1.14e}, %1.14e };\n",x0, y0, a, b, theta); )
+        
+    box.center.x = x0;
+    box.center.y = y0;
+    box.size.width = 2.0*a;
+    box.size.height = 2.0*b;
+    if( box.size.width > box.size.height )
+    {
+        float tmp;
+        CV_SWAP( box.size.width, box.size.height, tmp );
+        box.angle = (float)(fmod((90 + theta*180/CV_PI),180.0)) ;
+    } else {
+        box.angle = (float)(fmod(theta*180/CV_PI,180.0));
+    };
+    } else {
+//        box.center.x = c.x;
+//        box.center.y = c.y;
+//        box.size.width = 1.0;
+//        box.size.height = 1.0;
+        //        box.angle =0.0;
+debugging( fprintf (stdout, "USING : cv::fitEllipse( points );\n"); )
+        box = cv::fitEllipse( points );
+    }
     return box;
 }
 

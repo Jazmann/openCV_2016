@@ -39,8 +39,7 @@
 //
 //M*/
 #include "precomp.hpp"
-#include "/Users/jaspershemilt/Developer/OpenCV_Dev/opencv-master/opencv/modules/core/include/opencv2/core/eigensystem.hpp"
-// #include "/Users/jaspershemilt/Developer/OpenCV_Dev/opencv-master/opencv/modules/calib3d/src/dls.h"
+#include "opencv2/core/eigensystem.hpp"
 
 namespace cv
 {

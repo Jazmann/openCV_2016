@@ -8509,6 +8509,39 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
     }
 }
 
+//! converts image from one color space to another
+template class cv::colorSpaceConverter<CV_8UC3,CV_8UC3>;
+template class cv::colorSpaceConverter<CV_8UC4,CV_8UC3>;
+
+
+
+template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
+{
+    cv::Mat src = _src.getMat(), dst;
+    cv::Size sz = src.size();
+    int scn = src.channels(), depth = src.depth();
+    int dcn = cv::Data_Type<dst_t>::channels;
+    // CV_Assert( colorConverter.srcInfo::channels == src.channels() );
+    
+    if (dcn <= 0) dcn = 3;
+    CV_Assert( scn >= 3 && dcn == 3 );
+    
+    _dst.create(sz, CV_MAKETYPE(depth, dcn));
+    dst = _dst.getMat();
+    if( depth == CV_8U )
+    {
+        CvtColorLoop(src, dst, colorConverter);
+    } else {
+        CV_Error( CV_StsBadArg, "Unsupported image depth" );
+    }
+    
+}
+
+template void cv::convertColor<CV_8UC3,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC3, CV_8UC3>& colorConverter);
+template void cv::convertColor<CV_8UC4,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC4, CV_8UC3>& colorConverter);
+
+
+
 CV_IMPL void
 cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
 {

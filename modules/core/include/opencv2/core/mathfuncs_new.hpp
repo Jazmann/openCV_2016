@@ -12,54 +12,57 @@
 #ifndef __cplusplus
 #  error core.hpp header must be compiled as C++
 #endif
+
+#include <cmath>
+
 ///////////////////////////// Bitwise and discrete math operations ///////////////////////////
 
 template<typename _Tp> _Tp gComDivisor(_Tp u, _Tp v) {
-if (v)
-return gComDivisor<_Tp>(v, u % v);
-else
-return u < 0 ? -u : u; /* abs(u) */
+    if (v)
+        return gComDivisor<_Tp>(v, u % v);
+    else
+        return u < 0 ? -u : u; /* abs(u) */
 };
 
 template<typename _Tp> _Tp gComDivisor(_Tp a, _Tp b, _Tp c){
-return gComDivisor<_Tp>(gComDivisor<_Tp>(a, b), c);
+    return gComDivisor<_Tp>(gComDivisor<_Tp>(a, b), c);
 };
 
 
 template<typename _Tp> _Tp gComDivisor(_Tp a, _Tp* b, CV_32U_TYPE size_b){
-if (size_b >= 2){
-gComDivisor<_Tp>(a, b[0]);
-return gComDivisor<_Tp>(gComDivisor<_Tp>(a, b[0]), b++, size_b-1);
-}
-else if(size_b == 1) {
-return gComDivisor<_Tp>(a, b[0]);
-}
-else {
-return a;
-}
+    if (size_b >= 2){
+        gComDivisor<_Tp>(a, b[0]);
+        return gComDivisor<_Tp>(gComDivisor<_Tp>(a, b[0]), b++, size_b-1);
+    }
+    else if(size_b == 1) {
+        return gComDivisor<_Tp>(a, b[0]);
+    }
+    else {
+        return a;
+    }
 };
 
 template<typename _Tp> _Tp gComDivisor(_Tp* b, CV_32U_TYPE size_b){
-switch (size_b) {
-    case 0:
-    return _Tp();
-    break;
-    case 1:
-    return b[0];
-    break;
-    case 2:
-    return gComDivisor<_Tp>(b[0],b[1]);
-    break;
-    case 3:
-    return gComDivisor<_Tp>(gComDivisor<_Tp>(b[0],b[1]),b[2]);
-    break;
-    case 4:
-    return gComDivisor<_Tp>(gComDivisor<_Tp>(b[0],b[1]), gComDivisor<_Tp>(b[2],b[3]));
-    break;
-    default:
-    return gComDivisor<_Tp>(gComDivisor<_Tp>(b,size_b/2), gComDivisor<_Tp>(b+(size_b)/2,(size_b+1)/2));
-    break;
-}
+    switch (size_b) {
+        case 0:
+            return _Tp();
+            break;
+        case 1:
+            return b[0];
+            break;
+        case 2:
+            return gComDivisor<_Tp>(b[0],b[1]);
+            break;
+        case 3:
+            return gComDivisor<_Tp>(gComDivisor<_Tp>(b[0],b[1]),b[2]);
+            break;
+        case 4:
+            return gComDivisor<_Tp>(gComDivisor<_Tp>(b[0],b[1]), gComDivisor<_Tp>(b[2],b[3]));
+            break;
+        default:
+            return gComDivisor<_Tp>(gComDivisor<_Tp>(b,size_b/2), gComDivisor<_Tp>(b+(size_b)/2,(size_b+1)/2));
+            break;
+    }
 };
 
 CV_32U_TYPE CV_INLINE mostSignificantBit(CV_64U_TYPE x)
@@ -162,25 +165,31 @@ d = f;
 
 /* continued fraction and check denominator each step */
 for (i = 0; i < 64; i++) {
-a = n ? d / n : 0;
-if (i && !a) break;
-
-x = d; d = n; n = x % n;
-
-x = a;
-if (k[1] * a + k[0] >= max_denom) {
-x = (max_denom - k[0]) / k[1];
-if (x * 2 >= a || k[1] >= max_denom)
-i = 65;
-else
-break;
-}
-
-h[2] = x * h[1] + h[0]; h[0] = h[1]; h[1] = h[2];
-k[2] = x * k[1] + k[0]; k[0] = k[1]; k[1] = k[2];
+    a = n ? d / n : 0;
+    if (i && !a) break;
+    
+    x = d; d = n; n = x % n;
+    
+    x = a;
+    if (k[1] * a + k[0] >= max_denom) {
+        x = (max_denom - k[0]) / k[1];
+        if (x * 2 >= a || k[1] >= max_denom)
+            i = 65;
+        else
+            break;
+    }
+    
+    h[2] = x * h[1] + h[0]; h[0] = h[1]; h[1] = h[2];
+    k[2] = x * k[1] + k[0]; k[0] = k[1]; k[1] = k[2];
 }
 *denom = k[1];
 *num = neg ? -h[1] : h[1];
 }
+
+// Error function methods
+
+ double CV_EXPORTS erf(double x);
+ double CV_EXPORTS erf(double a, double b);
+ double CV_EXPORTS erfinv(double x); // returns  the inverse error function
 
 #endif /* mathfuncs_new_h */

@@ -51,6 +51,113 @@ enum
     KERNEL_SMOOTH       = 4, // all the kernel elements are non-negative and summed to 1
     KERNEL_INTEGER      = 8  // all the kernel coefficients are integer numbers
 };
+    
+    template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
+    {
+        public :
+        using srcInfo = cv::Data_Type<src_t>;
+        using dstInfo = cv::Data_Type<dst_t>;
+        using srcType = typename cv::Data_Type<src_t>::type;
+        using dstType = typename cv::Data_Type<dst_t>::type;
+        using wrkInfo = cv::Work_Type<src_t, dst_t>;
+        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
+        const srcType lookUpTableMax = 255;
+        const srcType nonLinearMin = 3; // Less than this is is not worth keeping the error function at all.
+        
+        srcType sMin, sMax, sRange;
+        dstType dMin, dMax, dRange;
+        srcType c;
+        double uC, g;
+        
+        double ErfA, ErfB, ErfAB, scale;
+        dstType shift;
+        
+        srcType sUnitGrad[2];
+        double ull, uul;
+        srcType sLowHigh[2];
+        bool useLookUpTable, linearDistribution;
+        double linearGrad;
+        
+        dstType dUnitGrad[2];
+        srcType linearConstant;
+        dstType shiftednErfConstant, dMaxShifted;
+        
+        distributeErfParameters();
+        distributeErfParameters( double _g, double _uC, srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, dstType dMin = dstInfo::min, dstType dMax = dstInfo::max);
+    };
+    
+    
+    template<int src_t, int dst_t>  class CV_EXPORTS depthConverter
+    {
+        public :
+        virtual ~depthConverter<src_t, dst_t>(){};
+        using srcInfo = cv::Data_Type<src_t>;
+        using dstInfo = cv::Data_Type<dst_t>;
+        using srcType = typename cv::Data_Type<src_t>::type;
+        using dstType = typename cv::Data_Type<dst_t>::type;
+        using wrkInfo = cv::Work_Type<src_t, dst_t>;
+        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
+        virtual void operator()(const srcType src, dstType &dst) = 0;
+    };
+    
+    template<int src_t, int dst_t>  class  CV_EXPORTS distributeErf: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename distributeErf::srcType;
+        using dstType = typename distributeErf::dstType;
+        using wrkType = typename distributeErf::wrkType;
+        distributeErfParameters<src_t, dst_t> par;
+        dstType* map; // [cv::Data_Type<src_t>::max-cv::Data_Type<src_t>::min];
+        
+        distributeErf();
+        distributeErf( distributeErfParameters<src_t, dst_t> par);
+        distributeErf( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType &dst);
+    };
+    
+    template<int src_t, int dst_t>  class CV_EXPORTS distributeErfCompact: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename distributeErfCompact::srcType;
+        using dstType = typename distributeErfCompact::dstType;
+        using wrkType = typename distributeErfCompact::wrkType;
+        distributeErfParameters<src_t, dst_t> par;
+        dstType* map; // [cv::Data_Type<src_t>::max-cv::Data_Type<src_t>::min];
+        distributeErfCompact();
+        distributeErfCompact( distributeErfParameters<src_t, dst_t> par);
+        distributeErfCompact( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType &dst);
+    };
+    
+    template<int src_t, int dst_t>  class CV_EXPORTS distributePartition: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename distributePartition::srcType;
+        using dstType = typename distributePartition::dstType;
+        using wrkType = typename distributePartition::wrkType;
+        srcType sMinCutoff, sMaxCutoff;
+        
+        distributePartition();
+        distributePartition( srcType sMinCutoff, srcType sMaxCutoff, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType &dst);
+    };
+    
+    template<int src_t, int dst_t>  class CV_EXPORTS distributeLinear: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename distributeLinear::srcType;
+        using dstType = typename distributeLinear::dstType;
+        using wrkType = typename distributeLinear::wrkType;
+        distributeErfParameters<src_t, dst_t> par;
+        srcType fMin, fMax;
+        wrkType g;
+        dstType c, dMin, dMax;
+        
+        distributeLinear();
+        distributeLinear( distributeErfParameters<src_t, dst_t> par);
+        distributeLinear( double _g, double _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType dst) const;
+    };
 
     
 template<int src_t, int dst_t> class CV_EXPORTS colorSpaceConverter

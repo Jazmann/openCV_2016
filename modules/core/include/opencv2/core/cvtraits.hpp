@@ -314,49 +314,49 @@ template struct cv_Work_Type<CV_64F,CV_64F>;
 
 template<int t1, int t2> struct cv_Signed_Work_Type;
 
-template<> struct cv_Signed_Work_Type<CV_8U, CV_8U> : cv_Data_Type<CV_64S>{};
-template<> struct cv_Signed_Work_Type<CV_8U,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8U, CV_8U> : cv_Data_Type<CV_16S>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_16U> : cv_Data_Type<CV_32S>{};
 template<> struct cv_Signed_Work_Type<CV_8U,CV_32U> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_8U,CV_64U> : cv_Data_Type<CV_64S>{};
 
-template<> struct cv_Signed_Work_Type<CV_8U, CV_8S> : cv_Data_Type<CV_64S>{};
-template<> struct cv_Signed_Work_Type<CV_8U,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8U, CV_8S> : cv_Data_Type<CV_16S>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_16S> : cv_Data_Type<CV_32S>{};
 template<> struct cv_Signed_Work_Type<CV_8U,CV_32S> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_8U,CV_64S> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_8U,CV_32F> : cv_Data_Type<CV_64F>{};
 template<> struct cv_Signed_Work_Type<CV_8U,CV_64F> : cv_Data_Type<CV_64F>{};
 
-template<> struct cv_Signed_Work_Type<CV_8S, CV_8U> : cv_Data_Type<CV_64S>{};
-template<> struct cv_Signed_Work_Type<CV_8S,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8S, CV_8U> : cv_Data_Type<CV_16S>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_16U> : cv_Data_Type<CV_32S>{};
 template<> struct cv_Signed_Work_Type<CV_8S,CV_32U> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_8S,CV_64U> : cv_Data_Type<CV_64S>{};
 
-template<> struct cv_Signed_Work_Type<CV_8S, CV_8S> : cv_Data_Type<CV_64S>{};
-template<> struct cv_Signed_Work_Type<CV_8S,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8S, CV_8S> : cv_Data_Type<CV_16S>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_16S> : cv_Data_Type<CV_32S>{};
 template<> struct cv_Signed_Work_Type<CV_8S,CV_32S> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_8S,CV_64S> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_8S,CV_32F> : cv_Data_Type<CV_64F>{};
 template<> struct cv_Signed_Work_Type<CV_8S,CV_64F> : cv_Data_Type<CV_64F>{};
 
-template<> struct cv_Signed_Work_Type<CV_16U, CV_8U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U, CV_8U> : cv_Data_Type<CV_32S>{};
 template<> struct cv_Signed_Work_Type<CV_16U,CV_16U> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_16U,CV_32U> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_16U,CV_64U> : cv_Data_Type<CV_64S>{};
 
-template<> struct cv_Signed_Work_Type<CV_16U, CV_8S> : cv_Data_Type<CV_64S>{};
-template<> struct cv_Signed_Work_Type<CV_16U,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U, CV_8S> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_16U,CV_16S> : cv_Data_Type<CV_32S>{};
 template<> struct cv_Signed_Work_Type<CV_16U,CV_32S> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_16U,CV_64S> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_16U,CV_32F> : cv_Data_Type<CV_64F>{};
 template<> struct cv_Signed_Work_Type<CV_16U,CV_64F> : cv_Data_Type<CV_64F>{};
 
-template<> struct cv_Signed_Work_Type<CV_16S, CV_8U> : cv_Data_Type<CV_64S>{};
-template<> struct cv_Signed_Work_Type<CV_16S,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S, CV_8U> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_16U> : cv_Data_Type<CV_32S>{};
 template<> struct cv_Signed_Work_Type<CV_16S,CV_32U> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_16S,CV_64U> : cv_Data_Type<CV_64S>{};
 
-template<> struct cv_Signed_Work_Type<CV_16S, CV_8S> : cv_Data_Type<CV_64S>{};
-template<> struct cv_Signed_Work_Type<CV_16S,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S, CV_8S> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_16S> : cv_Data_Type<CV_32S>{};
 template<> struct cv_Signed_Work_Type<CV_16S,CV_32S> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_16S,CV_64S> : cv_Data_Type<CV_64S>{};
 template<> struct cv_Signed_Work_Type<CV_16S,CV_32F> : cv_Data_Type<CV_64F>{};

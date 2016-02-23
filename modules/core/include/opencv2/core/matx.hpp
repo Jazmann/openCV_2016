@@ -55,6 +55,7 @@
 
 namespace cv
 {
+using std::initializer_list;
 
 //! @addtogroup core_basic
 //! @{
@@ -101,6 +102,11 @@ public:
 
     //! default constructor
     Matx();
+    Matx(std::initializer_list<_Tp> initList)
+    {
+        //   CV_Assert(m*n == val.size()); // Generate error if initList.size() != m*n
+        std::uninitialized_copy(initList.begin(), initList.end(), val);
+    }
 
     Matx(_Tp v0); //!< 1x1 matrix
     Matx(_Tp v0, _Tp v1); //!< 1x2 or 2x1 matrix
@@ -313,7 +319,10 @@ public:
 
     //! default constructor
     Vec();
-
+    Vec(std::initializer_list<_Tp> initList)
+    {
+        std::uninitialized_copy(initList.begin(), initList.end(), this->val);
+    }
     Vec(_Tp v0); //!< 1-element vector constructor
     Vec(_Tp v0, _Tp v1); //!< 2-element vector constructor
     Vec(_Tp v0, _Tp v1, _Tp v2); //!< 3-element vector constructor

@@ -164,7 +164,7 @@ template<int src_t, int dst_t> class CV_EXPORTS colorSpaceConverter
 {
     public :
     virtual ~colorSpaceConverter<src_t, dst_t>(){};
-    using srcInfo = cv_Data_Type<src_t>;
+    using srcInfo = cv::Data_Type<src_t>;
     using srcType = typename cv::Data_Type<src_t>::type;
     using src_channel_type = srcType;
     
@@ -172,15 +172,148 @@ template<int src_t, int dst_t> class CV_EXPORTS colorSpaceConverter
     using dstType = typename cv::Data_Type<dst_t>::type;
     using dst_channel_type = dstType;
     
-    using wrkInfo  = typename cv::Work_Type<src_t, dst_t>;
-    using wrkType  = typename cv::Work_Type<src_t, dst_t>::type;
-    using sWrkInfo = typename cv::Signed_Work_Type<src_t, dst_t>;
-    using sWrkType = typename cv::Signed_Work_Type<src_t, dst_t>::type;
+    using wrkInfo  =  cv::Work_Type<src_t, dst_t>;
+    using wrkType  = typename cv::Work_Type<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>::type;
+    using sWrkInfo =  cv::Signed_Work_Type<src_t, dst_t>;
+    using sWrkType = typename cv::Signed_Work_Type<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>::type;
     virtual void CV_EXPORTS operator()(const srcType * src, dstType* dst, int n) const = 0;
 };
 
 // template class colorSpaceConverter<CV_8UC3,CV_8UC3>;
 // template class colorSpaceConverter<CV_8UC4,CV_8UC3>;
+    
+template<int src_t, int dst_t> class CV_EXPORTS RGB2Rot_int: public colorSpaceConverter<src_t, dst_t>
+{
+    public :
+    using srcInfo  = typename RGB2Rot_int::srcInfo;
+    using dstInfo  = typename RGB2Rot_int::dstInfo;
+    using srcType  = typename RGB2Rot_int::srcType;
+    using dstType  = typename RGB2Rot_int::dstType;
+    using wrkInfo  = typename RGB2Rot_int::wrkInfo;
+    using wrkType  = typename RGB2Rot_int::wrkType;
+    using sWrkInfo = typename RGB2Rot_int::sWrkInfo;
+    using sWrkType = typename RGB2Rot_int::sWrkType;
+    // Values are expressed in three spaces; src, wrk, dst or source, rotated(working) and destination.
+    // Values are expressed in two ranges; u, q or unitary and quantized
+    
+    int indxA{0}, indxB{1}, indxC{2}; // indices for the axis.
+    int dstRGBIndices[3]; // indices for the destination 'RGB' channels
+    int srcRGBIndices[3]; // indices for the source RGB channels
+    Vec<wrkType, 3> qC_wrk; // The center point for the distribution function in the rotated color space
+    Vec<double, 3>  uC_wrk; // The center point for the distribution function in the rotated color space scaled to 0:1
+    Vec<srcType, 3> qC_src; // The center point for the distribution function in the source color space
+    Vec<double, 3>  uC_src; // The center point for the distribution function in the source color space scaled to 0:1
+    
+    Vec<double, 3> uG; // The distribution parameter in the rotated color space scaled to 0:1
+    
+    Vec<double, 3> rRScale, nRScale, fRScale;
+    cv::Matx<double, 3, 3> rR;
+    
+    cv::Matx<sWrkType, 3, 3> fR;
+    Vec<sWrkType, 3> RRange, RMin, RMax;
+    
+    sWrkType qfR[3][3];
+    double fScale[3], scale[3];
+    
+    Vec<double, dstInfo::channels> uRRange, uRMin, uRMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
+    
+    distributeErfParameters<wrkInfo::dataType, dstInfo::dataType> redParam, greenParam, blueParam;
+    depthConverter<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
+    
+    RGB2Rot_int(); // todo set default distribution functions.
+    
+    RGB2Rot_int(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC);
+    RGB2Rot_int(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _g, cv::Vec<double, 3> _c);
+    RGB2Rot_int(const int srcBlueIdx, const int dstBlueIdx, const double theta, double* g, double* c);
+    
+    Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> toWrk(Vec<double, 3> pnt);
+    Vec<typename cv::Data_Type<src_t>::type, 3>  toSrc(Vec<double, 3> pnt);
+    Vec<typename cv::Data_Type<dst_t>::type, 3>  toDst(Vec<double, 3> pnt);
+    Vec<double, 3> fromRot(Vec<double, 3> pnt);
+    Vec<double, 3>   toRot(Vec<double, 3> pnt);
+    void init();
+    void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
+    void setTransformFromAngle(double theta );
+    void setRanges();
+    void setuCinSrc(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
+    void setuC(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
+    void setG(Vec<double, 3> _g);
+    void setuG(Vec<double, 3> _g);
+    void setRedDistributionErf();
+    void setRedDistributionErf(  int center, double gradient);
+    void setGreenDistributionErf();
+    void setGreenDistributionErf(int center, double gradient);
+    void setBlueDistributionErf();
+    void setBlueDistributionErf( int center, double gradient);
+    
+    void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
+};
+
+
+template<int src_t, int dst_t> class CV_EXPORTS RGB2Rot: public colorSpaceConverter<src_t, dst_t>
+{
+    public :
+    using srcInfo = typename RGB2Rot::srcInfo;
+    using dstInfo = typename RGB2Rot::dstInfo;
+    using srcType = typename RGB2Rot::srcType;
+    using dstType = typename RGB2Rot::dstType;
+    using wrkInfo = typename RGB2Rot::wrkInfo;
+    using wrkType = typename RGB2Rot::wrkType;
+    using sWrkInfo = typename RGB2Rot::sWrkInfo;
+    using sWrkType = typename RGB2Rot::sWrkType;
+    // Values are expressed in three spaces; src, wrk, dst or source, rotated(working) and destination.
+    // Values are expressed in two ranges; u, q or unitary and quantized
+    
+    int indxA{0}, indxB{1}, indxC{2}; // indices for the axis.
+    int dstRGBIndices[3]; // indices for the destination 'RGB' channels
+    int srcRGBIndices[3]; // indices for the source RGB channels
+    wrkType C[3]; // The center point for the distribution function in the rotated color space
+    Vec<wrkType, 3> qC_wrk; // The center point for the distribution function in the rotated color space
+    Vec<double, 3>  uC_wrk; // The center point for the distribution function in the rotated color space scaled to 0:1
+    Vec<srcType, 3> qC_src; // The center point for the distribution function in the source color space
+    Vec<double, 3>  uC_src; // The center point for the distribution function in the source color space scaled to 0:1
+    
+    double qG[3];  // The distribution parameter in the rotated color space
+    double uG[3]; // The distribution parameter in the rotated color space scaled to 0:1
+    
+    cv::Matx<double, 3, 3> uT, uiT; // The transformation matrix in 0:1 scale
+    cv::Matx<double, 3, 3> R, fR; // The transformation matrix in 0:1 scale
+    Vec<double, 3> fRScale; // The transformation matrix in 0:1 scale
+    Vec<double, dstInfo::channels> uTRange, uTMin, uTMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
+    cv::Matx<sWrkType, 3, 3> T, iT; // The transformation matrix without overflow protection in the source / destination scale
+    sWrkType M[dstInfo::channels][srcInfo::channels]; // The working matrix for the transform computation with overflow protection.
+    sWrkType TRange[dstInfo::channels], TMin[dstInfo::channels], TMax[dstInfo::channels];
+    
+    depthConverter<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
+    
+    RGB2Rot(); // todo set default distribution functions.
+    
+    RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC);
+    RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> _g, cv::Vec<int, 3> _c);
+    
+    RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _g, cv::Vec<double, 3> _c);
+    RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, double* g, double* c);
+    
+    void init();
+    void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
+    void setTransform(cv::Matx<int, 3, 3>& T);
+    void setTransformFromAngle(double theta );
+    void setRanges();
+    void setCinSrc(Vec<int, 3> _c);
+    void setC(Vec<int, 3> _c);
+    void setuCinSrc(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
+    void setuC(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
+    void setG(Vec<double, 3> _g);
+    void setuG(Vec<double, 3> _g);
+    void setRedDistributionErf();
+    void setRedDistributionErf(  int center, double gradient);
+    void setGreenDistributionErf();
+    void setGreenDistributionErf(int center, double gradient);
+    void setBlueDistributionErf();
+    void setBlueDistributionErf( int center, double gradient);
+    
+    void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
+};
 
 template<int src_t, int dst_t> void CV_EXPORTS convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter);
 

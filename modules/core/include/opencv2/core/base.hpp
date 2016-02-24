@@ -593,7 +593,54 @@ CV_EXPORTS_W float cubeRoot(float val);
  @param y y-coordinate of the vector.
  */
 CV_EXPORTS_W float fastAtan2(float y, float x);
+    
+/** @brief Returns the bit position in a binary number having the greatest value.
+    mostSignificantBit returns the bit position in a binary number having the greatest value.
+    The MSB is sometimes referred to as the left-most bit due to the convention in positional 
+    notation of writing more significant digits further to the left.
+    @param x the binary number. A signed or unsigned integer with 8, 16, 32 or 64 bits.
+ */
+CV_EXPORTS_W CV_32U_TYPE CV_INLINE mostSignificantBit(CV_64U_TYPE x);
+CV_EXPORTS_W CV_32U_TYPE CV_INLINE mostSignificantBit(CV_32U_TYPE x);
+CV_EXPORTS_W CV_32U_TYPE CV_INLINE mostSignificantBit(CV_16U_TYPE x);
+CV_EXPORTS_W CV_32U_TYPE CV_INLINE mostSignificantBit(CV_8U_TYPE x);
+CV_EXPORTS_W CV_32U_TYPE CV_INLINE mostSignificantBit(CV_64S_TYPE x);
+CV_EXPORTS_W CV_32U_TYPE CV_INLINE mostSignificantBit(CV_32S_TYPE x);
+CV_EXPORTS_W CV_32U_TYPE CV_INLINE mostSignificantBit(CV_16S_TYPE x);
+CV_EXPORTS_W CV_32U_TYPE CV_INLINE mostSignificantBit(CV_8S_TYPE x);
 
+    
+/*  @brief Returns a rational number approximation to a float.
+    Returns a rational number approximation to a float.
+    f \approx \frac{num}{denom}.
+    The maxumum denominator limuts the accuracy of the approximation to have at denom \le max_denom.
+    Note that machine floating point number has a finite resolution (10e-16 ish for 64 bit double), 
+    so specifying a "best match with minimal error" is often wrong, because one can always just retrieve
+    the significand and return that divided by 2**52, which is in a sense accurate, but generally not very
+    useful: \frac{1.0}{7.0} would be \frac{2573485501354569}{18014398509481984}, for example.
+    @param f Number to convert.
+    @param num Returned numerator part of the rational
+    @param denom Returned denominator part of the rational.
+    @param max_denom The max denominator value.
+ */
+void CV_INLINE rat_approx(double f, CV_64S_TYPE max_denom, CV_64S_TYPE *num, CV_64S_TYPE *denom);
+    
+/** @brief Calculates the error function.
+ The function erf calculates the error function of a double x.
+ If two values are supplied the error function of the fraction is calculated
+ erf(a, b) = erf\left(\frac{a}{b}\right).
+ @param a The numerator of the fraction.
+ @param b The denominator of the fraction if supplied.
+ */
+CV_EXPORTS_W double erf(double x);
+CV_EXPORTS_W double erf(double a, double b);
+    
+/** @brief Calculates the inverse error function.
+ The function erf calculates the inverse error function of a double x.
+ @param x The value given to the inverse error function.
+ */
+CV_EXPORTS_W double erfinv(double x); // returns  the inverse error function
+    
 /** proxy for hal::LU */
 CV_EXPORTS int LU(float* A, size_t astep, int m, float* b, size_t bstep, int n);
 /** proxy for hal::LU */

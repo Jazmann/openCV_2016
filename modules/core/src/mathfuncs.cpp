@@ -45,6 +45,8 @@
 #include "opencl_kernels_core.hpp"
 #include <limits>
 #include <iostream>
+#include <cmath>
+
 
 namespace cv
 {
@@ -2229,6 +2231,276 @@ void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int)
     cv::solvePoly(_a, _r, maxiter);
     CV_Assert( _r.data == _r0.data ); // check that the array of roots was not reallocated
 }
+
+namespace cv
+{
+template<typename _Tp> _Tp gComDivisor(_Tp u, _Tp v) {
+    if (v)
+        return gComDivisor<_Tp>(v, u % v);
+    else
+        return u < 0 ? -u : u; /* abs(u) */
+};
+
+template<typename _Tp> _Tp gComDivisor(_Tp a, _Tp b, _Tp c){
+    return gComDivisor<_Tp>(gComDivisor<_Tp>(a, b), c);
+};
+
+
+template<typename _Tp> _Tp gComDivisor(_Tp a, _Tp* b, CV_32U_TYPE size_b){
+    if (size_b >= 2){
+        gComDivisor<_Tp>(a, b[0]);
+        return gComDivisor<_Tp>(gComDivisor<_Tp>(a, b[0]), b++, size_b-1);
+    }
+    else if(size_b == 1) {
+        return gComDivisor<_Tp>(a, b[0]);
+    }
+    else {
+        return a;
+    }
+};
+
+template<typename _Tp> _Tp gComDivisor(_Tp* b, CV_32U_TYPE size_b){
+    switch (size_b) {
+        case 0:
+            return _Tp();
+            break;
+        case 1:
+            return b[0];
+            break;
+        case 2:
+            return gComDivisor<_Tp>(b[0],b[1]);
+            break;
+        case 3:
+            return gComDivisor<_Tp>(gComDivisor<_Tp>(b[0],b[1]),b[2]);
+            break;
+        case 4:
+            return gComDivisor<_Tp>(gComDivisor<_Tp>(b[0],b[1]), gComDivisor<_Tp>(b[2],b[3]));
+            break;
+        default:
+            return gComDivisor<_Tp>(gComDivisor<_Tp>(b,size_b/2), gComDivisor<_Tp>(b+(size_b)/2,(size_b+1)/2));
+            break;
+    }
+};
+
+} // namespace cv
+
+namespace cv
+{
+CV_32U_TYPE CV_INLINE mostSignificantBit(CV_64U_TYPE x)
+{
+    static const CV_32U_TYPE bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+    CV_32U_TYPE r = 0;
+    if (x & 0xFFFFFFFF00000000) { r += 32/1; x >>= 32/1; }
+    if (x & 0x00000000FFFF0000) { r += 32/2; x >>= 32/2; }
+    if (x & 0x000000000000FF00) { r += 32/4; x >>= 32/4; }
+    if (x & 0x00000000000000F0) { r += 32/8; x >>= 32/8; }
+    return r + bval[x];
+}
+CV_32U_TYPE CV_INLINE  mostSignificantBit(CV_32U_TYPE x)
+{
+    static const CV_32U_TYPE bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+    CV_32U_TYPE r = 0;
+    if (x & 0xFFFF0000) { r += 16/1; x >>= 16/1; }
+    if (x & 0x0000FF00) { r += 16/2; x >>= 16/2; }
+    if (x & 0x000000F0) { r += 16/4; x >>= 16/4; }
+    return r + bval[x];
+}
+
+CV_32U_TYPE CV_INLINE  mostSignificantBit(CV_16U_TYPE x)
+{
+    static const CV_32U_TYPE bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+    CV_32U_TYPE r = 0;
+    if (x & 0xFF00) { r += 8/1; x >>= 8/1; }
+    if (x & 0x00F0) { r += 8/2; x >>= 8/2; }
+    return r + bval[x];
+}
+
+CV_32U_TYPE CV_INLINE  mostSignificantBit(CV_8U_TYPE x)
+{
+    static const CV_32U_TYPE bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+    CV_32U_TYPE r = 0;
+    if (x & 0xF0) { r += 4/1; x >>= 4/1; }
+    return r + bval[x];
+}
+
+CV_32U_TYPE CV_INLINE  mostSignificantBit(CV_64S_TYPE x)
+{
+    static const CV_32U_TYPE bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+    CV_32U_TYPE r = 0;
+    if (x & 0x7FFFFFFF00000000) { r += 32/1; x >>= 32/1; }
+    if (x & 0x00000000FFFF0000) { r += 32/2; x >>= 32/2; }
+    if (x & 0x000000000000FF00) { r += 32/4; x >>= 32/4; }
+    if (x & 0x00000000000000F0) { r += 32/8; x >>= 32/8; }
+    return r + bval[x];
+}
+CV_32U_TYPE CV_INLINE  mostSignificantBit(CV_32S_TYPE x)
+{
+    static const CV_32U_TYPE bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+    CV_32U_TYPE r = 0;
+    if (x & 0x7FFF0000) { r += 16/1; x >>= 16/1; }
+    if (x & 0x0000FF00) { r += 16/2; x >>= 16/2; }
+    if (x & 0x000000F0) { r += 16/4; x >>= 16/4; }
+    return r + bval[x];
+}
+
+CV_32U_TYPE CV_INLINE  mostSignificantBit(CV_16S_TYPE x)
+{
+    static const CV_32U_TYPE bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+    CV_32U_TYPE r = 0;
+    if (x & 0x7F00) { r += 8/1; x >>= 8/1; }
+    if (x & 0x00F0) { r += 8/2; x >>= 8/2; }
+    return r + bval[x];
+}
+
+CV_32U_TYPE CV_INLINE  mostSignificantBit(CV_8S_TYPE x)
+{
+    static const CV_32U_TYPE bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+    CV_32U_TYPE r = 0;
+    if (x & 0x70) { r += 4/1; x >>= 4/1; }
+    return r + bval[x];
+}
+    
+    
+} // namespace cv
+
+namespace cv
+{
+
+/* Rational Approximation
+ * f : number to convert.
+ * num, denom: returned parts of the rational.
+ * max_denom: max denominator value.  Note that machine floating point number
+ *     has a finite resolution (10e-16 ish for 64 bit double), so specifying
+ *     a "best match with minimal error" is often wrong, because one can
+ *     always just retrieve the significand and return that divided by
+ *     2**52, which is in a sense accurate, but generally not very useful:
+ *     1.0/7.0 would be "2573485501354569/18014398509481984", for example.
+ */
+void CV_INLINE rat_approx(double f, CV_64S_TYPE max_denom, CV_64S_TYPE *num, CV_64S_TYPE *denom)
+{
+    /*  a: continued fraction coefficients. */
+    CV_64S_TYPE a, h[3] = { 0, 1, 0 }, k[3] = { 1, 0, 0 };
+    CV_64S_TYPE x, d, n = 1;
+    int i, neg = 0;
+    
+    if (max_denom <= 1) { *denom = 1; *num = (CV_64S_TYPE) f; return; }
+    
+    if (f < 0) { neg = 1; f = -f; }
+    
+    while (f != floor(f)) { n <<= 1; f *= 2; }
+    d = f;
+    
+    /* continued fraction and check denominator each step */
+    for (i = 0; i < 64; i++) {
+        a = n ? d / n : 0;
+        if (i && !a) break;
+        
+        x = d; d = n; n = x % n;
+        
+        x = a;
+        if (k[1] * a + k[0] >= max_denom) {
+            x = (max_denom - k[0]) / k[1];
+            if (x * 2 >= a || k[1] >= max_denom)
+                i = 65;
+            else
+                break;
+        }
+        
+        h[2] = x * h[1] + h[0]; h[0] = h[1]; h[1] = h[2];
+        k[2] = x * k[1] + k[0]; k[0] = k[1]; k[1] = k[2];
+    }
+    *denom = k[1];
+    *num = neg ? -h[1] : h[1];
+}
+    
+} // namespace cv
+
+namespace cv
+{
+
+// Error function methods
+
+double erf(double x);
+double erf(double a, double b);
+double erfinv(double x); // returns  the inverse error function
+
+double erf(double x)
+{
+int sign;
+// constants
+double a1 =  0.254829592;
+double a2 = -0.284496736;
+double a3 =  1.421413741;
+double a4 = -1.453152027;
+double a5 =  1.061405429;
+double p  =  0.3275911;
+
+// Save the sign of x
+x < 0 ? sign = -1 : sign = 1;
+x = std::fabs(x);
+
+// A&S formula 7.1.26
+double t = 1.0/(1.0 + p*x);
+double y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x);
+
+return sign*y;
+}
+
+double erf(double a, double b)
+{
+// constants
+const double a1 =  0.254829592;
+const double a2 = -0.284496736;
+const double a3 =  1.421413741;
+const double a4 = -1.453152027;
+const double a5 =  1.061405429;
+const double p  =  0.3275911;
+
+// Save the sign of x
+int sign = 1;
+if (a < 0) sign *= -1; a = fabs(a);
+if (b < 0) sign *= -1; b = fabs(b);
+
+// A&S formula 7.1.26
+double pr = 1/p;
+double t = (pr*b)/(a + pr*b);
+double y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-(a*a)/(b*b));
+
+return sign*y;
+}
+
+double erfinv(double x)
+{
+// returns  the inverse error function
+// x must be  <-1<x<1
+
+int kMaxit    = 50;
+double kEps   = 1e-8;
+double kConst = 0.8862269254527579;     // sqrt(pi)/2.0
+
+if(fabs(x) <= kEps) return kConst*x;
+
+// Newton iterations
+double erfi, derfi, y0,y1,dy0,dy1;
+if(fabs(x) < 1.0) {
+    erfi  = kConst*fabs(x);
+    y0    = erf(0.9*erfi);
+    derfi = 0.1*erfi;
+    for (int iter=0; iter<kMaxit; iter++) {
+        y1  = 1. - erfc(erfi);
+        dy1 = fabs(x) - y1;
+        if (std::fabs(dy1) < kEps)  {if (x < 0) return -erfi; else return erfi;}
+        dy0    = y1 - y0;
+        derfi *= dy1/dy0;
+        y0     = y1;
+        erfi  += derfi;
+        if(std::fabs(derfi/erfi) < kEps) {if (x < 0) return -erfi; else return erfi;}
+    }
+}
+return 0; //did not converge
+}
+    
+} // namespace cv
 
 
 /* End of file. */

@@ -105,106 +105,605 @@
 
 namespace cv
 {
-    template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters()
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters()
     {
+        // The distribution is described using 2 numbers which are related to the center and the standard deviation.
+        // If the center is in the range 0:1 then it is assumed that both the standard deviation and the
+        // center are specified in the 0:1 range. The type of the number also sets the choice of range.
+        // Distinguishing between the standard deviation s and the related parameter g is more difficult.
+        // +ve values are taken to be s
+        // -ve values are taken to be g
+        srcType c; double uC; // The center of the distribution in srcRange and unit range
+        double  s,        uS; // The standard deviation of the distribution in srcRange and unit range
+        double  g,        uG; // 1/(Sqrt(2) s) in srcRange and unit range
+        
         sMax = srcInfo::max;  sMin = srcInfo::min; sRange = (sMax - sMin);
         dMax = dstInfo::max;  dMin = dstInfo::min; dRange = dMax - dMin;
         
-        uC = 0.5; c = sRange / 2 + sMin; g = 1.0;
+        uC = 0.5;                c = sRange / 2 + sMin;
+        uG = 1.0;                g = sRange * uG;
+        uS = 1.0/(sqrt(2) * uG);  s = sRange * uS;
         
         ErfA = wrkType(erf(uC)); ErfB = wrkType(erf(uC)); ErfAB = ErfB + ErfA;
         
-        shift = dstType(dMin + dRange * ErfA / ErfAB);
-        scale = double(dRange) / ErfAB;
-        
-        sUnitGrad[0] = std::floor(c - (sRange * std::sqrt(std::log((2*dRange * g)/(ErfAB  * std::sqrt(CV_PI) * sRange))))/g);
-        sUnitGrad[1] = std::ceil( c + (sRange * sqrt(log((2*dRange * g)/(ErfAB * std::sqrt(CV_PI) * sRange))))/g);
-        ull = 1./dRange; uul = 1. - ull; // double(dRange - 1)/dRange;
-        sLowHigh[0] = std::floor(c + sRange * erfinv(ull*ErfB-uul*ErfA)/g);
-        sLowHigh[1] = std::ceil( c - sRange * erfinv(ull*ErfA-uul*ErfB)/g);
-        
-        useLookUpTable = sUnitGrad[0] - sLowHigh[0] < lookUpTableMax;
-        linearDistribution = sUnitGrad[0] - sLowHigh[0] < nonLinearMin;
-        
-        dUnitGrad[0] = shift + scale * erf( g * (sUnitGrad[0] - c) / sRange);
-        dUnitGrad[1] = shift + scale * erf( g * (sUnitGrad[1] - c) / sRange);
-        linearConstant = dUnitGrad[0] - sUnitGrad[0];
-        shiftednErfConstant = sUnitGrad[1] + dUnitGrad[0] - sUnitGrad[0] - dUnitGrad[1];
-        dMaxShifted = (dMax + shiftednErfConstant);
+     //   useLookUpTable =
     };
     
-    
-    template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(double _g, double _uC, typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax, typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax): uC(_uC), g(_g), sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_32F_TYPE _uC,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)dMax);
-        sRange = (sMax - sMin);
-        dRange = (dMax - dMin);
-        c = srcType(uC * sRange) + sMin;
-        
-        ErfA = erf(g * uC);
-        ErfB = erf((g*(1 - uC)));
-        ErfAB = ErfB + ErfA;
-        shift = dstType(dMin + dRange * ErfA / ErfAB);
-        scale = double(dRange) / ErfAB;
-        
-        sUnitGrad[0] = std::floor(c - (sRange * std::sqrt(std::log((2*dRange * g)/(ErfAB  * std::sqrt(CV_PI) * sRange))))/g);
-        sUnitGrad[1] = std::ceil( c + (sRange * sqrt(log((2*dRange * g)/(ErfAB * std::sqrt(CV_PI) * sRange))))/g);
-        ull = 1./dRange; uul = 1. - ull; // double(dRange - 1)/dRange;
-        sLowHigh[0] = std::floor(c + sRange * erfinv(ull*ErfB-uul*ErfA)/g);
-        sLowHigh[1] = std::ceil( c - sRange * erfinv(ull*ErfA-uul*ErfB)/g);
-        
-        // srcType sLowHigh[0] = std::floor(c + sRange * erfinv(ull*ErfAB - ErfA)/g);
-        // srcType sLowHigh[1] = std::ceil( c - sRange * erfinv(ull*ErfAB - ErfB)/g);
-        
-        useLookUpTable = sUnitGrad[0] - sLowHigh[0] < lookUpTableMax;
-        linearDistribution = sUnitGrad[0] - sLowHigh[0] < nonLinearMin;
-        linearGrad = double(dRange)/double(sLowHigh[1] - sLowHigh[0]);
-        
-        dUnitGrad[0] = shift + scale * erf( g * (sUnitGrad[0] - c) / sRange);
-        dUnitGrad[1] = shift + scale * erf( g * (sUnitGrad[1] - c) / sRange);
-        linearConstant = dUnitGrad[0] - sUnitGrad[0];
-        shiftednErfConstant = sUnitGrad[1] + dUnitGrad[0] - sUnitGrad[0] - dUnitGrad[1];
-        dMaxShifted = (dMax + shiftednErfConstant);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_uC);
+        setup();
     };
     
-    template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_64F_TYPE _uC,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_uC);
+        setup();
+    };
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_8U_TYPE _c,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_c);
+        setup();
+    };
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_8S_TYPE _c,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_c);
+        setup();
+    };
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_16U_TYPE _c,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_c);
+        setup();
+    };
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_16S_TYPE _c,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_c);
+        setup();
+    };
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_32U_TYPE _c,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_c);
+        setup();
+    };
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_32S_TYPE _c,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_c);
+        setup();
+    };
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_64U_TYPE _c,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_c);
+        setup();
+    };
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                  double sg, CV_64S_TYPE _c,
+                                  typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax,
+                                  typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
+                                  ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        set(sg,_c);
+        setup();
+    };
+
+        template    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _uSuG, CV_32F_TYPE _uC)
+    {
+        if(0.0 <= uC && uC <= 1.0) {
+            setUnitCenter( double(_uC));
+            if (_uSuG < 0.0) { // _uSuG specifies uG
+                setUnitG(_uSuG);
+            } else {      // _uSuG specifies uS
+                setUnitSigma(_uSuG);
+            }
+
+        } else {
+            setSrcCenter(srcType(_uC));
+            if (_uSuG < 0.0) { // _uSuG specifies g
+                setSrcG(_uSuG);
+            } else {      // _uSuG specifies s
+                setSrcSigma(_uSuG);
+            }
+
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _uSuG, CV_64F_TYPE _uC)
+    {
+        if(0.0 <= uC && uC <= 1.0) {
+            setUnitCenter( double(_uC));
+            if (_uSuG < 0.0) { // _uSuG specifies uG
+                setUnitG(_uSuG);
+            } else {      // _uSuG specifies uS
+                setUnitSigma(_uSuG);
+            }
+            
+        } else {
+            setSrcCenter(srcType(_uC));
+            if (_uSuG < 0.0) { // _uSuG specifies g
+                setSrcG(_uSuG);
+            } else {      // _uSuG specifies s
+                setSrcSigma(_uSuG);
+            }
+            
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _sg, CV_8U_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+        if (_sg < 0.0) { // _sg specifies g
+            setSrcG(_sg);
+        } else {      // _sg specifies s
+            setSrcSigma(_sg);
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _sg, CV_8S_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+        if (_sg < 0.0) { // _sg specifies g
+            setSrcG(_sg);
+        } else {      // _sg specifies s
+            setSrcSigma(_sg);
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _sg, CV_16U_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+        if (_sg < 0.0) { // _sg specifies g
+            setSrcG(_sg);
+        } else {      // _sg specifies s
+            setSrcSigma(_sg);
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _sg, CV_16S_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+        if (_sg < 0.0) { // _sg specifies g
+            setSrcG(_sg);
+        } else {      // _sg specifies s
+            setSrcSigma(_sg);
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _sg, CV_32U_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+        if (_sg < 0.0) { // _sg specifies g
+            setSrcG(_sg);
+        } else {      // _sg specifies s
+            setSrcSigma(_sg);
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _sg, CV_32S_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+        if (_sg < 0.0) { // _sg specifies g
+            setSrcG(_sg);
+        } else {      // _sg specifies s
+            setSrcSigma(_sg);
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _sg, CV_64U_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+        if (_sg < 0.0) { // _sg specifies g
+            setSrcG(_sg);
+        } else {      // _sg specifies s
+            setSrcSigma(_sg);
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(double _sg, CV_64S_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+        if (_sg < 0.0) { // _sg specifies g
+            setSrcG(_sg);
+        } else {      // _sg specifies s
+            setSrcSigma(_sg);
+        }
+    }
+    
+
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_32F_TYPE _uC)
+    {
+        if(0.0 <= uC && uC <= 1.0) {
+            setUnitCenter( double(_uC));
+        } else {
+            setSrcCenter(srcType(_uC));
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_64F_TYPE _uC)
+    {
+        if(0.0 <= uC && uC <= 1.0) {
+            setUnitCenter( _uC);
+        } else {
+            setSrcCenter(srcType(_uC));
+        }
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_8U_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_8S_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_16U_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_16S_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_32U_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_32S_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_64U_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+    }
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setCenter(CV_64S_TYPE _c)
+    {
+        setSrcCenter(srcType(_c));
+    }
+
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setUnitCenter(double _uC)
+    {
+        CV_Assert(0.0 <= uC && uC <= 1.0);
+        this->uC = _uC;
+        this->c  = srcType(sRange * uC + sMin);
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setSrcCenter(typename distributeErfParameters::srcType _c)
+    {
+        CV_Assert((int)sMin <= (int)_c && (int)_c <= (int)sMax );
+        this->c  = _c;
+        this->uC = double(c - sMin)/double(sRange);
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setUnitSigma(double _uS)
+    {
+        this->uS = _uS;                   this->s = sRange * _uS;
+        this->uG = 1.0/(sqrt(2.0) * _uS); this->g = sRange * uG;
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setSrcSigma(double _s)
+    {
+        this->s = _s;                     this->uS = _s / double(sRange);
+        this->g = 1.0/(sqrt(2.0) * _s);   this->uG =  g / double(sRange);
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setUnitG(double _uG)
+    {
+        this->uG = _uG;                   this->g = sRange * _uG;
+        this->uS = 1.0/(sqrt(2.0) * _uG); this->s = sRange * uS;
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setSrcG(double _g)
+    {
+        this->g = _g;                     this->uG = _g / double(sRange);
+        this->s = 1.0/(sqrt(2.0) * _g);   this->uS =  s / double(sRange);
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setInternals()
+    {
+        ErfA = erf(uG * uC);
+        ErfB = erf((uG*(1 - uC)));
+        ErfAB = ErfB + ErfA;
+        
+        K = double(sRange)/double(dRange);
+        uM = (2.0 * uG)/(std::sqrt(CV_PI) * ErfAB); // \delta in the writeup
+        m = uM / K;
+        
+        sDelta = 1.0 / sRange;
+        dDelta = 1.0 / dRange;
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setDiscardRegionBounds()
+    {
+        // Discard region bounds.
+        
+        uLambda1 = uC - erfinv((1.0 - dDelta)*ErfA - dDelta*ErfB )/uG;
+        uLambda2 = uC + erfinv((1.0 - dDelta)*ErfB - dDelta*ErfA )/uG;
+        
+        lambda1 = srcType(floor(sRange * lambda1)) + sMin;
+        lambda2 = srcType( ceil(sRange * lambda2)) + sMin;
+        
+        Qdiscard = TolDiscard <= 1 - uLambda2 + uLambda1;
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setKeepRegionBounds()
+    {
+        // Keep region bounds.
+        
+        if (uM < K) {
+            // The distribution gradient never goes above 1.
+            // There is no region in which all the information is kept.
+            Qkeep = 0;
+            uOmega1  = uC; omega1  = c;
+            uOmega2  = uC; omega2  = c;
+            uOmegaP1 = uC; omegaP1 = c;
+            uOmegaP2 = uC; omegaP2 = c;
+            
+        } else {
+            
+            uOmega1 = uC - sqrt(log(uM/K))/uG; omega1 = srcType( ceil(sRange * uOmega1)) + sMin;
+            uOmega2 = uC + sqrt(log(uM/K))/uG; omega2 = srcType(floor(sRange * uOmega2)) + sMin;
+            
+            // Find the extedned keep region.
+            srcType x = omega2;
+            srcType Tp = 1; // Acceptable divergence from linearity Tp
+            double disOmega2 = dRange * ( erf( g * (omega2-c) ) + ErfA ) / ( ErfAB ) + dMin;
+            //            double disOmega2 = dRange * ( erf( g * (omega2-c) ) - erf( g * (sMin-c) ) ) / ( erf( g * (sMax-c) ) - erf( g * (sMin-c) ) ) + dMin;
+            srcType linearCheck = floor(disOmega2) - omega2 - Tp;
+            
+            //            disX = dRange * ( erf( g * (x-c) ) - erf( g * (sMin-c) ) ) / ( erf( g * (sMax-c) ) - erf( g * (sMin-c) ) ) + dMin;
+            double disX = dRange * ( erf( g * (x-c) ) + ErfA ) / ( ErfAB ) + dMin;
+            while (disX > x + linearCheck) {
+                x++;
+                disX = dRange * ( erf( g * (x-c) ) + ErfA ) / ( ErfAB ) + dMin;
+            }
+            
+            omegaP2 = x;
+            omegaP1 = omega1 - omegaP2 + omega2;
+            
+            uOmegaP2 = (omegaP2 - sMin)/sRange;
+            uOmegaP1 = (omegaP1 - sMin)/sRange;
+            
+            Qkeep = uOmegaP2 - uOmegaP1 >= TolKeep;
+            
+        }
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setRegionQ()
+    {
+        Qdiscard    = TolDiscard <= 1 - uLambda2 + uLambda1;
+        Qkeep       = TolKeep <= uOmegaP2 - uOmegaP1 ;
+        Qdistribute = TolDistribute <= uLambda2 - uOmegaP2 + uLambda1 - uOmegaP1;
+    }
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setDistributionParameters()
+    {
+        // The unpartitioned distribution uses.
+        // dis(x) = disScale * erf( g * (x - c) ) + disConstant;
+        disConstant = dRange * ErfA/ ErfAB    + dMin;
+        disScale = (dRange / ErfAB);
+        // Default values for the piecewise distribution.
+        disMin = dMin;
+        linearConstant = dMin;
+        shiftednErfConstant = 0;
+        disMax = dMax;
+
+        if (Qkeep) {
+            
+            if (Qdiscard) {
+                
+                if (Qdistribute) {
+                    // Qkeep && Qdiscard && Qdistribute
+                    //
+                    //         = disMin;                                                            x <= lambda1
+                    //         = disScale * erf( g * (x - c) ) + disConstant;                       lambda1 <  x <  omegaP1
+                    // pDis(x) = x + linearConstant;                                                omegaP1 <= x <= omegaP2
+                    //         = disScale * erf( g * (x - c) ) + disConstant + shiftednErfConstant; omegaP2 <  x <  lambda2
+                    //         = disMax;                                                            lambda1 <= x
+                    //
+                    dstType disOmegaP1 = dRange * ( erf( g * (uOmegaP1-c) ) + ErfA ) / ( ErfAB ) + dMin;
+                    dstType disOmegaP2 = dRange * ( erf( g * (uOmegaP2-c) ) + ErfA ) / ( ErfAB ) + dMin;
+                    dstType disLambda2 = dRange * ( erf( g * (uLambda2-c) ) + ErfA ) / ( ErfAB ) + dMin;
+                    
+                    linearConstant = disOmegaP1 - omegaP1;
+                    shiftednErfConstant = disOmegaP1 - omegaP1 - disOmegaP2 + omegaP2;
+                    disMax = disLambda2 + disOmegaP1 - omegaP1 - disOmegaP2 + omegaP2;
+                } else {
+                    // Qkeep && Qdiscard && !Qdistribute
+                    //
+                    //         = disMin;                          x <= lambda1
+                    // pDis(x) = x + linearConstant;   lambda1 <= x <= lambda2
+                    //         = disMax;               lambda1 <= x
+                    disMin = dMin;
+                    linearConstant = dMin;
+                    disMax = lambda2 - lambda1 + dMin;
+                };
+                
+            } else {
+                
+                if (Qdistribute) {
+                    // Qkeep && !Qdiscard && Qdistribute
+                    //
+                    //         = disScale * erf( g * (x - c) ) + disConstant;                                  x <  omegaP1
+                    // pDis(x) = x + linearConstant;                                                omegaP1 <= x <= omegaP2
+                    //         = disScale * erf( g * (x - c) ) + disConstant + shiftednErfConstant; omegaP2 <  x
+                    
+                    dstType disOmegaP1 = dRange * ( erf( g * (uOmegaP1-c) ) + ErfA ) / ( ErfAB ) + dMin;
+                    dstType disOmegaP2 = dRange * ( erf( g * (uOmegaP2-c) ) + ErfA ) / ( ErfAB ) + dMin;
+                    dstType disSMax = dRange * ( erf( g * (1-c) ) + ErfA ) / ( ErfAB ) + dMin;
+                    
+                    disMin = dMin;
+                    linearConstant = disOmegaP1 - omegaP1;
+                    shiftednErfConstant = disOmegaP1 - omegaP1 - disOmegaP2 + omegaP2;
+                    disMax = disSMax + disOmegaP1 - omegaP1 - disOmegaP2 + omegaP2;
+                } else {
+                    // Qkeep && !Qdiscard && !Qdistribute
+                    //
+                    // pDis(x) = disScale * x + disConstant;
+                    //
+                    disMin = dMin;
+                    linearConstant = dMin;
+                    shiftednErfConstant = 0;
+                    disMax = dMin + sRange;
+                };
+                
+            };
+            
+        } else {
+            
+            if (Qdiscard) {
+                
+                if (Qdistribute) {
+                    // !Qkeep && Qdiscard && Qdistribute
+                    //
+                    //         = disMin;                                        x <= lambda1
+                    // pDis(x) = disScale * erf( g * (x - c) ) + disConstant;   lambda1 <  x <  lambda2
+                    //         = disMax;                                        lambda1 <= x
+                    
+                    disMin = dMin;
+                    linearConstant = dMin;
+                    shiftednErfConstant = 0;
+                    disMax = dMax;
+                    
+                } else {
+                    // !Qkeep && Qdiscard && !Qdistribute
+                    //
+                    // pDis(x) = disMin;       x <= (lambda1+lambda2)/2
+                    //         = disMax;       (lambda1+lambda2)/2 < x
+                    
+                    disMin = dMin;
+                    linearConstant = dMin;
+                    shiftednErfConstant = 0;
+                    disMax = 1+dMin;
+                    
+                };
+                
+            } else {
+                
+                if (Qdistribute) {
+                    // !Qkeep && !Qdiscard && Qdistribute
+                    //
+                    // pDis(x) = disScale * erf( g * (x - c) ) + disConstant;
+                    //
+                    disMin = dMin;
+                    linearConstant = dMin;
+                    shiftednErfConstant = 0;
+                    disMax = dMax;
+                } else {
+                    // !Qkeep && !Qdiscard && !Qdistribute
+                    // ERROR
+                    CV_Assert(Qkeep || Qdiscard || Qdistribute);
+                };
+                
+            };
+            
+        };
+        
+        //   useLookUpTable =
+    }
+    
+    
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setup()
+    {
+        setInternals();
+        setDiscardRegionBounds();
+        setKeepRegionBounds();
+        setRegionQ();
+        setDistributionParameters();
+    }
+    
+    
+
+    
+template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
     {
         par();
     };
-    template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(distributeErfParameters<src_t, dst_t> _par)
+template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(distributeErfParameters<src_t, dst_t> _par)
     {
         par = _par;    };
     
-    template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double _g, typename distributeErf::srcType _c, typename distributeErf::srcType sMin, typename distributeErf::srcType sMax, typename distributeErf::dstType dMin, typename distributeErf::dstType dMax):par(_g,_c,sMin,sMax,dMin,dMax)
+template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double _g, typename distributeErf::srcType _c, typename distributeErf::srcType sMin, typename distributeErf::srcType sMax, typename distributeErf::dstType dMin, typename distributeErf::dstType dMax):par(_g,double(_c),sMin,sMax,dMin,dMax)
     {
         CV_Assert((int)sMin <= (int)_c && (int)_c <= (int)sMax && (int)dMin <= (int)dMax);
     };
     
-    template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(const typename distributeErf::srcType src, typename distributeErf::dstType &dst)
+template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(const typename distributeErf::srcType src, typename distributeErf::dstType &dst)
     {
         if(src >= par.c){
-            dst = dstType(par.shift + par.scale * erf(par.g*(src - par.c), double(par.sRange)));
+            dst = dstType(par.disConstant + par.disScale * erf(par.g*(src - par.c), double(par.sRange)));
         }else{
-            dst = dstType(par.shift - par.scale * erf(par.g*(par.c - src), double(par.sRange)));
+            dst = dstType(par.disConstant - par.disScale * erf(par.g*(par.c - src), double(par.sRange)));
         };
         
     };
     
     
-    template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(distributeErfParameters<src_t, dst_t> _par)
+template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(distributeErfParameters<src_t, dst_t> _par)
     {
         par = _par;    };
-    template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(double _g, typename distributeErfCompact::srcType _c, typename distributeErfCompact::srcType sMin, typename distributeErfCompact::srcType sMax, typename distributeErfCompact::dstType dMin, typename distributeErfCompact::dstType dMax): par(_g,_c,sMin,sMax,dMin,dMax)
+template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(double _g, typename distributeErfCompact::srcType _c, typename distributeErfCompact::srcType sMin, typename distributeErfCompact::srcType sMax, typename distributeErfCompact::dstType dMin, typename distributeErfCompact::dstType dMax): par(_g,_c,sMin,sMax,dMin,dMax)
     {
         CV_Assert((int)sMin <= (int)_c && (int)_c <= (int)sMax && (int)dMin <= (int)dMax);    };
     
-    template<int src_t, int dst_t>  void distributeErfCompact<src_t, dst_t>::operator()(const typename distributeErfCompact::srcType src, typename distributeErfCompact::dstType &dst)
+template<int src_t, int dst_t>  void distributeErfCompact<src_t, dst_t>::operator()(const typename distributeErfCompact::srcType src, typename distributeErfCompact::dstType &dst)
     {
         // 5 Region code : constant - erf - linear - erf - constant
         // Assumes that c is in the linear region.
         if(src <= par.sUnitGrad[1]){
             if(src > par.sLowHigh[1]){
-                dst = dstType(par.shift + par.scale * erf(par.g*(src - par.c), double(par.sRange)));
+                dst = dstType(par.disConstant + par.disScale * erf(par.g*(src - par.c), double(par.sRange)));
             }else{
                 dst = par.dMin;
             }
@@ -212,7 +711,7 @@ namespace cv
             dst = dstType(src + par.linearConstant);
         }else{
             if(src < par.sLowHigh[2]){
-                dst = dstType(par.shift - par.scale * erf(par.g*(par.c - src), double(par.sRange)) + par.shiftedErfConstant);
+                dst = dstType(par.disConstant - par.disScale * erf(par.g*(par.c - src), double(par.sRange)) + par.disConstantedErfConstant);
             }else{
                 dst = par.dMax;
             }
@@ -221,20 +720,20 @@ namespace cv
     };
     
     
-    template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear()
+template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear()
     {
         par();
     };
-    template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(distributeErfParameters<src_t, dst_t> _par)
+template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(distributeErfParameters<src_t, dst_t> _par)
     {
         par = _par;
     };
     
-    template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(double _g, double _c, typename distributeLinear::srcType sMin, typename distributeLinear::srcType sMax, typename distributeLinear::dstType dMin, typename distributeLinear::dstType dMax): par(_g,_c,sMin,sMax,dMin,dMax)    {
+template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(double _g, double _c, typename distributeLinear::srcType sMin, typename distributeLinear::srcType sMax, typename distributeLinear::dstType dMin, typename distributeLinear::dstType dMax): par(_g,_c,sMin,sMax,dMin,dMax)    {
         CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)sMax);
     };
     
-    template<int src_t, int dst_t>  void distributeLinear<src_t, dst_t>::operator()(const typename distributeLinear::srcType src, typename distributeLinear::dstType dst) const
+template<int src_t, int dst_t>  void distributeLinear<src_t, dst_t>::operator()(const typename distributeLinear::srcType src, typename distributeLinear::dstType dst) const
     {
         if(src <= par.sLowHigh[0]){
             dst = par.dMin;
@@ -247,11 +746,11 @@ namespace cv
     
     
     
-    template<int src_t, int dst_t> distributePartition<src_t, dst_t>::distributePartition(typename distributePartition::srcType _sMinCutoff, typename distributePartition::srcType _sMaxCutoff, typename distributePartition::srcType _sMin, typename distributePartition::srcType _sMax, typename distributePartition::dstType _dMin, typename distributePartition::dstType _dMax):sMinCutoff(_sMinCutoff), sMaxCutoff(_sMaxCutoff)    {
+template<int src_t, int dst_t> distributePartition<src_t, dst_t>::distributePartition(typename distributePartition::srcType _sMinCutoff, typename distributePartition::srcType _sMaxCutoff, typename distributePartition::srcType _sMin, typename distributePartition::srcType _sMax, typename distributePartition::dstType _dMin, typename distributePartition::dstType _dMax):sMinCutoff(_sMinCutoff), sMaxCutoff(_sMaxCutoff)    {
         CV_Assert((int)_sMin <= (int)sMinCutoff && (int)sMinCutoff <= (int)_sMax && (int)_sMin <= (int)sMaxCutoff && (int)sMaxCutoff <= (int)_sMax && (int)_dMin <= (int)_dMax);
     };
     
-    template<int src_t, int dst_t>  void distributePartition<src_t, dst_t>::operator()(const typename distributePartition::srcType src, typename distributePartition::dstType &dst)
+template<int src_t, int dst_t>  void distributePartition<src_t, dst_t>::operator()(const typename distributePartition::srcType src, typename distributePartition::dstType &dst)
     {
         if(src >= sMinCutoff && src <= sMaxCutoff){
             dst = dstType(src);

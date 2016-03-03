@@ -62,28 +62,134 @@ enum
         using wrkInfo = cv::Work_Type<src_t, dst_t>;
         using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
         const srcType lookUpTableMax = 255;
-        const srcType nonLinearMin = 3; // Less than this is is not worth keeping the error function at all.
+//        const srcType nonLinearMin = 3; // Less than this is is not worth keeping the error function at all.
         
         srcType sMin, sMax, sRange;
         dstType dMin, dMax, dRange;
-        srcType c;
-        double uC, g;
+        // The distribution is described using 2 numbers which are related to the center and the standard deviation.
+        // If the center is in the range 0:1 then it is assumed that both the standard deviation and the
+        // center are specified in the 0:1 range. The type of the number also sets the choice of range.
+        // Distinguishing between the standard deviation s and the related parameter g is more difficult.
+        // +ve values are taken to be s
+        // -ve values are taken to be g
+        srcType c; double uC; // The center of the distribution in srcRange and unit range
+        double  s,        uS; // The standard deviation of the distribution in srcRange and unit range
+        double  g,        uG; // 1/(Sqrt(2) s) in srcRange and unit range
         
-        double ErfA, ErfB, ErfAB, scale;
-        dstType shift;
+        double ErfA, ErfB, ErfAB;
+        double K;     // The aspect ratio
+        double m, uM; // \delta in the writeup
+        double sDelta , dDelta; // quantum steps in the src and destination.
         
-        srcType sUnitGrad[2];
-        double ull, uul;
-        srcType sLowHigh[2];
-        bool useLookUpTable, linearDistribution;
-        double linearGrad;
+        double uLambda1, uLambda2;
+        srcType lambda1,  lambda2;
         
-        dstType dUnitGrad[2];
-        srcType linearConstant;
-        dstType shiftednErfConstant, dMaxShifted;
+        double uOmega1, uOmega2;
+        srcType omega1,  omega2;
         
+        double uOmegaP1, uOmegaP2;
+        srcType omegaP1,  omegaP2;
+        
+        double TolDiscard = 1.0/16.0, TolKeep = 1.0/16.0, TolDistribute = 1.0/16.0;
+        bool Qdiscard, Qdistribute, Qkeep;
+        
+        // dis(x) = disScale * erf( g * (x - c) ) + disConstant;
+        dstType disConstant;
+        double disScale;
+        
+        dstType disMin;              // The minimum value taken by the distribution/
+        dstType linearConstant;      // The value added in the linear section of the distribution pDis(x) = x + linearConstant
+        dstType shiftednErfConstant; // The height lost by using the linear distribution pDis(x) = dis(x) + shiftednErfConstant
+        dstType disMax;              // The maximun value taken by the distribution.
+        
+        bool useLookUpTable;
+                
         distributeErfParameters();
-        distributeErfParameters( double _g, double _uC, srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, dstType dMin = dstInfo::min, dstType dMax = dstInfo::max);
+        
+        distributeErfParameters(double sg, CV_32F_TYPE _uC,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        distributeErfParameters(double sg, CV_64F_TYPE _uC,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        distributeErfParameters(double sg, CV_8U_TYPE _c,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        distributeErfParameters(double sg, CV_8S_TYPE _c,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        distributeErfParameters(double sg, CV_16U_TYPE _c,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        distributeErfParameters(double sg, CV_16S_TYPE _c,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        distributeErfParameters(double sg, CV_32U_TYPE _c,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        distributeErfParameters(double sg, CV_32S_TYPE _c,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        distributeErfParameters(double sg, CV_64U_TYPE _c,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        distributeErfParameters(double sg, CV_64S_TYPE _c,\
+                                srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, \
+                                dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
+                                );
+        
+        void set(double, CV_32F_TYPE);
+        void set(double, CV_64F_TYPE);
+        void set(double, CV_8U_TYPE);
+        void set(double, CV_8S_TYPE);
+        void set(double, CV_16U_TYPE);
+        void set(double, CV_16S_TYPE);
+        void set(double, CV_32U_TYPE);
+        void set(double, CV_32S_TYPE);
+        void set(double, CV_64U_TYPE);
+        void set(double, CV_64S_TYPE);
+        
+        void setCenter(CV_32F_TYPE);
+        void setCenter(CV_64F_TYPE);
+        void setCenter(CV_8U_TYPE);
+        void setCenter(CV_8S_TYPE);
+        void setCenter(CV_16U_TYPE);
+        void setCenter(CV_16S_TYPE);
+        void setCenter(CV_32U_TYPE);
+        void setCenter(CV_32S_TYPE);
+        void setCenter(CV_64U_TYPE);
+        void setCenter(CV_64S_TYPE);
+        
+        void setUnitCenter(double);
+        void setSrcCenter(srcType);
+        
+        
+        void setUnitSigma(double _uS);
+        void setSrcSigma(double _s);
+        void setUnitG(double _uG);
+        void setSrcG(double _g);
+        
+        void setInternals();
+        
+        void setDiscardRegionBounds();
+        
+        void setKeepRegionBounds();
+        
+        void setRegionQ();
+        
+        void setDistributionParameters();
+        
+        void setup();
+
     };
     
     
@@ -91,12 +197,12 @@ enum
     {
         public :
         virtual ~depthConverter<src_t, dst_t>(){};
-        using srcInfo = cv::Data_Type<src_t>;
-        using dstInfo = cv::Data_Type<dst_t>;
-        using srcType = typename cv::Data_Type<src_t>::type;
-        using dstType = typename cv::Data_Type<dst_t>::type;
-        using wrkInfo = cv::Work_Type<src_t, dst_t>;
-        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
+        using srcInfo = cv_Data_Type<src_t>;
+        using dstInfo = cv_Data_Type<dst_t>;
+        using srcType = typename cv_Data_Type<src_t>::type;
+        using dstType = typename cv_Data_Type<dst_t>::type;
+        using wrkInfo = cv_Work_Type<src_t, dst_t>;
+        using wrkType = typename cv_Work_Type<src_t, dst_t>::type;
         virtual void operator()(const srcType src, dstType &dst) = 0;
     };
     

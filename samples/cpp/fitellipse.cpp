@@ -38,6 +38,12 @@ void processImage(int, void*);
 
 int main( int argc, char** argv )
 {
+    // ****************************************************
+    
+    cv::distributeErfParameters<CV_8U, CV_8U> par(0.1,0.2);
+    
+    // ****************************************************
+    
     cv::CommandLineParser parser(argc, argv,
         "{help h||}{@image|../data/stuff.jpg|}"
     );

@@ -22,8 +22,9 @@ template<int t> struct cv_Data_Type{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(t);
     constexpr static type max  = cv_Data_Type<CV_MAT_DEPTH(t)>::max;
     constexpr static type min  = cv_Data_Type<CV_MAT_DEPTH(t)>::min;
-    
+    constexpr static char fmt[5] = { '%', 'i', '\0', ' ', ' ' };
 };
+
 template<> struct cv_Data_Type<CV_8U>{
     using type = CV_8U_TYPE;
     const static int channelType = CV_8U;
@@ -31,8 +32,9 @@ template<> struct cv_Data_Type<CV_8U>{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_8U);
     constexpr static type max  = CV_8U_MAX;
     constexpr static type min  = CV_8U_MIN;
-    const char* fmt = "hhu";
+    constexpr static char fmt[5] = { '%', 'h', 'h', 'u', '\0' }; // "hhu"
 };
+
 template<> struct cv_Data_Type<CV_8S>{
     using type = CV_8S_TYPE;
     const static int channelType = CV_8S;
@@ -40,8 +42,9 @@ template<> struct cv_Data_Type<CV_8S>{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_8S);
     constexpr static type max  = CV_8S_MAX;
     constexpr static type min  = CV_8S_MIN;
-    const char* fmt = "hhi";
+    constexpr static char fmt[5] = { '%', 'h', 'h', 'i', '\0' }; //"hhi";
 };
+
 template<> struct cv_Data_Type<CV_16U>{
     using type = CV_16U_TYPE;
     const static int channelType = CV_16U;
@@ -49,8 +52,9 @@ template<> struct cv_Data_Type<CV_16U>{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_16U);
     constexpr static type max  = CV_16U_MAX;
     constexpr static type min  = CV_16U_MIN;
-    const char* fmt = "hu";
+    constexpr static char fmt[5] = { '%', 'h', 'u', '\0', ' ' }; //"hu";
 };
+
 template<> struct cv_Data_Type<CV_16S>{
     using type = CV_16S_TYPE;
     const static int channelType = CV_16S;
@@ -58,8 +62,9 @@ template<> struct cv_Data_Type<CV_16S>{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_16S);
     constexpr static type max  = CV_16S_MAX;
     constexpr static type min  = CV_16S_MIN;
-    const char* fmt = "hi";
+    constexpr static char fmt[5] = { '%', 'h', 'i', '\0', ' ' }; //"hi";
 };
+
 template<> struct cv_Data_Type<CV_32U>{
     using type = CV_32U_TYPE;
     const static int channelType = CV_32U;
@@ -67,8 +72,9 @@ template<> struct cv_Data_Type<CV_32U>{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_32U);
     constexpr static type max  = CV_32U_MAX;
     constexpr static type min  = CV_32U_MIN;
-    const char* fmt = "u";
+    constexpr static char fmt[5] = { '%', 'u', '\0', ' ', ' ' }; // "u";
 };
+
 template<> struct cv_Data_Type<CV_32S>{
     using type = CV_32S_TYPE;
     const static int channelType = CV_32S;
@@ -76,8 +82,9 @@ template<> struct cv_Data_Type<CV_32S>{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_32S);
     constexpr static type max  = CV_32S_MAX;
     constexpr static type min  = CV_32S_MIN;
-    const char* fmt = "i";
+    constexpr static char fmt[5] = { '%', 'i', '\0', ' ', ' ' }; // "i";
 };
+
 template<> struct cv_Data_Type<CV_64U>{
     using type = CV_64U_TYPE;
     const static int channelType = CV_64U;
@@ -85,17 +92,19 @@ template<> struct cv_Data_Type<CV_64U>{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_64U);
     constexpr static type max  = CV_64U_MAX;
     constexpr static type min  = CV_64U_MIN;
-    const char* fmt = "llu";
+    constexpr static char fmt[5] = { '%', 'l', 'l', 'u', '\0' }; //"llu";
 };
+
 template<> struct cv_Data_Type<CV_64S>{
     using type = CV_64S_TYPE;
     const static int channelType = CV_64S;
     const static int bitDepth  = CV_MAT_DEPTH_BITS(CV_64S);
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_64S);
-    const static type max  = CV_64S_MAX;
-    const static type min  = CV_64S_MIN;
-    const char* fmt = "lli";
+    constexpr static type max  = CV_64S_MAX;
+    constexpr static type min  = CV_64S_MIN;
+    constexpr static char fmt[5] = { '%', 'l', 'l', 'i', '\0' }; //"lli";
 };
+
 template<> struct cv_Data_Type<CV_32F>{
     using type = CV_32F_TYPE;
     const static int channelType = CV_32F;
@@ -103,8 +112,9 @@ template<> struct cv_Data_Type<CV_32F>{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_32F);
     constexpr static type max  = CV_32F_MAX;
     constexpr static type min  = CV_32F_MIN;
-    const char* fmt = "f";
+    constexpr static char fmt[5] = { '%', 'f', '\0', ' ', ' ' }; // "f";
 };
+
 template<> struct cv_Data_Type<CV_64F>{
     using type = CV_64F_TYPE;
     const static int channelType = CV_64F;
@@ -112,7 +122,7 @@ template<> struct cv_Data_Type<CV_64F>{
     const static int byteDepth = CV_MAT_DEPTH_BYTES(CV_64F);
     constexpr static type max  = CV_64F_MAX;
     constexpr static type min  = CV_64F_MIN;
-    const char* fmt = "f";
+    constexpr static char fmt[5] = { '%', 'f', '\0', ' ', ' ' }; // "f";
 };
 
 template<int t1, int t2> struct cv_Work_Type{

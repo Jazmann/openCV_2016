@@ -760,12 +760,12 @@ enum ColorConversionCodes {
     template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
     {
         public :
-        using srcInfo = cv::Data_Type<src_t>;
-        using dstInfo = cv::Data_Type<dst_t>;
-        using srcType = typename cv::Data_Type<src_t>::type;
-        using dstType = typename cv::Data_Type<dst_t>::type;
-        using wrkInfo = cv::Work_Type<src_t, dst_t>;
-        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
+        using srcInfo = cv_Data_Type<src_t>;
+        using dstInfo = cv_Data_Type<dst_t>;
+        using srcType = typename cv_Data_Type<src_t>::type;
+        using dstType = typename cv_Data_Type<dst_t>::type;
+        using wrkInfo = cv_Work_Type<src_t, dst_t>;
+        using wrkType = typename cv_Work_Type<src_t, dst_t>::type;
         const srcType lookUpTableMax = 255;
         //        const srcType nonLinearMin = 3; // Less than this is is not worth keeping the error function at all.
         
@@ -781,8 +781,13 @@ enum ColorConversionCodes {
         double  s,        uS; // The standard deviation of the distribution in srcRange and unit range
         double  g,        uG; // 1/(Sqrt(2) s) in srcRange and unit range
         
+        double axisLength=1.0; // In a colorspace transformation the src pixel values can be affected so that the information is spread
+                               // over an axis gaining or loosing information. The ammount of information is axisLength * sRange.
+                               // If axisLengh>1 then the distribution must act on a larger type than srcType and so must be used to
+                               // construct a distribution from a working type wrkType to the dst type.
         double ErfA, ErfB, ErfAB;
         double K;     // The aspect ratio
+        double kappa; // The compression ratio
         double m, uM; // \delta in the writeup
         double sDelta , dDelta; // quantum steps in the src and destination.
         
@@ -798,8 +803,7 @@ enum ColorConversionCodes {
         
         srcType Omega[2];          // The preserved 'keep' region bounds actually used by the distribution.
 
-        
-        double TolDiscard = 1.0/16.0, TolKeep = 1.0/16.0, TolDistribute = 1.0/16.0;
+        double TolDiscard, TolKeep, TolDistribute;
         bool Qdiscard, Qdistribute, Qkeep;
         
         // dis(x) = disScale * erf( g * (x - c) ) + disConstant;
@@ -811,6 +815,7 @@ enum ColorConversionCodes {
         dstType linearConstant;      // The value added in the linear section of the distribution pDis(x) = x + linearConstant
         dstType shiftednErfConstant; // The height lost by using the linear distribution pDis(x) = dis(x) + shiftednErfConstant
         dstType disMax;              // The maximun value taken by the distribution.
+        
         
         bool useLookUpTable;
         
@@ -857,6 +862,10 @@ enum ColorConversionCodes {
                                 dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
                                 );
         
+        void setRange(srcType, srcType, dstType, dstType);
+        void setSrcRange(srcType, srcType);
+        void setDstRange(dstType, dstType);
+        
         void set(double, CV_32F_TYPE);
         void set(double, CV_64F_TYPE);
         void set(double, CV_8U_TYPE);
@@ -887,6 +896,8 @@ enum ColorConversionCodes {
         void setDistributionParameters();
         
         void setup();
+        
+        void print();
         
     };
     
@@ -919,6 +930,36 @@ enum ColorConversionCodes {
         void operator()(const srcType src, dstType &dst);
     };
     
+    template<int src_t, int dst_t>  class  CV_EXPORTS distributePartition: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename distributePartition::srcType;
+        using dstType = typename distributePartition::dstType;
+        using wrkType = typename distributePartition::wrkType;
+        distributeErfParameters<src_t, dst_t> par;
+        dstType* map; // [cv::Data_Type<src_t>::max-cv::Data_Type<src_t>::min];
+        
+        distributePartition();
+        distributePartition( distributeErfParameters<src_t, dst_t> par);
+        distributePartition( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType &dst);
+    };
+    
+    template<int src_t, int dst_t>  class  CV_EXPORTS distributeStep: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename distributeStep::srcType;
+        using dstType = typename distributeStep::dstType;
+        using wrkType = typename distributeStep::wrkType;
+        distributeErfParameters<src_t, dst_t> par;
+        dstType* map; // [cv::Data_Type<src_t>::max-cv::Data_Type<src_t>::min];
+        
+        distributeStep();
+        distributeStep( distributeErfParameters<src_t, dst_t> par);
+        distributeStep( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType &dst);
+    };
+
     template<int src_t, int dst_t>  class CV_EXPORTS distributeErfCompact: public depthConverter<src_t, dst_t>
     {
         public :
@@ -932,35 +973,7 @@ enum ColorConversionCodes {
         distributeErfCompact( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
         void operator()(const srcType src, dstType &dst);
     };
-    
-    template<int src_t, int dst_t>  class CV_EXPORTS distributeStep: public depthConverter<src_t, dst_t>
-    {
-        public :
-        using srcType = typename distributeStep::srcType;
-        using dstType = typename distributeStep::dstType;
-        using wrkType = typename distributeStep::wrkType;
-        distributeErfParameters<src_t, dst_t> par;
-        dstType* map; // [cv::Data_Type<src_t>::max-cv::Data_Type<src_t>::min];
-        distributeStep();
-        distributeStep( distributeErfParameters<src_t, dst_t> par);
-        distributeStep( double _uG, double _uC, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
-        void operator()(const srcType src, dstType &dst);
-    };
 
-    
-    template<int src_t, int dst_t>  class CV_EXPORTS distributePartition: public depthConverter<src_t, dst_t>
-    {
-        public :
-        using srcType = typename distributePartition::srcType;
-        using dstType = typename distributePartition::dstType;
-        using wrkType = typename distributePartition::wrkType;
-        srcType sMinCutoff, sMaxCutoff;
-        
-        distributePartition();
-        distributePartition( srcType sMinCutoff, srcType sMaxCutoff, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
-        void operator()(const srcType src, dstType &dst);
-    };
-    
     template<int src_t, int dst_t>  class CV_EXPORTS distributeLinear: public depthConverter<src_t, dst_t>
     {
         public :
@@ -968,16 +981,46 @@ enum ColorConversionCodes {
         using dstType = typename distributeLinear::dstType;
         using wrkType = typename distributeLinear::wrkType;
         distributeErfParameters<src_t, dst_t> par;
-        srcType fMin, fMax;
-        wrkType g;
-        dstType c, dMin, dMax;
         
         distributeLinear();
         distributeLinear( distributeErfParameters<src_t, dst_t> par);
         distributeLinear( double _g, double _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
-        void operator()(const srcType src, dstType dst) const;
+        void operator()(const srcType src, dstType &dst);
     };
     
+template<int src_t, int dst_t>  depthConverter<src_t, dst_t> CV_EXPORTS distribute(distributeErfParameters<src_t, dst_t> par)
+    {
+        if (par.Qkeep) {
+            if (par.Qdiscard) {
+                if (par.Qdistribute) {
+                    return new distributeErfCompact<src_t, dst_t>(par);
+                } else {
+                    return new distributePartition<src_t, dst_t>(par);
+                };
+            } else {
+                if (par.Qdistribute) {
+                    return new distributeErfCompact<src_t, dst_t>(par);
+                } else {
+                    return new distributePartition<src_t, dst_t>(par);
+                };
+            };
+        } else {
+            if (par.Qdiscard) {
+                if (par.Qdistribute) {
+                    return new distributeErf<src_t, dst_t>(par);
+                } else {
+                    return new distributeStep<src_t, dst_t>(par);
+                };
+            } else {
+                if (par.Qdistribute) {
+                    return new distributeErf<src_t, dst_t>(par);
+                } else {
+                    return new distributeLinear<src_t, dst_t>(par);
+                };
+            };
+        };
+
+    };
     
     template<int src_t, int dst_t> class CV_EXPORTS colorSpaceConverter
     {
@@ -1025,6 +1068,11 @@ enum ColorConversionCodes {
         
         Vec<double, 3> uG; // The distribution parameter in the rotated color space scaled to 0:1
         
+        Vec<double, 3>  L; // The rotated axis lengths
+        Vec<double, 3> iL; // The reciprocal of the rotated axis lengths
+        Vec<double, 3> srcL; // The required axis lengths
+        cv::Matx<double, 3, 2> lambdaRGB; // The discard region in the RGB space
+        
         Vec<double, 3> rRScale, nRScale, fRScale;
         cv::Matx<double, 3, 3> rR;
         
@@ -1050,10 +1098,10 @@ enum ColorConversionCodes {
         Vec<typename cv::Data_Type<dst_t>::type, 3>  toDst(Vec<double, 3> pnt);
         Vec<double, 3> fromRot(Vec<double, 3> pnt);
         Vec<double, 3>   toRot(Vec<double, 3> pnt);
-        void init();
+        void init(cv::Vec<double, 3> , cv::Vec<double, 3>, const double);
+        void setRanges();
         void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
         void setTransformFromAngle(double theta );
-        void setRanges();
         void setuCinSrc(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
         void setuC(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
         void setG(Vec<double, 3> _g);
@@ -1066,10 +1114,13 @@ enum ColorConversionCodes {
         void setBlueDistributionErf( int center, double gradient);
         
         void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
+        
+
     };
     
+cv::Vec<int, 3> dqAS( double theta);
     
-    template<int src_t, int dst_t> class CV_EXPORTS RGB2Rot: public colorSpaceConverter<src_t, dst_t>
+template<int src_t, int dst_t> class CV_EXPORTS RGB2Rot: public colorSpaceConverter<src_t, dst_t>
     {
         public :
         using srcInfo = typename RGB2Rot::srcInfo;

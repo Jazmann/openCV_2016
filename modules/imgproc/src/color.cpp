@@ -103,6 +103,29 @@
 #define MAX_IPP32f  1.0
 #endif
 
+
+//template struct  cv_Data_Type<CV_8U>;
+//template struct  cv_Data_Type<CV_8S>;
+//template struct  cv_Data_Type<CV_16U>;
+//template struct  cv_Data_Type<CV_16S>;
+//template struct  cv_Data_Type<CV_32U>;
+//template struct  cv_Data_Type<CV_32S>;
+//template struct  cv_Data_Type<CV_64U>;
+//template struct  cv_Data_Type<CV_64S>;
+//template struct  cv_Data_Type<CV_32F>;
+//template struct  cv_Data_Type<CV_64F>;
+//
+//template struct  cv::Data_Type<CV_8U>;
+//template struct  cv::Data_Type<CV_8S>;
+//template struct  cv::Data_Type<CV_16U>;
+//template struct  cv::Data_Type<CV_16S>;
+//template struct  cv::Data_Type<CV_32U>;
+//template struct  cv::Data_Type<CV_32S>;
+//template struct  cv::Data_Type<CV_64U>;
+//template struct  cv::Data_Type<CV_64S>;
+//template struct  cv::Data_Type<CV_32F>;
+//template struct  cv::Data_Type<CV_64F>;
+
 constexpr  char cv_Data_Type<CV_8U>::fmt[5];
 constexpr  char cv_Data_Type<CV_8S>::fmt[5];
 constexpr  char cv_Data_Type<CV_16U>::fmt[5];
@@ -116,7 +139,11 @@ constexpr  char cv_Data_Type<CV_64F>::fmt[5];
 
 namespace cv
 {
-    template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters()
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters()
+    {
+        this->init();
+    };
+template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::init()
     {
         // The distribution is described using 2 numbers which are related to the center and the standard deviation.
         // If the center is in the range 0:1 then it is assumed that both the standard deviation and the
@@ -146,7 +173,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_uC);
         setup();
@@ -158,7 +185,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_uC);
         setup();
@@ -170,7 +197,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_c);
         setup();
@@ -181,7 +208,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_c);
         setup();
@@ -193,7 +220,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_c);
         setup();
@@ -205,7 +232,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_c);
         setup();
@@ -217,7 +244,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_c);
         setup();
@@ -229,7 +256,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_c);
         setup();
@@ -241,7 +268,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_c);
         setup();
@@ -253,7 +280,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
                                   typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax
                                   ): sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
-        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax && 0.0 <= uC && uC <= 1.0);
+        CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
         set(sg,_c);
         setup();
@@ -269,20 +296,26 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setRa
         CV_Assert((int)sMin < (int)sMax && (int)dMin <= (int)dMax);
         sMin = _sMin; sMax = _sMax; dMin = _dMin; dMax = _dMax;
         sRange = (sMax - sMin);  dRange = (dMax - dMin);
+        setUnitCenter(this->uC);
+        setUnitG(this->uG);
         setup();
     };
     
 template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setSrcRange(typename distributeErfParameters::srcType _sMin,
                                                                                        typename distributeErfParameters::srcType _sMax)
     {
-        sRange = (sMax - sMin);
+        sRange = (_sMax - _sMin);
         sMin = _sMin; sMax = _sMax;
+        setUnitCenter(this->uC);
+        setUnitG(this->uG);
         setup();
     }
 template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setDstRange(typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax)
     {
         dMin = _dMin; dMax = _dMax;
-        dRange = (dMax - dMin);
+        dRange = (_dMax - _dMin);
+        setUnitCenter(this->uC);
+        setUnitG(this->uG);
         setup();
     }
     
@@ -291,7 +324,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
         if(0.0 <= uC && uC <= 1.0) {
             setUnitCenter( double(_uC));
             if (_uSuG < 0.0) { // _uSuG specifies uG
-                setUnitG(_uSuG);
+                setUnitG(-1.0*_uSuG);
             } else {      // _uSuG specifies uS
                 setUnitSigma(_uSuG);
             }
@@ -299,7 +332,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
         } else {
             setSrcCenter(srcType(_uC));
             if (_uSuG < 0.0) { // _uSuG specifies g
-                setSrcG(_uSuG);
+                setSrcG(-1.0*_uSuG);
             } else {      // _uSuG specifies s
                 setSrcSigma(_uSuG);
             }
@@ -311,7 +344,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
         if(0.0 <= uC && uC <= 1.0) {
             setUnitCenter( double(_uC));
             if (_uSuG < 0.0) { // _uSuG specifies uG
-                setUnitG(_uSuG);
+                setUnitG(-1.0*_uSuG);
             } else {      // _uSuG specifies uS
                 setUnitSigma(_uSuG);
             }
@@ -319,7 +352,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
         } else {
             setSrcCenter(srcType(_uC));
             if (_uSuG < 0.0) { // _uSuG specifies g
-                setSrcG(_uSuG);
+                setSrcG(-1.0*_uSuG);
             } else {      // _uSuG specifies s
                 setSrcSigma(_uSuG);
             }
@@ -330,7 +363,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
     {
         setSrcCenter(srcType(_c));
         if (_sg < 0.0) { // _sg specifies g
-            setSrcG(_sg);
+            setSrcG(-1.0*_sg);
         } else {      // _sg specifies s
             setSrcSigma(_sg);
         }
@@ -339,7 +372,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
     {
         setSrcCenter(srcType(_c));
         if (_sg < 0.0) { // _sg specifies g
-            setSrcG(_sg);
+            setSrcG(-1.0*_sg);
         } else {      // _sg specifies s
             setSrcSigma(_sg);
         }
@@ -348,7 +381,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
     {
         setSrcCenter(srcType(_c));
         if (_sg < 0.0) { // _sg specifies g
-            setSrcG(_sg);
+            setSrcG(-1.0*_sg);
         } else {      // _sg specifies s
             setSrcSigma(_sg);
         }
@@ -357,7 +390,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
     {
         setSrcCenter(srcType(_c));
         if (_sg < 0.0) { // _sg specifies g
-            setSrcG(_sg);
+            setSrcG(-1.0*_sg);
         } else {      // _sg specifies s
             setSrcSigma(_sg);
         }
@@ -366,7 +399,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
     {
         setSrcCenter(srcType(_c));
         if (_sg < 0.0) { // _sg specifies g
-            setSrcG(_sg);
+            setSrcG(-1.0*_sg);
         } else {      // _sg specifies s
             setSrcSigma(_sg);
         }
@@ -375,7 +408,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
     {
         setSrcCenter(srcType(_c));
         if (_sg < 0.0) { // _sg specifies g
-            setSrcG(_sg);
+            setSrcG(-1.0*_sg);
         } else {      // _sg specifies s
             setSrcSigma(_sg);
         }
@@ -384,7 +417,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
     {
         setSrcCenter(srcType(_c));
         if (_sg < 0.0) { // _sg specifies g
-            setSrcG(_sg);
+            setSrcG(-1.0*_sg);
         } else {      // _sg specifies s
             setSrcSigma(_sg);
         }
@@ -393,7 +426,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::set(d
     {
         setSrcCenter(srcType(_c));
         if (_sg < 0.0) { // _sg specifies g
-            setSrcG(_sg);
+            setSrcG(-1.0*_sg);
         } else {      // _sg specifies s
             setSrcSigma(_sg);
         }
@@ -497,7 +530,7 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setKe
             
             //            disX = dRange * ( erf( g * (x-c) ) - erf( g * (sMin-c) ) ) / ( erf( g * (sMax-c) ) - erf( g * (sMin-c) ) ) + dMin;
             double disX = dRange * ( erf( g * (x-c) ) + ErfA ) / ( ErfAB ) + dMin;
-            while (disX > x + linearCheck) {
+            while (disX > x + linearCheck && x < sMax) {
                 x++;
                 disX = dRange * ( erf( g * (x-c) ) + ErfA ) / ( ErfAB ) + dMin;
             }
@@ -741,8 +774,8 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setup
 template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::print()
     {
         char buf[100];
-        strcpy(buf, "c = "); strcat(buf, srcInfo::fmt); strcat(buf, ";\n");
-        fprintf (stdout, buf,c);
+        strcpy(buf, "c = "); strcat(buf, srcInfo::fmt); strcat(buf, " <= "); strcat(buf, srcInfo::fmt); strcat(buf, " <= ");strcat(buf, srcInfo::fmt); strcat(buf, ";\n");
+        fprintf (stdout, buf,sMin,c,sMax);
         fprintf (stdout, "uC = %.14f;\n",uC);
         fprintf (stdout, "s = %.14f;\n",s);
         fprintf (stdout, "uS = %.14f;\n",uS);
@@ -899,78 +932,41 @@ template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::print
         };
     };
 
+    template class distributeErfParameters<CV_8U, CV_8U>;      template class distributeErfParameters<CV_8S, CV_8U>;
+    template class distributeErfParameters<CV_8U, CV_8S>;      template class distributeErfParameters<CV_8S, CV_8S>;
+    template class distributeErfParameters<CV_8U, CV_16U>;     template class distributeErfParameters<CV_8S, CV_16U>;
+    template class distributeErfParameters<CV_8U, CV_16S>;     template class distributeErfParameters<CV_8S, CV_16S>;
+    template class distributeErfParameters<CV_8U, CV_32U>;     template class distributeErfParameters<CV_8S, CV_32U>;
+    template class distributeErfParameters<CV_8U, CV_32S>;     template class distributeErfParameters<CV_8S, CV_32S>;
+    template class distributeErfParameters<CV_8U, CV_64U>;     template class distributeErfParameters<CV_8S, CV_64U>;
+    template class distributeErfParameters<CV_8U, CV_64S>;     template class distributeErfParameters<CV_8S, CV_64S>;
     
-    template class distributeErfParameters<CV_8U, CV_8U>;
-    template class distributeErfParameters<CV_8U, CV_8S>;
-    template class distributeErfParameters<CV_8U, CV_16U>;
-    template class distributeErfParameters<CV_8U, CV_16S>;
-    template class distributeErfParameters<CV_8U, CV_32U>;
-    template class distributeErfParameters<CV_8U, CV_32S>;
-    template class distributeErfParameters<CV_8U, CV_64U>;
-    template class distributeErfParameters<CV_8U, CV_64S>;
+    template class distributeErfParameters<CV_16U, CV_8U>;     template class distributeErfParameters<CV_16S, CV_8U>;
+    template class distributeErfParameters<CV_16U, CV_8S>;     template class distributeErfParameters<CV_16S, CV_8S>;
+    template class distributeErfParameters<CV_16U, CV_16U>;    template class distributeErfParameters<CV_16S, CV_16U>;
+    template class distributeErfParameters<CV_16U, CV_16S>;    template class distributeErfParameters<CV_16S, CV_16S>;
+    template class distributeErfParameters<CV_16U, CV_32U>;    template class distributeErfParameters<CV_16S, CV_32U>;
+    template class distributeErfParameters<CV_16U, CV_32S>;    template class distributeErfParameters<CV_16S, CV_32S>;
+    template class distributeErfParameters<CV_16U, CV_64U>;    template class distributeErfParameters<CV_16S, CV_64U>;
+    template class distributeErfParameters<CV_16U, CV_64S>;    template class distributeErfParameters<CV_16S, CV_64S>;
     
-    template class distributeErfParameters<CV_8S, CV_8U>;
-    template class distributeErfParameters<CV_8S, CV_8S>;
-    template class distributeErfParameters<CV_8S, CV_16U>;
-    template class distributeErfParameters<CV_8S, CV_16S>;
-    template class distributeErfParameters<CV_8S, CV_32U>;
-    template class distributeErfParameters<CV_8S, CV_32S>;
-    template class distributeErfParameters<CV_8S, CV_64U>;
-    template class distributeErfParameters<CV_8S, CV_64S>;
+    template class distributeErfParameters<CV_32U, CV_8U>;     template class distributeErfParameters<CV_32S, CV_8U>;
+    template class distributeErfParameters<CV_32U, CV_8S>;     template class distributeErfParameters<CV_32S, CV_8S>;
+    template class distributeErfParameters<CV_32U, CV_16U>;    template class distributeErfParameters<CV_32S, CV_16U>;
+    template class distributeErfParameters<CV_32U, CV_16S>;    template class distributeErfParameters<CV_32S, CV_16S>;
+    template class distributeErfParameters<CV_32U, CV_32U>;    template class distributeErfParameters<CV_32S, CV_32U>;
+    template class distributeErfParameters<CV_32U, CV_32S>;    template class distributeErfParameters<CV_32S, CV_32S>;
+    template class distributeErfParameters<CV_32U, CV_64U>;    template class distributeErfParameters<CV_32S, CV_64U>;
+    template class distributeErfParameters<CV_32U, CV_64S>;    template class distributeErfParameters<CV_32S, CV_64S>;
     
-    template class distributeErfParameters<CV_16U, CV_8U>;
-    template class distributeErfParameters<CV_16U, CV_8S>;
-    template class distributeErfParameters<CV_16U, CV_16U>;
-    template class distributeErfParameters<CV_16U, CV_16S>;
-    template class distributeErfParameters<CV_16U, CV_32U>;
-    template class distributeErfParameters<CV_16U, CV_32S>;
-    template class distributeErfParameters<CV_16U, CV_64U>;
-    template class distributeErfParameters<CV_16U, CV_64S>;
-    
-    template class distributeErfParameters<CV_16S, CV_8U>;
-    template class distributeErfParameters<CV_16S, CV_8S>;
-    template class distributeErfParameters<CV_16S, CV_16U>;
-    template class distributeErfParameters<CV_16S, CV_16S>;
-    template class distributeErfParameters<CV_16S, CV_32U>;
-    template class distributeErfParameters<CV_16S, CV_32S>;
-    template class distributeErfParameters<CV_16S, CV_64U>;
-    template class distributeErfParameters<CV_16S, CV_64S>;
-    
-    template class distributeErfParameters<CV_32U, CV_8U>;
-    template class distributeErfParameters<CV_32U, CV_8S>;
-    template class distributeErfParameters<CV_32U, CV_16U>;
-    template class distributeErfParameters<CV_32U, CV_16S>;
-    template class distributeErfParameters<CV_32U, CV_32U>;
-    template class distributeErfParameters<CV_32U, CV_32S>;
-    template class distributeErfParameters<CV_32U, CV_64U>;
-    template class distributeErfParameters<CV_32U, CV_64S>;
-    
-    template class distributeErfParameters<CV_32S, CV_8U>;
-    template class distributeErfParameters<CV_32S, CV_8S>;
-    template class distributeErfParameters<CV_32S, CV_16U>;
-    template class distributeErfParameters<CV_32S, CV_16S>;
-    template class distributeErfParameters<CV_32S, CV_32U>;
-    template class distributeErfParameters<CV_32S, CV_32S>;
-    template class distributeErfParameters<CV_32S, CV_64U>;
-    template class distributeErfParameters<CV_32S, CV_64S>;
-    
-    template class distributeErfParameters<CV_64U, CV_8U>;
-    template class distributeErfParameters<CV_64U, CV_8S>;
-    template class distributeErfParameters<CV_64U, CV_16U>;
-    template class distributeErfParameters<CV_64U, CV_16S>;
-    template class distributeErfParameters<CV_64U, CV_32U>;
-    template class distributeErfParameters<CV_64U, CV_32S>;
-    template class distributeErfParameters<CV_64U, CV_64U>;
-    template class distributeErfParameters<CV_64U, CV_64S>;
-    
-    template class distributeErfParameters<CV_64S, CV_8U>;
-    template class distributeErfParameters<CV_64S, CV_8S>;
-    template class distributeErfParameters<CV_64S, CV_16U>;
-    template class distributeErfParameters<CV_64S, CV_16S>;
-    template class distributeErfParameters<CV_64S, CV_32U>;
-    template class distributeErfParameters<CV_64S, CV_32S>;
-    template class distributeErfParameters<CV_64S, CV_64U>;
-    template class distributeErfParameters<CV_64S, CV_64S>;
+    template class distributeErfParameters<CV_64U, CV_8U>;     template class distributeErfParameters<CV_64S, CV_8U>;
+    template class distributeErfParameters<CV_64U, CV_8S>;     template class distributeErfParameters<CV_64S, CV_8S>;
+    template class distributeErfParameters<CV_64U, CV_16U>;    template class distributeErfParameters<CV_64S, CV_16U>;
+    template class distributeErfParameters<CV_64U, CV_16S>;    template class distributeErfParameters<CV_64S, CV_16S>;
+    template class distributeErfParameters<CV_64U, CV_32U>;    template class distributeErfParameters<CV_64S, CV_32U>;
+    template class distributeErfParameters<CV_64U, CV_32S>;    template class distributeErfParameters<CV_64S, CV_32S>;
+    template class distributeErfParameters<CV_64U, CV_64U>;    template class distributeErfParameters<CV_64S, CV_64U>;
+    template class distributeErfParameters<CV_64U, CV_64S>;    template class distributeErfParameters<CV_64S, CV_64S>;
     
 
         
@@ -1003,77 +999,106 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
         }
     };
     
-    template class distributeErf<CV_8U, CV_8U>;
-    template class distributeErf<CV_8U, CV_8S>;
-    template class distributeErf<CV_8U, CV_16U>;
-    template class distributeErf<CV_8U, CV_16S>;
-    template class distributeErf<CV_8U, CV_32U>;
-    template class distributeErf<CV_8U, CV_32S>;
-    template class distributeErf<CV_8U, CV_64U>;
-    template class distributeErf<CV_8U, CV_64S>;
+    template class distributeErf<CV_8U, CV_8U>;      template class distributeErf<CV_8S, CV_8U>;
+    template class distributeErf<CV_8U, CV_8S>;      template class distributeErf<CV_8S, CV_8S>;
+    template class distributeErf<CV_8U, CV_16U>;     template class distributeErf<CV_8S, CV_16U>;
+    template class distributeErf<CV_8U, CV_16S>;     template class distributeErf<CV_8S, CV_16S>;
+    template class distributeErf<CV_8U, CV_32U>;     template class distributeErf<CV_8S, CV_32U>;
+    template class distributeErf<CV_8U, CV_32S>;     template class distributeErf<CV_8S, CV_32S>;
+    template class distributeErf<CV_8U, CV_64U>;     template class distributeErf<CV_8S, CV_64U>;
+    template class distributeErf<CV_8U, CV_64S>;     template class distributeErf<CV_8S, CV_64S>;
     
-    template class distributeErf<CV_8S, CV_8U>;
-    template class distributeErf<CV_8S, CV_8S>;
-    template class distributeErf<CV_8S, CV_16U>;
-    template class distributeErf<CV_8S, CV_16S>;
-    template class distributeErf<CV_8S, CV_32U>;
-    template class distributeErf<CV_8S, CV_32S>;
-    template class distributeErf<CV_8S, CV_64U>;
-    template class distributeErf<CV_8S, CV_64S>;
+    template class distributeErf<CV_16U, CV_8U>;     template class distributeErf<CV_16S, CV_8U>;
+    template class distributeErf<CV_16U, CV_8S>;     template class distributeErf<CV_16S, CV_8S>;
+    template class distributeErf<CV_16U, CV_16U>;    template class distributeErf<CV_16S, CV_16U>;
+    template class distributeErf<CV_16U, CV_16S>;    template class distributeErf<CV_16S, CV_16S>;
+    template class distributeErf<CV_16U, CV_32U>;    template class distributeErf<CV_16S, CV_32U>;
+    template class distributeErf<CV_16U, CV_32S>;    template class distributeErf<CV_16S, CV_32S>;
+    template class distributeErf<CV_16U, CV_64U>;    template class distributeErf<CV_16S, CV_64U>;
+    template class distributeErf<CV_16U, CV_64S>;    template class distributeErf<CV_16S, CV_64S>;
     
-    template class distributeErf<CV_16U, CV_8U>;
-    template class distributeErf<CV_16U, CV_8S>;
-    template class distributeErf<CV_16U, CV_16U>;
-    template class distributeErf<CV_16U, CV_16S>;
-    template class distributeErf<CV_16U, CV_32U>;
-    template class distributeErf<CV_16U, CV_32S>;
-    template class distributeErf<CV_16U, CV_64U>;
-    template class distributeErf<CV_16U, CV_64S>;
+    template class distributeErf<CV_32U, CV_8U>;     template class distributeErf<CV_32S, CV_8U>;
+    template class distributeErf<CV_32U, CV_8S>;     template class distributeErf<CV_32S, CV_8S>;
+    template class distributeErf<CV_32U, CV_16U>;    template class distributeErf<CV_32S, CV_16U>;
+    template class distributeErf<CV_32U, CV_16S>;    template class distributeErf<CV_32S, CV_16S>;
+    template class distributeErf<CV_32U, CV_32U>;    template class distributeErf<CV_32S, CV_32U>;
+    template class distributeErf<CV_32U, CV_32S>;    template class distributeErf<CV_32S, CV_32S>;
+    template class distributeErf<CV_32U, CV_64U>;    template class distributeErf<CV_32S, CV_64U>;
+    template class distributeErf<CV_32U, CV_64S>;    template class distributeErf<CV_32S, CV_64S>;
     
-    template class distributeErf<CV_16S, CV_8U>;
-    template class distributeErf<CV_16S, CV_8S>;
-    template class distributeErf<CV_16S, CV_16U>;
-    template class distributeErf<CV_16S, CV_16S>;
-    template class distributeErf<CV_16S, CV_32U>;
-    template class distributeErf<CV_16S, CV_32S>;
-    template class distributeErf<CV_16S, CV_64U>;
-    template class distributeErf<CV_16S, CV_64S>;
+    template class distributeErf<CV_64U, CV_8U>;     template class distributeErf<CV_64S, CV_8U>;
+    template class distributeErf<CV_64U, CV_8S>;     template class distributeErf<CV_64S, CV_8S>;
+    template class distributeErf<CV_64U, CV_16U>;    template class distributeErf<CV_64S, CV_16U>;
+    template class distributeErf<CV_64U, CV_16S>;    template class distributeErf<CV_64S, CV_16S>;
+    template class distributeErf<CV_64U, CV_32U>;    template class distributeErf<CV_64S, CV_32U>;
+    template class distributeErf<CV_64U, CV_32S>;    template class distributeErf<CV_64S, CV_32S>;
+    template class distributeErf<CV_64U, CV_64U>;    template class distributeErf<CV_64S, CV_64U>;
+    template class distributeErf<CV_64U, CV_64S>;    template class distributeErf<CV_64S, CV_64S>;
     
-    template class distributeErf<CV_32U, CV_8U>;
-    template class distributeErf<CV_32U, CV_8S>;
-    template class distributeErf<CV_32U, CV_16U>;
-    template class distributeErf<CV_32U, CV_16S>;
-    template class distributeErf<CV_32U, CV_32U>;
-    template class distributeErf<CV_32U, CV_32S>;
-    template class distributeErf<CV_32U, CV_64U>;
-    template class distributeErf<CV_32U, CV_64S>;
+
     
-    template class distributeErf<CV_32S, CV_8U>;
-    template class distributeErf<CV_32S, CV_8S>;
-    template class distributeErf<CV_32S, CV_16U>;
-    template class distributeErf<CV_32S, CV_16S>;
-    template class distributeErf<CV_32S, CV_32U>;
-    template class distributeErf<CV_32S, CV_32S>;
-    template class distributeErf<CV_32S, CV_64U>;
-    template class distributeErf<CV_32S, CV_64S>;
     
-    template class distributeErf<CV_64U, CV_8U>;
-    template class distributeErf<CV_64U, CV_8S>;
-    template class distributeErf<CV_64U, CV_16U>;
-    template class distributeErf<CV_64U, CV_16S>;
-    template class distributeErf<CV_64U, CV_32U>;
-    template class distributeErf<CV_64U, CV_32S>;
-    template class distributeErf<CV_64U, CV_64U>;
-    template class distributeErf<CV_64U, CV_64S>;
+    template<int src_t, int dst_t, int wrk_t> distributeErfScaled<src_t, dst_t, wrk_t>::distributeErfScaled(){};
+    template<int src_t, int dst_t, int wrk_t> distributeErfScaled<src_t, dst_t, wrk_t>::distributeErfScaled(distributeErfParameters<src_t, dst_t> _par, double _scale, double _qRange, double _qMin):scale(_scale), qRange(_qRange), qMin(_qMin), par(_par){
+        qLambda1 = par.uLambda1 * qRange + qMin;
+        qLambda2 = par.uLambda2 * qRange + qMin;
+        qOmega1  = par.uOmegaP1 * qRange + qMin;
+        qOmega2  = par.uOmegaP2 * qRange + qMin;
+        qC = par.uC * qRange + qMin;
+    };
     
-    template class distributeErf<CV_64S, CV_8U>;
-    template class distributeErf<CV_64S, CV_8S>;
-    template class distributeErf<CV_64S, CV_16U>;
-    template class distributeErf<CV_64S, CV_16S>;
-    template class distributeErf<CV_64S, CV_32U>;
-    template class distributeErf<CV_64S, CV_32S>;
-    template class distributeErf<CV_64S, CV_64U>;
-    template class distributeErf<CV_64S, CV_64S>;
+    template<int src_t, int dst_t, int wrk_t>  void distributeErfScaled<src_t, dst_t, wrk_t>::operator()(const typename distributeErfScaled::srcType src, typename distributeErfScaled::dstType &dst)
+    {
+        // ErfDistribution
+        //
+        //         = disMin;                                                                                    sMin    <= x <= lambda1 * qRange + qMin
+        // pDis(x) = disScale * erf( g * (scale *x - c) ) + disConstant;                        lambda1 * qRange + qMin <  x <  uC * qRange + qMin
+        //         = disScale * erf( g * (scale *x - c) ) + disConstant + shiftednErfConstant;       uC * qRange + qMin <  x <  lambda2 * qRange + qMin
+        //         = disMax;                                                                    lambda2 * qRange + qMin <= x <= sMax
+        
+        if(src <= qLambda1){
+            dst = par.disMin;                                                                      //   sMin    <= x <= lambda1
+        } else if (src >= qLambda2){
+            dst = par.disMax;                                                                      //   lambda1 <= x <= sMax
+        } else {
+            if(src <= qC){
+                dst = dstType(par.disConstant - par.disScale * erf(par.g*(par.c - scale * src)) ); //   lambda1 <  x <  omegaP1
+            } else {
+                dst = dstType(par.disConstant + par.disScale * erf(par.g*(scale * src - par.c)) ); //   omegaP2 <  x <  lambda2
+            }
+        }
+    };
+    
+    
+    template class distributeErfScaled<CV_8U, CV_8U,  CV_16S>;     template class distributeErfScaled<CV_8S, CV_8U,  CV_16S>;
+    template class distributeErfScaled<CV_8U, CV_8S,  CV_16S>;     template class distributeErfScaled<CV_8S, CV_8S,  CV_16S>;
+    template class distributeErfScaled<CV_8U, CV_16U, CV_16S>;     template class distributeErfScaled<CV_8S, CV_16U, CV_16S>;
+    template class distributeErfScaled<CV_8U, CV_16S, CV_16S>;     template class distributeErfScaled<CV_8S, CV_16S, CV_16S>;
+    template class distributeErfScaled<CV_8U, CV_32U, CV_16S>;     template class distributeErfScaled<CV_8S, CV_32U, CV_16S>;
+    template class distributeErfScaled<CV_8U, CV_32S, CV_16S>;     template class distributeErfScaled<CV_8S, CV_32S, CV_16S>;
+    template class distributeErfScaled<CV_8U, CV_64U, CV_16S>;     template class distributeErfScaled<CV_8S, CV_64U, CV_16S>;
+    template class distributeErfScaled<CV_8U, CV_64S, CV_16S>;     template class distributeErfScaled<CV_8S, CV_64S, CV_16S>;
+    
+    template class distributeErfScaled<CV_16U, CV_8U,  CV_32S>;    template class distributeErfScaled<CV_16S, CV_8U,  CV_32S>;
+    template class distributeErfScaled<CV_16U, CV_8S,  CV_32S>;    template class distributeErfScaled<CV_16S, CV_8S,  CV_32S>;
+    template class distributeErfScaled<CV_16U, CV_16U, CV_32S>;    template class distributeErfScaled<CV_16S, CV_16U, CV_32S>;
+    template class distributeErfScaled<CV_16U, CV_16S, CV_32S>;    template class distributeErfScaled<CV_16S, CV_16S, CV_32S>;
+    template class distributeErfScaled<CV_16U, CV_32U, CV_32S>;    template class distributeErfScaled<CV_16S, CV_32U, CV_32S>;
+    template class distributeErfScaled<CV_16U, CV_32S, CV_32S>;    template class distributeErfScaled<CV_16S, CV_32S, CV_32S>;
+    template class distributeErfScaled<CV_16U, CV_64U, CV_32S>;    template class distributeErfScaled<CV_16S, CV_64U, CV_32S>;
+    template class distributeErfScaled<CV_16U, CV_64S, CV_32S>;    template class distributeErfScaled<CV_16S, CV_64S, CV_32S>;
+    
+    template class distributeErfScaled<CV_32U, CV_8U,  CV_64S>;    template class distributeErfScaled<CV_32S, CV_8U,  CV_64S>;
+    template class distributeErfScaled<CV_32U, CV_8S,  CV_64S>;    template class distributeErfScaled<CV_32S, CV_8S,  CV_64S>;
+    template class distributeErfScaled<CV_32U, CV_16U, CV_64S>;    template class distributeErfScaled<CV_32S, CV_16U, CV_64S>;
+    template class distributeErfScaled<CV_32U, CV_16S, CV_64S>;    template class distributeErfScaled<CV_32S, CV_16S, CV_64S>;
+    template class distributeErfScaled<CV_32U, CV_32U, CV_64S>;    template class distributeErfScaled<CV_32S, CV_32U, CV_64S>;
+    template class distributeErfScaled<CV_32U, CV_32S, CV_64S>;    template class distributeErfScaled<CV_32S, CV_32S, CV_64S>;
+    template class distributeErfScaled<CV_32U, CV_64U, CV_64S>;    template class distributeErfScaled<CV_32S, CV_64U, CV_64S>;
+    template class distributeErfScaled<CV_32U, CV_64S, CV_64S>;    template class distributeErfScaled<CV_32S, CV_64S, CV_64S>;
+
+    
+    
     
     template<int src_t, int dst_t> distributePartition<src_t, dst_t>::distributePartition(){};
     template<int src_t, int dst_t> distributePartition<src_t, dst_t>::distributePartition(distributeErfParameters<src_t, dst_t> _par):par(_par){ };
@@ -1098,78 +1123,97 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
         }
     };
     
-    template class distributePartition<CV_8U, CV_8U>;
-    template class distributePartition<CV_8U, CV_8S>;
-    template class distributePartition<CV_8U, CV_16U>;
-    template class distributePartition<CV_8U, CV_16S>;
-    template class distributePartition<CV_8U, CV_32U>;
-    template class distributePartition<CV_8U, CV_32S>;
-    template class distributePartition<CV_8U, CV_64U>;
-    template class distributePartition<CV_8U, CV_64S>;
+    template class distributePartition<CV_8U, CV_8U>;      template class distributePartition<CV_8S, CV_8U>;
+    template class distributePartition<CV_8U, CV_8S>;      template class distributePartition<CV_8S, CV_8S>;
+    template class distributePartition<CV_8U, CV_16U>;     template class distributePartition<CV_8S, CV_16U>;
+    template class distributePartition<CV_8U, CV_16S>;     template class distributePartition<CV_8S, CV_16S>;
+    template class distributePartition<CV_8U, CV_32U>;     template class distributePartition<CV_8S, CV_32U>;
+    template class distributePartition<CV_8U, CV_32S>;     template class distributePartition<CV_8S, CV_32S>;
+    template class distributePartition<CV_8U, CV_64U>;     template class distributePartition<CV_8S, CV_64U>;
+    template class distributePartition<CV_8U, CV_64S>;     template class distributePartition<CV_8S, CV_64S>;
     
-    template class distributePartition<CV_8S, CV_8U>;
-    template class distributePartition<CV_8S, CV_8S>;
-    template class distributePartition<CV_8S, CV_16U>;
-    template class distributePartition<CV_8S, CV_16S>;
-    template class distributePartition<CV_8S, CV_32U>;
-    template class distributePartition<CV_8S, CV_32S>;
-    template class distributePartition<CV_8S, CV_64U>;
-    template class distributePartition<CV_8S, CV_64S>;
+    template class distributePartition<CV_16U, CV_8U>;     template class distributePartition<CV_16S, CV_8U>;
+    template class distributePartition<CV_16U, CV_8S>;     template class distributePartition<CV_16S, CV_8S>;
+    template class distributePartition<CV_16U, CV_16U>;    template class distributePartition<CV_16S, CV_16U>;
+    template class distributePartition<CV_16U, CV_16S>;    template class distributePartition<CV_16S, CV_16S>;
+    template class distributePartition<CV_16U, CV_32U>;    template class distributePartition<CV_16S, CV_32U>;
+    template class distributePartition<CV_16U, CV_32S>;    template class distributePartition<CV_16S, CV_32S>;
+    template class distributePartition<CV_16U, CV_64U>;    template class distributePartition<CV_16S, CV_64U>;
+    template class distributePartition<CV_16U, CV_64S>;    template class distributePartition<CV_16S, CV_64S>;
     
-    template class distributePartition<CV_16U, CV_8U>;
-    template class distributePartition<CV_16U, CV_8S>;
-    template class distributePartition<CV_16U, CV_16U>;
-    template class distributePartition<CV_16U, CV_16S>;
-    template class distributePartition<CV_16U, CV_32U>;
-    template class distributePartition<CV_16U, CV_32S>;
-    template class distributePartition<CV_16U, CV_64U>;
-    template class distributePartition<CV_16U, CV_64S>;
+    template class distributePartition<CV_32U, CV_8U>;     template class distributePartition<CV_32S, CV_8U>;
+    template class distributePartition<CV_32U, CV_8S>;     template class distributePartition<CV_32S, CV_8S>;
+    template class distributePartition<CV_32U, CV_16U>;    template class distributePartition<CV_32S, CV_16U>;
+    template class distributePartition<CV_32U, CV_16S>;    template class distributePartition<CV_32S, CV_16S>;
+    template class distributePartition<CV_32U, CV_32U>;    template class distributePartition<CV_32S, CV_32U>;
+    template class distributePartition<CV_32U, CV_32S>;    template class distributePartition<CV_32S, CV_32S>;
+    template class distributePartition<CV_32U, CV_64U>;    template class distributePartition<CV_32S, CV_64U>;
+    template class distributePartition<CV_32U, CV_64S>;    template class distributePartition<CV_32S, CV_64S>;
     
-    template class distributePartition<CV_16S, CV_8U>;
-    template class distributePartition<CV_16S, CV_8S>;
-    template class distributePartition<CV_16S, CV_16U>;
-    template class distributePartition<CV_16S, CV_16S>;
-    template class distributePartition<CV_16S, CV_32U>;
-    template class distributePartition<CV_16S, CV_32S>;
-    template class distributePartition<CV_16S, CV_64U>;
-    template class distributePartition<CV_16S, CV_64S>;
+    template class distributePartition<CV_64U, CV_8U>;     template class distributePartition<CV_64S, CV_8U>;
+    template class distributePartition<CV_64U, CV_8S>;     template class distributePartition<CV_64S, CV_8S>;
+    template class distributePartition<CV_64U, CV_16U>;    template class distributePartition<CV_64S, CV_16U>;
+    template class distributePartition<CV_64U, CV_16S>;    template class distributePartition<CV_64S, CV_16S>;
+    template class distributePartition<CV_64U, CV_32U>;    template class distributePartition<CV_64S, CV_32U>;
+    template class distributePartition<CV_64U, CV_32S>;    template class distributePartition<CV_64S, CV_32S>;
+    template class distributePartition<CV_64U, CV_64U>;    template class distributePartition<CV_64S, CV_64U>;
+    template class distributePartition<CV_64U, CV_64S>;    template class distributePartition<CV_64S, CV_64S>;
+
     
-    template class distributePartition<CV_32U, CV_8U>;
-    template class distributePartition<CV_32U, CV_8S>;
-    template class distributePartition<CV_32U, CV_16U>;
-    template class distributePartition<CV_32U, CV_16S>;
-    template class distributePartition<CV_32U, CV_32U>;
-    template class distributePartition<CV_32U, CV_32S>;
-    template class distributePartition<CV_32U, CV_64U>;
-    template class distributePartition<CV_32U, CV_64S>;
     
-    template class distributePartition<CV_32S, CV_8U>;
-    template class distributePartition<CV_32S, CV_8S>;
-    template class distributePartition<CV_32S, CV_16U>;
-    template class distributePartition<CV_32S, CV_16S>;
-    template class distributePartition<CV_32S, CV_32U>;
-    template class distributePartition<CV_32S, CV_32S>;
-    template class distributePartition<CV_32S, CV_64U>;
-    template class distributePartition<CV_32S, CV_64S>;
+    template<int src_t, int dst_t, int wrk_t> distributePartitionScaled<src_t, dst_t, wrk_t>::distributePartitionScaled(){};
+    template<int src_t, int dst_t, int wrk_t> distributePartitionScaled<src_t, dst_t, wrk_t>::distributePartitionScaled(distributeErfParameters<src_t, dst_t> _par, double _scale, double _qRange, double _qMin):scale(_scale), qRange(_qRange), qMin(_qMin), par(_par){
+        qLambda1 = par.uLambda1 * qRange + qMin;
+        qLambda2 = par.uLambda2 * qRange + qMin;
+        qOmega1  = par.uOmegaP1 * qRange + qMin;
+        qOmega2  = par.uOmegaP2 * qRange + qMin;
+
+    };
     
-    template class distributePartition<CV_64U, CV_8U>;
-    template class distributePartition<CV_64U, CV_8S>;
-    template class distributePartition<CV_64U, CV_16U>;
-    template class distributePartition<CV_64U, CV_16S>;
-    template class distributePartition<CV_64U, CV_32U>;
-    template class distributePartition<CV_64U, CV_32S>;
-    template class distributePartition<CV_64U, CV_64U>;
-    template class distributePartition<CV_64U, CV_64S>;
+    template<int src_t, int dst_t, int wrk_t>  void distributePartitionScaled<src_t, dst_t, wrk_t>::operator()(const typename distributePartitionScaled::srcType src, typename distributePartitionScaled::dstType &dst)
+    {
+        // PartitionDistribution
+        //
+        //         = disMin;                                                                                    sMin    <= x <= lambda1 * qRange + qMin
+        // pDis(x) = scale * x - linearConstant;                                                omegaP1 * qRange + qMin <= x <= omegaP2 * qRange + qMin
+        //         = disMax;                                                                    lambda2 * qRange + qMin <= x <= sMax
+        
+        if(src <= qLambda1){
+            dst = par.disMin;                       //                   sMin    <= x <= lambda1 * qRange + qMin
+        } else if (src >= qLambda2){
+            dst = par.disMax;                       //   lambda2 * qRange + qMin <= x <= sMax
+        } else {
+            dst = scale * src - par.linearConstant; //   lambda1 * qRange + qMin <= x <= lambda2 * qRange + qMin
+        }
+    };
     
-    template class distributePartition<CV_64S, CV_8U>;
-    template class distributePartition<CV_64S, CV_8S>;
-    template class distributePartition<CV_64S, CV_16U>;
-    template class distributePartition<CV_64S, CV_16S>;
-    template class distributePartition<CV_64S, CV_32U>;
-    template class distributePartition<CV_64S, CV_32S>;
-    template class distributePartition<CV_64S, CV_64U>;
-    template class distributePartition<CV_64S, CV_64S>;
+    template class distributePartitionScaled<CV_8U, CV_8U,  CV_16S>;     template class distributePartitionScaled<CV_8S, CV_8U,  CV_16S>;
+    template class distributePartitionScaled<CV_8U, CV_8S,  CV_16S>;     template class distributePartitionScaled<CV_8S, CV_8S,  CV_16S>;
+    template class distributePartitionScaled<CV_8U, CV_16U, CV_16S>;     template class distributePartitionScaled<CV_8S, CV_16U, CV_16S>;
+    template class distributePartitionScaled<CV_8U, CV_16S, CV_16S>;     template class distributePartitionScaled<CV_8S, CV_16S, CV_16S>;
+    template class distributePartitionScaled<CV_8U, CV_32U, CV_16S>;     template class distributePartitionScaled<CV_8S, CV_32U, CV_16S>;
+    template class distributePartitionScaled<CV_8U, CV_32S, CV_16S>;     template class distributePartitionScaled<CV_8S, CV_32S, CV_16S>;
+    template class distributePartitionScaled<CV_8U, CV_64U, CV_16S>;     template class distributePartitionScaled<CV_8S, CV_64U, CV_16S>;
+    template class distributePartitionScaled<CV_8U, CV_64S, CV_16S>;     template class distributePartitionScaled<CV_8S, CV_64S, CV_16S>;
     
+    template class distributePartitionScaled<CV_16U, CV_8U,  CV_32S>;    template class distributePartitionScaled<CV_16S, CV_8U,  CV_32S>;
+    template class distributePartitionScaled<CV_16U, CV_8S,  CV_32S>;    template class distributePartitionScaled<CV_16S, CV_8S,  CV_32S>;
+    template class distributePartitionScaled<CV_16U, CV_16U, CV_32S>;    template class distributePartitionScaled<CV_16S, CV_16U, CV_32S>;
+    template class distributePartitionScaled<CV_16U, CV_16S, CV_32S>;    template class distributePartitionScaled<CV_16S, CV_16S, CV_32S>;
+    template class distributePartitionScaled<CV_16U, CV_32U, CV_32S>;    template class distributePartitionScaled<CV_16S, CV_32U, CV_32S>;
+    template class distributePartitionScaled<CV_16U, CV_32S, CV_32S>;    template class distributePartitionScaled<CV_16S, CV_32S, CV_32S>;
+    template class distributePartitionScaled<CV_16U, CV_64U, CV_32S>;    template class distributePartitionScaled<CV_16S, CV_64U, CV_32S>;
+    template class distributePartitionScaled<CV_16U, CV_64S, CV_32S>;    template class distributePartitionScaled<CV_16S, CV_64S, CV_32S>;
+    
+    template class distributePartitionScaled<CV_32U, CV_8U,  CV_64S>;    template class distributePartitionScaled<CV_32S, CV_8U,  CV_64S>;
+    template class distributePartitionScaled<CV_32U, CV_8S,  CV_64S>;    template class distributePartitionScaled<CV_32S, CV_8S,  CV_64S>;
+    template class distributePartitionScaled<CV_32U, CV_16U, CV_64S>;    template class distributePartitionScaled<CV_32S, CV_16U, CV_64S>;
+    template class distributePartitionScaled<CV_32U, CV_16S, CV_64S>;    template class distributePartitionScaled<CV_32S, CV_16S, CV_64S>;
+    template class distributePartitionScaled<CV_32U, CV_32U, CV_64S>;    template class distributePartitionScaled<CV_32S, CV_32U, CV_64S>;
+    template class distributePartitionScaled<CV_32U, CV_32S, CV_64S>;    template class distributePartitionScaled<CV_32S, CV_32S, CV_64S>;
+    template class distributePartitionScaled<CV_32U, CV_64U, CV_64S>;    template class distributePartitionScaled<CV_32S, CV_64U, CV_64S>;
+    template class distributePartitionScaled<CV_32U, CV_64S, CV_64S>;    template class distributePartitionScaled<CV_32S, CV_64S, CV_64S>;
+
 
     
 template<int src_t, int dst_t> distributeStep<src_t, dst_t>::distributeStep(){ };
@@ -1193,78 +1237,95 @@ template<int src_t, int dst_t>  void distributeStep<src_t, dst_t>::operator()(co
     };
 };
     
-    template class distributeStep<CV_8U, CV_8U>;
-    template class distributeStep<CV_8U, CV_8S>;
-    template class distributeStep<CV_8U, CV_16U>;
-    template class distributeStep<CV_8U, CV_16S>;
-    template class distributeStep<CV_8U, CV_32U>;
-    template class distributeStep<CV_8U, CV_32S>;
-    template class distributeStep<CV_8U, CV_64U>;
-    template class distributeStep<CV_8U, CV_64S>;
     
-    template class distributeStep<CV_8S, CV_8U>;
-    template class distributeStep<CV_8S, CV_8S>;
-    template class distributeStep<CV_8S, CV_16U>;
-    template class distributeStep<CV_8S, CV_16S>;
-    template class distributeStep<CV_8S, CV_32U>;
-    template class distributeStep<CV_8S, CV_32S>;
-    template class distributeStep<CV_8S, CV_64U>;
-    template class distributeStep<CV_8S, CV_64S>;
+    template class distributeStep<CV_8U, CV_8U>;      template class distributeStep<CV_8S, CV_8U>;
+    template class distributeStep<CV_8U, CV_8S>;      template class distributeStep<CV_8S, CV_8S>;
+    template class distributeStep<CV_8U, CV_16U>;     template class distributeStep<CV_8S, CV_16U>;
+    template class distributeStep<CV_8U, CV_16S>;     template class distributeStep<CV_8S, CV_16S>;
+    template class distributeStep<CV_8U, CV_32U>;     template class distributeStep<CV_8S, CV_32U>;
+    template class distributeStep<CV_8U, CV_32S>;     template class distributeStep<CV_8S, CV_32S>;
+    template class distributeStep<CV_8U, CV_64U>;     template class distributeStep<CV_8S, CV_64U>;
+    template class distributeStep<CV_8U, CV_64S>;     template class distributeStep<CV_8S, CV_64S>;
     
-    template class distributeStep<CV_16U, CV_8U>;
-    template class distributeStep<CV_16U, CV_8S>;
-    template class distributeStep<CV_16U, CV_16U>;
-    template class distributeStep<CV_16U, CV_16S>;
-    template class distributeStep<CV_16U, CV_32U>;
-    template class distributeStep<CV_16U, CV_32S>;
-    template class distributeStep<CV_16U, CV_64U>;
-    template class distributeStep<CV_16U, CV_64S>;
+    template class distributeStep<CV_16U, CV_8U>;     template class distributeStep<CV_16S, CV_8U>;
+    template class distributeStep<CV_16U, CV_8S>;     template class distributeStep<CV_16S, CV_8S>;
+    template class distributeStep<CV_16U, CV_16U>;    template class distributeStep<CV_16S, CV_16U>;
+    template class distributeStep<CV_16U, CV_16S>;    template class distributeStep<CV_16S, CV_16S>;
+    template class distributeStep<CV_16U, CV_32U>;    template class distributeStep<CV_16S, CV_32U>;
+    template class distributeStep<CV_16U, CV_32S>;    template class distributeStep<CV_16S, CV_32S>;
+    template class distributeStep<CV_16U, CV_64U>;    template class distributeStep<CV_16S, CV_64U>;
+    template class distributeStep<CV_16U, CV_64S>;    template class distributeStep<CV_16S, CV_64S>;
     
-    template class distributeStep<CV_16S, CV_8U>;
-    template class distributeStep<CV_16S, CV_8S>;
-    template class distributeStep<CV_16S, CV_16U>;
-    template class distributeStep<CV_16S, CV_16S>;
-    template class distributeStep<CV_16S, CV_32U>;
-    template class distributeStep<CV_16S, CV_32S>;
-    template class distributeStep<CV_16S, CV_64U>;
-    template class distributeStep<CV_16S, CV_64S>;
+    template class distributeStep<CV_32U, CV_8U>;     template class distributeStep<CV_32S, CV_8U>;
+    template class distributeStep<CV_32U, CV_8S>;     template class distributeStep<CV_32S, CV_8S>;
+    template class distributeStep<CV_32U, CV_16U>;    template class distributeStep<CV_32S, CV_16U>;
+    template class distributeStep<CV_32U, CV_16S>;    template class distributeStep<CV_32S, CV_16S>;
+    template class distributeStep<CV_32U, CV_32U>;    template class distributeStep<CV_32S, CV_32U>;
+    template class distributeStep<CV_32U, CV_32S>;    template class distributeStep<CV_32S, CV_32S>;
+    template class distributeStep<CV_32U, CV_64U>;    template class distributeStep<CV_32S, CV_64U>;
+    template class distributeStep<CV_32U, CV_64S>;    template class distributeStep<CV_32S, CV_64S>;
     
-    template class distributeStep<CV_32U, CV_8U>;
-    template class distributeStep<CV_32U, CV_8S>;
-    template class distributeStep<CV_32U, CV_16U>;
-    template class distributeStep<CV_32U, CV_16S>;
-    template class distributeStep<CV_32U, CV_32U>;
-    template class distributeStep<CV_32U, CV_32S>;
-    template class distributeStep<CV_32U, CV_64U>;
-    template class distributeStep<CV_32U, CV_64S>;
+    template class distributeStep<CV_64U, CV_8U>;     template class distributeStep<CV_64S, CV_8U>;
+    template class distributeStep<CV_64U, CV_8S>;     template class distributeStep<CV_64S, CV_8S>;
+    template class distributeStep<CV_64U, CV_16U>;    template class distributeStep<CV_64S, CV_16U>;
+    template class distributeStep<CV_64U, CV_16S>;    template class distributeStep<CV_64S, CV_16S>;
+    template class distributeStep<CV_64U, CV_32U>;    template class distributeStep<CV_64S, CV_32U>;
+    template class distributeStep<CV_64U, CV_32S>;    template class distributeStep<CV_64S, CV_32S>;
+    template class distributeStep<CV_64U, CV_64U>;    template class distributeStep<CV_64S, CV_64U>;
+    template class distributeStep<CV_64U, CV_64S>;    template class distributeStep<CV_64S, CV_64S>;
     
-    template class distributeStep<CV_32S, CV_8U>;
-    template class distributeStep<CV_32S, CV_8S>;
-    template class distributeStep<CV_32S, CV_16U>;
-    template class distributeStep<CV_32S, CV_16S>;
-    template class distributeStep<CV_32S, CV_32U>;
-    template class distributeStep<CV_32S, CV_32S>;
-    template class distributeStep<CV_32S, CV_64U>;
-    template class distributeStep<CV_32S, CV_64S>;
+
     
-    template class distributeStep<CV_64U, CV_8U>;
-    template class distributeStep<CV_64U, CV_8S>;
-    template class distributeStep<CV_64U, CV_16U>;
-    template class distributeStep<CV_64U, CV_16S>;
-    template class distributeStep<CV_64U, CV_32U>;
-    template class distributeStep<CV_64U, CV_32S>;
-    template class distributeStep<CV_64U, CV_64U>;
-    template class distributeStep<CV_64U, CV_64S>;
+    template<int src_t, int dst_t, int wrk_t> distributeStepScaled<src_t, dst_t, wrk_t>::distributeStepScaled(){};
+    template<int src_t, int dst_t, int wrk_t> distributeStepScaled<src_t, dst_t, wrk_t>::distributeStepScaled(distributeErfParameters<src_t, dst_t> _par, double _scale, double _qRange, double _qMin):scale(_scale), qRange(_qRange), qMin(_qMin), par(_par){
+        qLambda1 = par.uLambda1 * qRange + qMin;
+        qLambda2 = par.uLambda2 * qRange + qMin;
+        qOmega1  = par.uOmegaP1 * qRange + qMin;
+        qOmega2  = par.uOmegaP2 * qRange + qMin;
+    };
     
-    template class distributeStep<CV_64S, CV_8U>;
-    template class distributeStep<CV_64S, CV_8S>;
-    template class distributeStep<CV_64S, CV_16U>;
-    template class distributeStep<CV_64S, CV_16S>;
-    template class distributeStep<CV_64S, CV_32U>;
-    template class distributeStep<CV_64S, CV_32S>;
-    template class distributeStep<CV_64S, CV_64U>;
-    template class distributeStep<CV_64S, CV_64S>;
+    template<int src_t, int dst_t, int wrk_t>  void distributeStepScaled<src_t, dst_t, wrk_t>::operator()(const typename distributeStepScaled::srcType src, typename distributeStepScaled::dstType &dst)
+    {
+        // StepDistribution
+        //
+        // pDis(x) = disMin;       x <= (lambda1+lambda2)/2
+        //         = disMax;       x >  (lambda1+lambda2)/2
+        //
+        if(src <= qOmega1){
+            dst = par.disMin;                                                                                       //   sMin    <= x <= lambda1
+        } else {
+            dst = par.disMax;                                                                                       //   lambda1 <= x <= sMax
+        }
+    };
     
+    
+    template class distributeStepScaled<CV_8U, CV_8U,  CV_16S>;     template class distributeStepScaled<CV_8S, CV_8U,  CV_16S>;
+    template class distributeStepScaled<CV_8U, CV_8S,  CV_16S>;     template class distributeStepScaled<CV_8S, CV_8S,  CV_16S>;
+    template class distributeStepScaled<CV_8U, CV_16U, CV_16S>;     template class distributeStepScaled<CV_8S, CV_16U, CV_16S>;
+    template class distributeStepScaled<CV_8U, CV_16S, CV_16S>;     template class distributeStepScaled<CV_8S, CV_16S, CV_16S>;
+    template class distributeStepScaled<CV_8U, CV_32U, CV_16S>;     template class distributeStepScaled<CV_8S, CV_32U, CV_16S>;
+    template class distributeStepScaled<CV_8U, CV_32S, CV_16S>;     template class distributeStepScaled<CV_8S, CV_32S, CV_16S>;
+    template class distributeStepScaled<CV_8U, CV_64U, CV_16S>;     template class distributeStepScaled<CV_8S, CV_64U, CV_16S>;
+    template class distributeStepScaled<CV_8U, CV_64S, CV_16S>;     template class distributeStepScaled<CV_8S, CV_64S, CV_16S>;
+    
+    template class distributeStepScaled<CV_16U, CV_8U,  CV_32S>;    template class distributeStepScaled<CV_16S, CV_8U,  CV_32S>;
+    template class distributeStepScaled<CV_16U, CV_8S,  CV_32S>;    template class distributeStepScaled<CV_16S, CV_8S,  CV_32S>;
+    template class distributeStepScaled<CV_16U, CV_16U, CV_32S>;    template class distributeStepScaled<CV_16S, CV_16U, CV_32S>;
+    template class distributeStepScaled<CV_16U, CV_16S, CV_32S>;    template class distributeStepScaled<CV_16S, CV_16S, CV_32S>;
+    template class distributeStepScaled<CV_16U, CV_32U, CV_32S>;    template class distributeStepScaled<CV_16S, CV_32U, CV_32S>;
+    template class distributeStepScaled<CV_16U, CV_32S, CV_32S>;    template class distributeStepScaled<CV_16S, CV_32S, CV_32S>;
+    template class distributeStepScaled<CV_16U, CV_64U, CV_32S>;    template class distributeStepScaled<CV_16S, CV_64U, CV_32S>;
+    template class distributeStepScaled<CV_16U, CV_64S, CV_32S>;    template class distributeStepScaled<CV_16S, CV_64S, CV_32S>;
+    
+    template class distributeStepScaled<CV_32U, CV_8U,  CV_64S>;    template class distributeStepScaled<CV_32S, CV_8U,  CV_64S>;
+    template class distributeStepScaled<CV_32U, CV_8S,  CV_64S>;    template class distributeStepScaled<CV_32S, CV_8S,  CV_64S>;
+    template class distributeStepScaled<CV_32U, CV_16U, CV_64S>;    template class distributeStepScaled<CV_32S, CV_16U, CV_64S>;
+    template class distributeStepScaled<CV_32U, CV_16S, CV_64S>;    template class distributeStepScaled<CV_32S, CV_16S, CV_64S>;
+    template class distributeStepScaled<CV_32U, CV_32U, CV_64S>;    template class distributeStepScaled<CV_32S, CV_32U, CV_64S>;
+    template class distributeStepScaled<CV_32U, CV_32S, CV_64S>;    template class distributeStepScaled<CV_32S, CV_32S, CV_64S>;
+    template class distributeStepScaled<CV_32U, CV_64U, CV_64S>;    template class distributeStepScaled<CV_32S, CV_64U, CV_64S>;
+    template class distributeStepScaled<CV_32U, CV_64S, CV_64S>;    template class distributeStepScaled<CV_32S, CV_64S, CV_64S>;
+
     
 template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(){};
 template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(distributeErfParameters<src_t, dst_t> _par):par(_par){};
@@ -1300,79 +1361,105 @@ template<int src_t, int dst_t>  void distributeErfCompact<src_t, dst_t>::operato
         }
     };
     
-    template class distributeErfCompact<CV_8U, CV_8U>;
-    template class distributeErfCompact<CV_8U, CV_8S>;
-    template class distributeErfCompact<CV_8U, CV_16U>;
-    template class distributeErfCompact<CV_8U, CV_16S>;
-    template class distributeErfCompact<CV_8U, CV_32U>;
-    template class distributeErfCompact<CV_8U, CV_32S>;
-    template class distributeErfCompact<CV_8U, CV_64U>;
-    template class distributeErfCompact<CV_8U, CV_64S>;
-    
-    template class distributeErfCompact<CV_8S, CV_8U>;
-    template class distributeErfCompact<CV_8S, CV_8S>;
-    template class distributeErfCompact<CV_8S, CV_16U>;
-    template class distributeErfCompact<CV_8S, CV_16S>;
-    template class distributeErfCompact<CV_8S, CV_32U>;
-    template class distributeErfCompact<CV_8S, CV_32S>;
-    template class distributeErfCompact<CV_8S, CV_64U>;
-    template class distributeErfCompact<CV_8S, CV_64S>;
-    
-    template class distributeErfCompact<CV_16U, CV_8U>;
-    template class distributeErfCompact<CV_16U, CV_8S>;
-    template class distributeErfCompact<CV_16U, CV_16U>;
-    template class distributeErfCompact<CV_16U, CV_16S>;
-    template class distributeErfCompact<CV_16U, CV_32U>;
-    template class distributeErfCompact<CV_16U, CV_32S>;
-    template class distributeErfCompact<CV_16U, CV_64U>;
-    template class distributeErfCompact<CV_16U, CV_64S>;
-    
-    template class distributeErfCompact<CV_16S, CV_8U>;
-    template class distributeErfCompact<CV_16S, CV_8S>;
-    template class distributeErfCompact<CV_16S, CV_16U>;
-    template class distributeErfCompact<CV_16S, CV_16S>;
-    template class distributeErfCompact<CV_16S, CV_32U>;
-    template class distributeErfCompact<CV_16S, CV_32S>;
-    template class distributeErfCompact<CV_16S, CV_64U>;
-    template class distributeErfCompact<CV_16S, CV_64S>;
-    
-    template class distributeErfCompact<CV_32U, CV_8U>;
-    template class distributeErfCompact<CV_32U, CV_8S>;
-    template class distributeErfCompact<CV_32U, CV_16U>;
-    template class distributeErfCompact<CV_32U, CV_16S>;
-    template class distributeErfCompact<CV_32U, CV_32U>;
-    template class distributeErfCompact<CV_32U, CV_32S>;
-    template class distributeErfCompact<CV_32U, CV_64U>;
-    template class distributeErfCompact<CV_32U, CV_64S>;
-    
-    template class distributeErfCompact<CV_32S, CV_8U>;
-    template class distributeErfCompact<CV_32S, CV_8S>;
-    template class distributeErfCompact<CV_32S, CV_16U>;
-    template class distributeErfCompact<CV_32S, CV_16S>;
-    template class distributeErfCompact<CV_32S, CV_32U>;
-    template class distributeErfCompact<CV_32S, CV_32S>;
-    template class distributeErfCompact<CV_32S, CV_64U>;
-    template class distributeErfCompact<CV_32S, CV_64S>;
-    
-    template class distributeErfCompact<CV_64U, CV_8U>;
-    template class distributeErfCompact<CV_64U, CV_8S>;
-    template class distributeErfCompact<CV_64U, CV_16U>;
-    template class distributeErfCompact<CV_64U, CV_16S>;
-    template class distributeErfCompact<CV_64U, CV_32U>;
-    template class distributeErfCompact<CV_64U, CV_32S>;
-    template class distributeErfCompact<CV_64U, CV_64U>;
-    template class distributeErfCompact<CV_64U, CV_64S>;
-    
-    template class distributeErfCompact<CV_64S, CV_8U>;
-    template class distributeErfCompact<CV_64S, CV_8S>;
-    template class distributeErfCompact<CV_64S, CV_16U>;
-    template class distributeErfCompact<CV_64S, CV_16S>;
-    template class distributeErfCompact<CV_64S, CV_32U>;
-    template class distributeErfCompact<CV_64S, CV_32S>;
-    template class distributeErfCompact<CV_64S, CV_64U>;
-    template class distributeErfCompact<CV_64S, CV_64S>;
-    
+template class distributeErfCompact<CV_8U, CV_8U>;      template class distributeErfCompact<CV_8S, CV_8U>;
+template class distributeErfCompact<CV_8U, CV_8S>;      template class distributeErfCompact<CV_8S, CV_8S>;
+template class distributeErfCompact<CV_8U, CV_16U>;     template class distributeErfCompact<CV_8S, CV_16U>;
+template class distributeErfCompact<CV_8U, CV_16S>;     template class distributeErfCompact<CV_8S, CV_16S>;
+template class distributeErfCompact<CV_8U, CV_32U>;     template class distributeErfCompact<CV_8S, CV_32U>;
+template class distributeErfCompact<CV_8U, CV_32S>;     template class distributeErfCompact<CV_8S, CV_32S>;
+template class distributeErfCompact<CV_8U, CV_64U>;     template class distributeErfCompact<CV_8S, CV_64U>;
+template class distributeErfCompact<CV_8U, CV_64S>;     template class distributeErfCompact<CV_8S, CV_64S>;
 
+template class distributeErfCompact<CV_16U, CV_8U>;     template class distributeErfCompact<CV_16S, CV_8U>;
+template class distributeErfCompact<CV_16U, CV_8S>;     template class distributeErfCompact<CV_16S, CV_8S>;
+template class distributeErfCompact<CV_16U, CV_16U>;    template class distributeErfCompact<CV_16S, CV_16U>;
+template class distributeErfCompact<CV_16U, CV_16S>;    template class distributeErfCompact<CV_16S, CV_16S>;
+template class distributeErfCompact<CV_16U, CV_32U>;    template class distributeErfCompact<CV_16S, CV_32U>;
+template class distributeErfCompact<CV_16U, CV_32S>;    template class distributeErfCompact<CV_16S, CV_32S>;
+template class distributeErfCompact<CV_16U, CV_64U>;    template class distributeErfCompact<CV_16S, CV_64U>;
+template class distributeErfCompact<CV_16U, CV_64S>;    template class distributeErfCompact<CV_16S, CV_64S>;
+
+template class distributeErfCompact<CV_32U, CV_8U>;     template class distributeErfCompact<CV_32S, CV_8U>;
+template class distributeErfCompact<CV_32U, CV_8S>;     template class distributeErfCompact<CV_32S, CV_8S>;
+template class distributeErfCompact<CV_32U, CV_16U>;    template class distributeErfCompact<CV_32S, CV_16U>;
+template class distributeErfCompact<CV_32U, CV_16S>;    template class distributeErfCompact<CV_32S, CV_16S>;
+template class distributeErfCompact<CV_32U, CV_32U>;    template class distributeErfCompact<CV_32S, CV_32U>;
+template class distributeErfCompact<CV_32U, CV_32S>;    template class distributeErfCompact<CV_32S, CV_32S>;
+template class distributeErfCompact<CV_32U, CV_64U>;    template class distributeErfCompact<CV_32S, CV_64U>;
+template class distributeErfCompact<CV_32U, CV_64S>;    template class distributeErfCompact<CV_32S, CV_64S>;
+
+template class distributeErfCompact<CV_64U, CV_8U>;     template class distributeErfCompact<CV_64S, CV_8U>;
+template class distributeErfCompact<CV_64U, CV_8S>;     template class distributeErfCompact<CV_64S, CV_8S>;
+template class distributeErfCompact<CV_64U, CV_16U>;    template class distributeErfCompact<CV_64S, CV_16U>;
+template class distributeErfCompact<CV_64U, CV_16S>;    template class distributeErfCompact<CV_64S, CV_16S>;
+template class distributeErfCompact<CV_64U, CV_32U>;    template class distributeErfCompact<CV_64S, CV_32U>;
+template class distributeErfCompact<CV_64U, CV_32S>;    template class distributeErfCompact<CV_64S, CV_32S>;
+template class distributeErfCompact<CV_64U, CV_64U>;    template class distributeErfCompact<CV_64S, CV_64U>;
+template class distributeErfCompact<CV_64U, CV_64S>;    template class distributeErfCompact<CV_64S, CV_64S>;
+    
+    
+template<int src_t, int dst_t, int wrk_t> distributeErfCompactScaled<src_t, dst_t, wrk_t>::distributeErfCompactScaled(){};
+template<int src_t, int dst_t, int wrk_t> distributeErfCompactScaled<src_t, dst_t, wrk_t>::distributeErfCompactScaled(distributeErfParameters<src_t, dst_t> _par, double _scale, double _qRange, double _qMin):scale(_scale), qRange(_qRange), qMin(_qMin), par(_par){
+    qLambda1 = par.uLambda1 * qRange + qMin;
+    qLambda2 = par.uLambda2 * qRange + qMin;
+    qOmega1  = par.uOmegaP1 * qRange + qMin;
+    qOmega2  = par.uOmegaP2 * qRange + qMin;
+};
+
+template<int src_t, int dst_t, int wrk_t>  void distributeErfCompactScaled<src_t, dst_t, wrk_t>::operator()(const typename distributeErfCompactScaled::srcType src, typename distributeErfCompactScaled::dstType &dst)
+{
+    // 5 Region code : constant - erf - linear - erf - constant
+    // Assumes that c is in the linear region.
+    //
+    // distributeErfCompactScaled
+    //
+    //         = disMin;                                                                                    sMin    <= x <= lambda1 * qRange + qMin
+    //         = disScale * erf( g * (scale *x - c) ) + disConstant;                        lambda1 * qRange + qMin <  x <  omegaP1 * qRange + qMin
+    // pDis(x) = scale * x - linearConstant;                                                omegaP1 * qRange + qMin <= x <= omegaP2 * qRange + qMin
+    //         = disScale * erf( g * (scale *x - c) ) + disConstant + shiftednErfConstant;  omegaP2 * qRange + qMin <  x <  lambda2 * qRange + qMin
+    //         = disMax;                                                                    lambda2 * qRange + qMin <= x <= sMax
+    
+    if(src <= qLambda1){
+        dst = par.disMin;                                                                                       //   sMin    <= x <= lambda1
+    } else if (src >= qLambda2){
+        dst = par.disMax;                                                                                       //   lambda1 <= x <= sMax
+    } else {
+        if(src <= qOmega1){
+            dst = dstType(par.disConstant - par.disScale * erf(par.g*(par.c - scale * src)));                   //   lambda1 <  x <  omegaP1
+        } else if (src >= qOmega2){
+            dst = dstType(par.disConstant + par.disScale * erf(par.g*(scale * src - par.c)) + par.shiftednErfConstant); //   omegaP2 <  x <  lambda2
+        } else {
+            dst = scale * src - par.linearConstant;                                                                     //   omegaP1 <  x <  omegaP2
+        }
+    }
+};
+    
+template class distributeErfCompactScaled<CV_8U, CV_8U,  CV_16S>;     template class distributeErfCompactScaled<CV_8S, CV_8U,  CV_16S>;
+template class distributeErfCompactScaled<CV_8U, CV_8S,  CV_16S>;     template class distributeErfCompactScaled<CV_8S, CV_8S,  CV_16S>;
+template class distributeErfCompactScaled<CV_8U, CV_16U, CV_16S>;     template class distributeErfCompactScaled<CV_8S, CV_16U, CV_16S>;
+template class distributeErfCompactScaled<CV_8U, CV_16S, CV_16S>;     template class distributeErfCompactScaled<CV_8S, CV_16S, CV_16S>;
+template class distributeErfCompactScaled<CV_8U, CV_32U, CV_16S>;     template class distributeErfCompactScaled<CV_8S, CV_32U, CV_16S>;
+template class distributeErfCompactScaled<CV_8U, CV_32S, CV_16S>;     template class distributeErfCompactScaled<CV_8S, CV_32S, CV_16S>;
+template class distributeErfCompactScaled<CV_8U, CV_64U, CV_16S>;     template class distributeErfCompactScaled<CV_8S, CV_64U, CV_16S>;
+template class distributeErfCompactScaled<CV_8U, CV_64S, CV_16S>;     template class distributeErfCompactScaled<CV_8S, CV_64S, CV_16S>;
+
+template class distributeErfCompactScaled<CV_16U, CV_8U,  CV_32S>;    template class distributeErfCompactScaled<CV_16S, CV_8U,  CV_32S>;
+template class distributeErfCompactScaled<CV_16U, CV_8S,  CV_32S>;    template class distributeErfCompactScaled<CV_16S, CV_8S,  CV_32S>;
+template class distributeErfCompactScaled<CV_16U, CV_16U, CV_32S>;    template class distributeErfCompactScaled<CV_16S, CV_16U, CV_32S>;
+template class distributeErfCompactScaled<CV_16U, CV_16S, CV_32S>;    template class distributeErfCompactScaled<CV_16S, CV_16S, CV_32S>;
+template class distributeErfCompactScaled<CV_16U, CV_32U, CV_32S>;    template class distributeErfCompactScaled<CV_16S, CV_32U, CV_32S>;
+template class distributeErfCompactScaled<CV_16U, CV_32S, CV_32S>;    template class distributeErfCompactScaled<CV_16S, CV_32S, CV_32S>;
+template class distributeErfCompactScaled<CV_16U, CV_64U, CV_32S>;    template class distributeErfCompactScaled<CV_16S, CV_64U, CV_32S>;
+template class distributeErfCompactScaled<CV_16U, CV_64S, CV_32S>;    template class distributeErfCompactScaled<CV_16S, CV_64S, CV_32S>;
+
+template class distributeErfCompactScaled<CV_32U, CV_8U,  CV_64S>;    template class distributeErfCompactScaled<CV_32S, CV_8U,  CV_64S>;
+template class distributeErfCompactScaled<CV_32U, CV_8S,  CV_64S>;    template class distributeErfCompactScaled<CV_32S, CV_8S,  CV_64S>;
+template class distributeErfCompactScaled<CV_32U, CV_16U, CV_64S>;    template class distributeErfCompactScaled<CV_32S, CV_16U, CV_64S>;
+template class distributeErfCompactScaled<CV_32U, CV_16S, CV_64S>;    template class distributeErfCompactScaled<CV_32S, CV_16S, CV_64S>;
+template class distributeErfCompactScaled<CV_32U, CV_32U, CV_64S>;    template class distributeErfCompactScaled<CV_32S, CV_32U, CV_64S>;
+template class distributeErfCompactScaled<CV_32U, CV_32S, CV_64S>;    template class distributeErfCompactScaled<CV_32S, CV_32S, CV_64S>;
+template class distributeErfCompactScaled<CV_32U, CV_64U, CV_64S>;    template class distributeErfCompactScaled<CV_32S, CV_64U, CV_64S>;
+template class distributeErfCompactScaled<CV_32U, CV_64S, CV_64S>;    template class distributeErfCompactScaled<CV_32S, CV_64S, CV_64S>;
     
 template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(){};
 template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(distributeErfParameters<src_t, dst_t> _par):par(_par){};
@@ -1392,78 +1479,100 @@ template<int src_t, int dst_t>  void distributeLinear<src_t, dst_t>::operator()(
         };
     };
     
-    template class distributeLinear<CV_8U, CV_8U>;
-    template class distributeLinear<CV_8U, CV_8S>;
-    template class distributeLinear<CV_8U, CV_16U>;
-    template class distributeLinear<CV_8U, CV_16S>;
-    template class distributeLinear<CV_8U, CV_32U>;
-    template class distributeLinear<CV_8U, CV_32S>;
-    template class distributeLinear<CV_8U, CV_64U>;
-    template class distributeLinear<CV_8U, CV_64S>;
     
-    template class distributeLinear<CV_8S, CV_8U>;
-    template class distributeLinear<CV_8S, CV_8S>;
-    template class distributeLinear<CV_8S, CV_16U>;
-    template class distributeLinear<CV_8S, CV_16S>;
-    template class distributeLinear<CV_8S, CV_32U>;
-    template class distributeLinear<CV_8S, CV_32S>;
-    template class distributeLinear<CV_8S, CV_64U>;
-    template class distributeLinear<CV_8S, CV_64S>;
+    template class distributeLinear<CV_8U, CV_8U>;      template class distributeLinear<CV_8S, CV_8U>;
+    template class distributeLinear<CV_8U, CV_8S>;      template class distributeLinear<CV_8S, CV_8S>;
+    template class distributeLinear<CV_8U, CV_16U>;     template class distributeLinear<CV_8S, CV_16U>;
+    template class distributeLinear<CV_8U, CV_16S>;     template class distributeLinear<CV_8S, CV_16S>;
+    template class distributeLinear<CV_8U, CV_32U>;     template class distributeLinear<CV_8S, CV_32U>;
+    template class distributeLinear<CV_8U, CV_32S>;     template class distributeLinear<CV_8S, CV_32S>;
+    template class distributeLinear<CV_8U, CV_64U>;     template class distributeLinear<CV_8S, CV_64U>;
+    template class distributeLinear<CV_8U, CV_64S>;     template class distributeLinear<CV_8S, CV_64S>;
     
-    template class distributeLinear<CV_16U, CV_8U>;
-    template class distributeLinear<CV_16U, CV_8S>;
-    template class distributeLinear<CV_16U, CV_16U>;
-    template class distributeLinear<CV_16U, CV_16S>;
-    template class distributeLinear<CV_16U, CV_32U>;
-    template class distributeLinear<CV_16U, CV_32S>;
-    template class distributeLinear<CV_16U, CV_64U>;
-    template class distributeLinear<CV_16U, CV_64S>;
+    template class distributeLinear<CV_16U, CV_8U>;     template class distributeLinear<CV_16S, CV_8U>;
+    template class distributeLinear<CV_16U, CV_8S>;     template class distributeLinear<CV_16S, CV_8S>;
+    template class distributeLinear<CV_16U, CV_16U>;    template class distributeLinear<CV_16S, CV_16U>;
+    template class distributeLinear<CV_16U, CV_16S>;    template class distributeLinear<CV_16S, CV_16S>;
+    template class distributeLinear<CV_16U, CV_32U>;    template class distributeLinear<CV_16S, CV_32U>;
+    template class distributeLinear<CV_16U, CV_32S>;    template class distributeLinear<CV_16S, CV_32S>;
+    template class distributeLinear<CV_16U, CV_64U>;    template class distributeLinear<CV_16S, CV_64U>;
+    template class distributeLinear<CV_16U, CV_64S>;    template class distributeLinear<CV_16S, CV_64S>;
     
-    template class distributeLinear<CV_16S, CV_8U>;
-    template class distributeLinear<CV_16S, CV_8S>;
-    template class distributeLinear<CV_16S, CV_16U>;
-    template class distributeLinear<CV_16S, CV_16S>;
-    template class distributeLinear<CV_16S, CV_32U>;
-    template class distributeLinear<CV_16S, CV_32S>;
-    template class distributeLinear<CV_16S, CV_64U>;
-    template class distributeLinear<CV_16S, CV_64S>;
+    template class distributeLinear<CV_32U, CV_8U>;     template class distributeLinear<CV_32S, CV_8U>;
+    template class distributeLinear<CV_32U, CV_8S>;     template class distributeLinear<CV_32S, CV_8S>;
+    template class distributeLinear<CV_32U, CV_16U>;    template class distributeLinear<CV_32S, CV_16U>;
+    template class distributeLinear<CV_32U, CV_16S>;    template class distributeLinear<CV_32S, CV_16S>;
+    template class distributeLinear<CV_32U, CV_32U>;    template class distributeLinear<CV_32S, CV_32U>;
+    template class distributeLinear<CV_32U, CV_32S>;    template class distributeLinear<CV_32S, CV_32S>;
+    template class distributeLinear<CV_32U, CV_64U>;    template class distributeLinear<CV_32S, CV_64U>;
+    template class distributeLinear<CV_32U, CV_64S>;    template class distributeLinear<CV_32S, CV_64S>;
     
-    template class distributeLinear<CV_32U, CV_8U>;
-    template class distributeLinear<CV_32U, CV_8S>;
-    template class distributeLinear<CV_32U, CV_16U>;
-    template class distributeLinear<CV_32U, CV_16S>;
-    template class distributeLinear<CV_32U, CV_32U>;
-    template class distributeLinear<CV_32U, CV_32S>;
-    template class distributeLinear<CV_32U, CV_64U>;
-    template class distributeLinear<CV_32U, CV_64S>;
+    template class distributeLinear<CV_64U, CV_8U>;     template class distributeLinear<CV_64S, CV_8U>;
+    template class distributeLinear<CV_64U, CV_8S>;     template class distributeLinear<CV_64S, CV_8S>;
+    template class distributeLinear<CV_64U, CV_16U>;    template class distributeLinear<CV_64S, CV_16U>;
+    template class distributeLinear<CV_64U, CV_16S>;    template class distributeLinear<CV_64S, CV_16S>;
+    template class distributeLinear<CV_64U, CV_32U>;    template class distributeLinear<CV_64S, CV_32U>;
+    template class distributeLinear<CV_64U, CV_32S>;    template class distributeLinear<CV_64S, CV_32S>;
+    template class distributeLinear<CV_64U, CV_64U>;    template class distributeLinear<CV_64S, CV_64U>;
+    template class distributeLinear<CV_64U, CV_64S>;    template class distributeLinear<CV_64S, CV_64S>;
     
-    template class distributeLinear<CV_32S, CV_8U>;
-    template class distributeLinear<CV_32S, CV_8S>;
-    template class distributeLinear<CV_32S, CV_16U>;
-    template class distributeLinear<CV_32S, CV_16S>;
-    template class distributeLinear<CV_32S, CV_32U>;
-    template class distributeLinear<CV_32S, CV_32S>;
-    template class distributeLinear<CV_32S, CV_64U>;
-    template class distributeLinear<CV_32S, CV_64S>;
+
+
+template<int src_t, int dst_t, int wrk_t> distributeLinearScaled<src_t, dst_t, wrk_t>::distributeLinearScaled(){};
+    template<int src_t, int dst_t, int wrk_t> distributeLinearScaled<src_t, dst_t, wrk_t>::distributeLinearScaled(distributeErfParameters<src_t, dst_t> _par, double _scale, double _qRange, double _qMin):scale(_scale), qRange(_qRange), qMin(_qMin), par(_par){
+        qLambda1 = par.uLambda1 * qRange + qMin;
+        qLambda2 = par.uLambda2 * qRange + qMin;
+        qOmega1  = par.uOmegaP1 * qRange + qMin;
+        qOmega2  = par.uOmegaP2 * qRange + qMin;
+    qLinearGrad = par.linearGrad * scale;
+};
+
+template<int src_t, int dst_t, int wrk_t>  void distributeLinearScaled<src_t, dst_t, wrk_t>::operator()(const typename distributeLinearScaled::srcType src, typename distributeLinearScaled::dstType &dst)
+{
+    // Linear Distribution
+    //
+    // distributeLinearScaled
+    //
+    //         = disMin;                                                         sMin    <= x <= lambda1 * qRange + qMin
+    // pDis(x) = linearGrad * scale * x - linearConstant;        omegaP1 * qRange + qMin <= x <= omegaP2 * qRange + qMin
+    //         = disMax;                                         lambda2 * qRange + qMin <= x <= sMax
     
-    template class distributeLinear<CV_64U, CV_8U>;
-    template class distributeLinear<CV_64U, CV_8S>;
-    template class distributeLinear<CV_64U, CV_16U>;
-    template class distributeLinear<CV_64U, CV_16S>;
-    template class distributeLinear<CV_64U, CV_32U>;
-    template class distributeLinear<CV_64U, CV_32S>;
-    template class distributeLinear<CV_64U, CV_64U>;
-    template class distributeLinear<CV_64U, CV_64S>;
-    
-    template class distributeLinear<CV_64S, CV_8U>;
-    template class distributeLinear<CV_64S, CV_8S>;
-    template class distributeLinear<CV_64S, CV_16U>;
-    template class distributeLinear<CV_64S, CV_16S>;
-    template class distributeLinear<CV_64S, CV_32U>;
-    template class distributeLinear<CV_64S, CV_32S>;
-    template class distributeLinear<CV_64S, CV_64U>;
-    template class distributeLinear<CV_64S, CV_64S>;
-    
+    if(src <= qLambda1){
+        dst = par.disMin;                                        //   sMin    <= x <= lambda1
+    } else if (src >= qLambda2){
+        dst = par.disMax;                                        //   lambda2 <= x <= sMax
+    } else {
+        dst = dstType( qLinearGrad * src) - par.linearConstant;  //   lambda1 <= x <= lambda2
+    }
+};
+
+template class distributeLinearScaled<CV_8U, CV_8U,  CV_16S>;     template class distributeLinearScaled<CV_8S, CV_8U,  CV_16S>;
+template class distributeLinearScaled<CV_8U, CV_8S,  CV_16S>;     template class distributeLinearScaled<CV_8S, CV_8S,  CV_16S>;
+template class distributeLinearScaled<CV_8U, CV_16U, CV_16S>;     template class distributeLinearScaled<CV_8S, CV_16U, CV_16S>;
+template class distributeLinearScaled<CV_8U, CV_16S, CV_16S>;     template class distributeLinearScaled<CV_8S, CV_16S, CV_16S>;
+template class distributeLinearScaled<CV_8U, CV_32U, CV_16S>;     template class distributeLinearScaled<CV_8S, CV_32U, CV_16S>;
+template class distributeLinearScaled<CV_8U, CV_32S, CV_16S>;     template class distributeLinearScaled<CV_8S, CV_32S, CV_16S>;
+template class distributeLinearScaled<CV_8U, CV_64U, CV_16S>;     template class distributeLinearScaled<CV_8S, CV_64U, CV_16S>;
+template class distributeLinearScaled<CV_8U, CV_64S, CV_16S>;     template class distributeLinearScaled<CV_8S, CV_64S, CV_16S>;
+
+template class distributeLinearScaled<CV_16U, CV_8U,  CV_32S>;    template class distributeLinearScaled<CV_16S, CV_8U,  CV_32S>;
+template class distributeLinearScaled<CV_16U, CV_8S,  CV_32S>;    template class distributeLinearScaled<CV_16S, CV_8S,  CV_32S>;
+template class distributeLinearScaled<CV_16U, CV_16U, CV_32S>;    template class distributeLinearScaled<CV_16S, CV_16U, CV_32S>;
+template class distributeLinearScaled<CV_16U, CV_16S, CV_32S>;    template class distributeLinearScaled<CV_16S, CV_16S, CV_32S>;
+template class distributeLinearScaled<CV_16U, CV_32U, CV_32S>;    template class distributeLinearScaled<CV_16S, CV_32U, CV_32S>;
+template class distributeLinearScaled<CV_16U, CV_32S, CV_32S>;    template class distributeLinearScaled<CV_16S, CV_32S, CV_32S>;
+template class distributeLinearScaled<CV_16U, CV_64U, CV_32S>;    template class distributeLinearScaled<CV_16S, CV_64U, CV_32S>;
+template class distributeLinearScaled<CV_16U, CV_64S, CV_32S>;    template class distributeLinearScaled<CV_16S, CV_64S, CV_32S>;
+
+template class distributeLinearScaled<CV_32U, CV_8U,  CV_64S>;    template class distributeLinearScaled<CV_32S, CV_8U,  CV_64S>;
+template class distributeLinearScaled<CV_32U, CV_8S,  CV_64S>;    template class distributeLinearScaled<CV_32S, CV_8S,  CV_64S>;
+template class distributeLinearScaled<CV_32U, CV_16U, CV_64S>;    template class distributeLinearScaled<CV_32S, CV_16U, CV_64S>;
+template class distributeLinearScaled<CV_32U, CV_16S, CV_64S>;    template class distributeLinearScaled<CV_32S, CV_16S, CV_64S>;
+template class distributeLinearScaled<CV_32U, CV_32U, CV_64S>;    template class distributeLinearScaled<CV_32S, CV_32U, CV_64S>;
+template class distributeLinearScaled<CV_32U, CV_32S, CV_64S>;    template class distributeLinearScaled<CV_32S, CV_32S, CV_64S>;
+template class distributeLinearScaled<CV_32U, CV_64U, CV_64S>;    template class distributeLinearScaled<CV_32S, CV_64U, CV_64S>;
+template class distributeLinearScaled<CV_32U, CV_64S, CV_64S>;    template class distributeLinearScaled<CV_32S, CV_64S, CV_64S>;
+
 // computes cubic spline coefficients for a function: (xi=i, yi=f[i]), i=0..n
 template<typename _Tp> static void splineBuild(const _Tp* f, int n, _Tp* tab)
 {
@@ -9873,73 +9982,70 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
 
 // ***************************************************************************************************************************
 
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setRGBIndices(int srcBlueIdx, int dstBlueIdx){
-    cv::Matx<sWrkType, dstInfo::channels, srcInfo::channels> _fR;
-    Vec<sWrkType, dstInfo::channels> _RRange, _RMin;
-    
-    for (int i=0; i < dstInfo::channels; i++) {
-        for (int j=0; j < srcInfo::channels; j++) {
-            _fR(i,j) = fR(i,j);
-        }
-        _RRange[i] = RRange[i];
-        _RMin[i] = RMin[i];
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRGBIndices(int _srcBlueIdx, int _dstBlueIdx){
+    int srcBlueIdx, dstBlueIdx;
+    if (_srcBlueIdx==3) {
+        srcBlueIdx = 2; // Someone has accidentally used 1,2,3 indexes rather than 0,1,2
+    } else {
+        srcBlueIdx = _srcBlueIdx % 3;
     }
-    
-    srcRGBIndices[0] = (srcBlueIdx+2)%4; srcRGBIndices[1] = 1; srcRGBIndices[2] = srcBlueIdx; // (blueIdx+2)%4 = 2 if blueIdx = 0
-    dstRGBIndices[0] = (dstBlueIdx+2)%4; dstRGBIndices[1] = 1; dstRGBIndices[2] = dstBlueIdx; //                 0 if blueIdx = 2
-    for(int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
-            fR(i,j) = _fR(dstRGBIndices[i], srcRGBIndices[j]);
-        }
-        RRange[i] = _RRange[dstRGBIndices[i]];
-        RMin[i]   = _RMin[  dstRGBIndices[i]];
+    if (_dstBlueIdx==3) {
+        dstBlueIdx = 2; // Someone has accidentally used 1,2,3 indexes rather than 0,1,2
+    } else {
+        dstBlueIdx = _dstBlueIdx % 3;
     }
+    srcIndx[0] = (srcBlueIdx+2)%4; srcIndx[1] = 1; srcIndx[2] = srcBlueIdx; // (blueIdx+2)%4 = 2 if blueIdx = 0
+    dstIndx[0] = (dstBlueIdx+2)%4; dstIndx[1] = 1; dstIndx[2] = dstBlueIdx; //                 0 if blueIdx = 2
+    
 };
 
-template<int src_t, int dst_t> cv::Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> cv::RGB2Rot_int<src_t, dst_t>::toWrk(Vec<double, 3> pnt){
-    Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> out;
-    out[0] = RRange[0] * pnt(0)+ RMin[0];
-    out[1] = RRange[1] * pnt(1)+ RMin[1];
-    out[2] = RRange[2] * pnt(2)+ RMin[2];
-    return out;
-};
-template<int src_t, int dst_t> cv::Vec<typename cv::Data_Type<src_t>::type, 3> cv::RGB2Rot_int<src_t, dst_t>::toSrc(Vec<double, 3> pnt){
-    Vec<typename cv::Data_Type<src_t>::type, 3> out;
-    out[0] = srcType((srcInfo::max - srcInfo::min) * pnt(0)+ srcInfo::min);
-    out[1] = srcType((srcInfo::max - srcInfo::min) * pnt(1)+ srcInfo::min);
-    out[2] = srcType((srcInfo::max - srcInfo::min) * pnt(2)+ srcInfo::min);
-    return out;
-};
-template<int src_t, int dst_t> cv::Vec<typename cv::Data_Type<dst_t>::type, 3> cv::RGB2Rot_int<src_t, dst_t>::toDst(Vec<double, 3> pnt){
-    Vec<typename cv::Data_Type<dst_t>::type, 3> out;
-    out[0] = dstType((dstInfo::max - dstInfo::min) * pnt(0)+ dstInfo::min);
-    out[1] = dstType((dstInfo::max - dstInfo::min) * pnt(1)+ dstInfo::min);
-    out[2] = dstType((dstInfo::max - dstInfo::min) * pnt(2)+ dstInfo::min);
-    return out;
-};
-
-template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot_int<src_t, dst_t>::fromRot(Vec<double, 3> pnt){
+//template<int src_t, int dst_t> cv::Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> cv::RGB2Rot<src_t, dst_t>::toWrk(Vec<double, 3> pnt){
+//    Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> out;
+//    out[0] = RRange[0] * pnt(0)+ RMin[0];
+//    out[1] = RRange[1] * pnt(1)+ RMin[1];
+//    out[2] = RRange[2] * pnt(2)+ RMin[2];
+//    return out;
+//};
+//template<int src_t, int dst_t> cv::Vec<typename cv::Data_Type<src_t>::type, 3> cv::RGB2Rot<src_t, dst_t>::toSrc(Vec<double, 3> pnt){
+//    Vec<typename cv::Data_Type<src_t>::type, 3> out;
+//    out[0] = srcType((srcInfo::max - srcInfo::min) * pnt(0)+ srcInfo::min);
+//    out[1] = srcType((srcInfo::max - srcInfo::min) * pnt(1)+ srcInfo::min);
+//    out[2] = srcType((srcInfo::max - srcInfo::min) * pnt(2)+ srcInfo::min);
+//    return out;
+//};
+//template<int src_t, int dst_t> cv::Vec<typename cv::Data_Type<dst_t>::type, 3> cv::RGB2Rot<src_t, dst_t>::toDst(Vec<double, 3> pnt){
+//    Vec<typename cv::Data_Type<dst_t>::type, 3> out;
+//    out[0] = dstType((dstInfo::max - dstInfo::min) * pnt(0)+ dstInfo::min);
+//    out[1] = dstType((dstInfo::max - dstInfo::min) * pnt(1)+ dstInfo::min);
+//    out[2] = dstType((dstInfo::max - dstInfo::min) * pnt(2)+ dstInfo::min);
+//    return out;
+//};
+//
+template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot<src_t, dst_t>::fromRot(Vec<double, 3> pnt){
     Vec<double, 3> out = pnt;
     out[0] +=   uRMin[0]; out[1] +=   uRMin[1]; out[2] +=   uRMin[2];
     out[0] /= nRScale[0]; out[1] /= nRScale[1]; out[2] /= nRScale[2];
     out[0] *= rRScale[0]; out[1] *= rRScale[1]; out[2] *= rRScale[2];// column multiplication is consistent with use of the inverse equal to the transpose
     return rR.t() * out;
 };
-template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot_int<src_t, dst_t>::toRot(Vec<double, 3> pnt){
-    Vec<double, 3> out = rR * pnt;
-    out[0] *= rRScale[0] * nRScale[0]; out[1] *= rRScale[1] * nRScale[1]; out[2] *= rRScale[2] * nRScale[2];
-    out[0] -=   uRMin[0];              out[1] -=   uRMin[1];              out[2] -= uRMin[2];
+template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot<src_t, dst_t>::toRot(Vec<double, 3> src){
+    // src is assumed to be in the 0:1 unit range.
+    // The ordering of the src elemebts is specified by the blue index specified in the constructor.
+    // out will be in the 0:1 unit range but in the LCaCb space.
+    Vec<double, 3> out;
+    out(0) = src(srcIndx[0])*qRs(0,0) + src(srcIndx[1])*qRs(0,1) + src(srcIndx[2])*qRs(0,2); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+    out(1) = src(srcIndx[0])*qRs(1,0) + src(srcIndx[1])*qRs(1,1) + src(srcIndx[2])*qRs(1,2); // could be used in place of * scale
+    out(2) = src(srcIndx[0])*qRs(2,0) + src(srcIndx[1])*qRs(2,1) + src(srcIndx[2])*qRs(2,2); // Find shift which fits RRange into the desired bit depth.
     return out;
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setTransformFromAngle(double theta )
+
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setReducedRotationMatrix(double theta )
 {
-    // theta is the rotation in radians about the luminocity axis
-    // 0 <= theta < 2 Pi and theta should have been adjusted using
-    // theta = adjustTheta(theta,nBits);
     
-    int nBits = srcInfo::bitDepth -1; // The number of bits in which to store the numeric value of the matrix (-1 to account for the sign bit)
-    double rRange = std::pow(2,nBits);
+    double theta1 = std::fmod(theta, CV_PI/6.);
+    double theta2 = std::fmod(theta, CV_PI/3.);
+    double theta6 = std::fmod(theta, CV_PI);
     
     double Cos      = std::cos(theta);    double CosPlus  = std::cos(CV_PI/6. + theta);    double CosMinus = std::cos(CV_PI/6. - theta);
     double Sin      = std::sin(theta);    double SinPlus  = std::sin(CV_PI/6. + theta);    double SinMinus = std::sin(CV_PI/6. - theta);
@@ -9952,72 +10058,256 @@ template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setTransformF
                                 -CosPlus, -Sin,  CosMinus );
     
     //  rRScale scales to give the unscaled rotated ranges.
-    rRScale = Vec<double, 3>(1./std::sqrt(3), std::sqrt(0.6666666666666666), std::sqrt(0.6666666666666666));
+    rRScale = Vec<double, 3>(std::sqrt(0.333333333333333333333), std::sqrt(0.666666666666666666666), std::sqrt(0.666666666666666666666));
     
-    //  nRScale is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
-    nRScale = Vec<double, 3>(1/std::sqrt(3), \
-                             (std::sqrt(1.5))/(2.*std::cos(CV_PI/6. - std::fmod(theta - CV_PI/6., CV_PI/3.))), \
-                             (std::sqrt(1.5))/(2.*std::cos(CV_PI/6. - std::fmod(theta,            CV_PI/3.))));
+}
+
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta )
+{
     
-    switch (int(std::floor(6* (std::fmod(theta, CV_PI/2.))/CV_PI)))
+    double theta1 = std::fmod(theta, CV_PI/6.);
+    double theta2 = std::fmod(theta, CV_PI/3.);
+    double theta6 = std::fmod(theta, CV_PI);
+    
+    double Cos      = std::cos(theta);    double CosPlus  = std::cos(CV_PI/6. + theta);    double CosMinus = std::cos(CV_PI/6. - theta);
+    double Sin      = std::sin(theta);    double SinPlus  = std::sin(CV_PI/6. + theta);    double SinMinus = std::sin(CV_PI/6. - theta);
+    
+    double Csc   = 1./std::sin(theta);    double CscPlus  = 1./std::sin(CV_PI/6. + theta);    double CscMinus = 1./std::sin(CV_PI/6. - theta);
+    double Sec   = 1./std::cos(theta);    double SecPlus  = 1./std::cos(CV_PI/6. + theta);    double SecMinus = 1./std::cos(CV_PI/6. - theta);
+    
+    rR = cv::Matx<double, 3, 3>( 1.,       1.,   1., \
+                                -SinPlus,  Cos, -SinMinus, \
+                                -CosPlus, -Sin,  CosMinus );
+    
+    //  rRScale scales to give the unscaled rotated ranges.
+    rRScale = Vec<double, 3>(std::sqrt(0.333333333333333333333), std::sqrt(0.666666666666666666666), std::sqrt(0.666666666666666666666));
+ 
+    setReducedRotationMatrix(theta );
+    
+    
+    // Find Lambda2 equivalent in RGB
+    cv::Vec<double,3> rRScaleXiLXl1c;
+    cv::Vec<double,3> rRScaleXiLXl2c;
+    
+    rRScaleXiLXl1c(0) = rRScale(0)*iL(0)*(LParam.uLambda1);
+    rRScaleXiLXl1c(1) = rRScale(1)*iL(1)*(CaParam.uLambda1-0.5);
+    rRScaleXiLXl1c(2) = rRScale(2)*iL(2)*(CbParam.uLambda1-0.5);
+    rRScaleXiLXl2c(0) = rRScale(0)*iL(0)*(LParam.uLambda2);
+    rRScaleXiLXl2c(1) = rRScale(1)*iL(1)*(CaParam.uLambda2-0.5);
+    rRScaleXiLXl2c(2) = rRScale(2)*iL(2)*(CbParam.uLambda2-0.5);
+    
+    cv::Vec<double,3> lambda1RGB,lambda2RGB, lambdaRGB;
+    lambda1RGB = rR.t()*rRScaleXiLXl1c;
+    lambda2RGB = rR.t()*rRScaleXiLXl2c;
+    
+    for (int i=0; i<3; i++) {
+        if (lambda1RGB(i)< lambda2RGB(i)) {
+            lambdaRGB(i) = lambda2RGB(i);
+        } else {
+            lambdaRGB(i) = lambda1RGB(i);
+        }
+    }
+    
+    // Find the relative importance of the channels.
+    Vec<int,3> lossyElementsQ;
+    
+    lossyElementsQ=dqAS(theta + CV_PI/2.0);
+    double maxLoss1=0.0;
+    for (int i=0; i<3; i++) {
+        if (lossyElementsQ(i)) {
+            if (lambdaRGB(i)>maxLoss1) {
+                maxLoss1 = lambdaRGB(i);
+            }
+        }
+    }
+    lossyElementsQ=dqAS(theta);
+    double maxLoss2=0.0;
+    for (int i=0; i<3; i++) {
+        if (lossyElementsQ(i)) {
+            if (lambdaRGB(i)>maxLoss2) {
+                maxLoss2 = lambdaRGB(i);
+            }
+        }
+    }
+    
+    if (std::fmod(theta, CV_PI/3.) < CV_PI/6.0) { // This is dqEO
+        alpha = 2.0 * srcL(1) * maxLoss1;
+        beta  = 2.0 * srcL(2) * maxLoss2;
+    } else {
+        beta  = 2.0 * srcL(1) * maxLoss1;
+        alpha = 2.0 * srcL(2) * maxLoss2;
+    }
+    
+    // Find a starting index.
+    double tol = 1.0;
+    srcType bI = ((1<<srcInfo::bitDepth-3)); // bI = 2^(n-3)
+    double indx = bI * std::tan(theta1) * (sqrt(3.0) * std::tan(theta1) +7)/(std::tan(theta1) + sqrt(3.0)); // The intersection index
+    
+    // Suggest a new angle
+    double angle, pert;
+    int indxP = std::ceil(indx),indxM = std::floor(indx);
+    
+    cv::Vec<double,2> anglePertP, anglePertM;
+    anglePertP = chanPerturbation(indxP, alpha, beta, srcInfo::bitDepth);
+    anglePertM = chanPerturbation(indxM, alpha, beta, srcInfo::bitDepth);
+    
+    while (anglePertP(1) > tol) {
+        indxP++;
+        anglePertP = chanPerturbation(indxP, alpha, beta, srcInfo::bitDepth);
+    }
+    while (anglePertM(1) > tol) {
+        indxM--;
+        anglePertM = chanPerturbation(indxM, alpha, beta, srcInfo::bitDepth);
+    }
+    if (anglePertP(0) - theta1 < theta1 - anglePertP(1)) {
+        angle = theta - theta1 + anglePertP(0);
+        pert = anglePertP(1);
+    } else {
+        angle = theta - theta1 + anglePertM(0);
+        pert = anglePertM(1);
+    }
+    
+    // Generate the integer rotation matrix.
+    using sSrcType = typename cv::Data_Type<src_t>::sType;
+    sSrcType Ap, Am, Bp, Bm, U;
+    Ap = bI + sSrcType(round(bI * sqrt(3.0) * tan(theta1)));
+    Am = bI - sSrcType(round(bI * sqrt(3.0) * tan(theta1)));
+    Bp = bI + sSrcType(round(bI * sqrt(3.0) * tan(CV_PI/6.0 - theta1)));
+    Bm = bI - sSrcType(round(bI * sqrt(3.0) * tan(CV_PI/6.0 - theta1)));
+    U  = -1*((1<<(srcInfo::bitDepth-2))); // bI = 2^(n-2)
+    
+    switch (int(std::floor(6* (std::fmod(theta, CV_PI))/CV_PI)))
     {
         case 0:
-            fRScale = Vec<double, 3>(1,(-2*SinPlus)/rRange,(-2*CosPlus)/rRange);
-            fR = cv::Matx<sWrkType, 3, 3>(
-                                          1,1,1,\
-                                          sWrkType(rRange/2.), sWrkType(-(rRange*Cos*CscPlus)/2.), sWrkType( (rRange*CscPlus*SinMinus)/2.),\
-                                          sWrkType(rRange/2.), sWrkType( (rRange*Sin*SecPlus)/2.), sWrkType(-(rRange*SecPlus*CosMinus)/2.)
+            qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
+                                          -1*Ap,  -1*U, -1*Am,\
+                                          -1*Bp, -1*Bm,  -1*U
                                           );
-            RRange[0] =  sWrkType(3 * srcInfo::max);                               RMin[0] = 0;                           RMax[0] = RRange[0];
-            RRange[1] =  sWrkType(    srcInfo::max * rRange * CscPlus * Cos);      RMin[1] = sWrkType(-1 * RRange[1]/2);  RMax[1] = RRange[1]/2;
-            RRange[2] =  sWrkType(    srcInfo::max * rRange * SecPlus * CosMinus); RMin[2] = sWrkType(-1 * RRange[2]/2);  RMax[2] = RRange[2]/2;
             break;
         case 1:
-            fRScale = Vec<double, 3>(1,(2*Cos)/rRange,(-2*Sin)/rRange);
-            fR = cv::Matx<sWrkType, 3, 3>(
-                                          1,1,1,\
-                                          sWrkType(-(rRange*Sec*SinPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Sec*SinMinus)/2.),\
-                                          sWrkType( (rRange*Csc*CosPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Csc*CosMinus)/2.)
-                                          );
-            RRange[0] = sWrkType( 3 * srcInfo::max);                           RMin[0] = 0;                           RMax[0] = RRange[0];
-            RRange[1] = sWrkType(     srcInfo::max * rRange * SinPlus  * Sec); RMin[1] = sWrkType(-1 * RRange[1]/2);  RMax[1] = RRange[1]/2;
-            RRange[2] = sWrkType(     srcInfo::max * rRange * CosMinus * Csc); RMin[2] = sWrkType(-1 * RRange[2]/2);  RMax[2] = RRange[2]/2;
-            
-            
+            qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
+                                               U,    Bp,    Bm,\
+                                           -1*Am, -1*Ap,  -1*U
+                                           );
             break;
         case 2:
-            fRScale = Vec<double, 3>(1,(-2*SinMinus)/rRange,(2*CosMinus)/rRange);
-            fR = cv::Matx<sWrkType, 3, 3>(
-                                          1,1,1,\
-                                          sWrkType( (rRange*CscMinus*SinPlus)/2.), sWrkType(-(rRange*Cos*CscMinus)/2.), sWrkType(rRange/2.),\
-                                          sWrkType(-(rRange*SecMinus*CosPlus)/2.), sWrkType(-(rRange*Sin*SecMinus)/2.), sWrkType(rRange/2.)
-                                          );
-            
-            RRange[0] = sWrkType( 3 * srcInfo::max);                               RMin[0] = 0;                           RMax[0] = RRange[0];
-            RRange[1] = sWrkType(-1 * srcInfo::max * rRange * CscMinus * SinPlus); RMin[1] = sWrkType(-1 * RRange[1]/2);  RMax[1] = RRange[1]/2;
-            RRange[2] = sWrkType(     srcInfo::max * rRange * SecMinus * Sin);     RMin[2] = sWrkType(-1 * RRange[2]/2);  RMax[2] = RRange[2]/2;
-            
+            qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
+                                               U,    Am,    Ap,\
+                                              Bm,     U,    Bp
+                                           );
+            break;
+        case 3:
+            qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
+                                           -1*Bp, -1*Bm,  -1*U,\
+                                              Ap,     U,    Am
+                                           );
+            break;
+        case 4:
+            qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
+                                           -1*Am, -1*Ap,  -1*U,\
+                                            -1*U, -1*Bp, -1*Bm
+                                           );
+            break;
+        case 5:
+            qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
+                                              Bm,     U,    Bp,\
+                                            -1*U, -1*Am, -1*Ap
+                                           );
             break;
         default:
-            fRScale = Vec<double, 3>();
-            fR = cv::Matx<sWrkType, 3, 3>();
-            RRange = Vec<sWrkType, 3>();  RMin = Vec<sWrkType, 3>();  RMax = Vec<sWrkType, 3>();
+            qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
+                                           -1*Ap,  -1*U, -1*Am,\
+                                           -1*Bp, -1*Bm,  -1*U
+                                           );
     };
+    int n=srcInfo::bitDepth;
+    cv::Vec<wrkType,3> qRsMin(             0, (1<<(n-2))-(1<<(2*n-2)), (1<<(n-2))-(1<<(2*n-2)) );
+    cv::Vec<wrkType,3> qRsMax(  3*((1<<n)-1), (1<<(2*n-2))-(1<<(n-2)), (1<<(2*n-2))-(1<<(n-2)) );
+    cv::Vec<wrkType,3> qRsRange(3*((1<<n)-1), (1<<(n-1))*((1<<n)-1),   (1<<(n-1))*((1<<n)-1) );
+
+    cv::Vec<double,3> S;
+    S(0) = srcL(0)*(1.0/3.0);
+    S(1) = srcL(1)*(1.0/(1<<(n-1)));
+    S(2) = srcL(2)*(1.0/(1<<(n-1)));
     
-    fScale[0] = rRScale[0] * fRScale[0];     fScale[1] = rRScale[1] * fRScale[1];     fScale[2] = rRScale[2] * fRScale[2];
-    scale[0] = rRScale[0] * nRScale[0];      scale[1] = rRScale[1] * nRScale[1];      scale[2] = rRScale[2] * nRScale[2];
+    // Design the distribution function.
     
-    uRRange[0] = 1.0; uRMin[0] = 0;    uRMax[0] = 1.0;
-    uRRange[1] = 1.0; uRMin[1] = -0.5; uRMax[1] = 0.5;
-    uRRange[2] = 1.0; uRMin[2] = -0.5; uRMax[2] = 0.5;
+
+    LDist = distributeScaled(LParam,double(S(0)),double(qRsRange(0)),double(qRsMin(0)));
     
-    qfR[0][0] = fR(0,0); qfR[0][1] = fR(0,1); qfR[0][2] = fR(0,2);
-    qfR[1][0] = fR(1,0); qfR[1][1] = fR(1,1); qfR[1][2] = fR(1,2);
-    qfR[2][0] = fR(2,0); qfR[2][1] = fR(2,1); qfR[2][2] = fR(2,2);
+    CaDist = distributeScaled(CaParam,double(S(1)),double(qRsRange(1)),double(qRsMin(1)));
     
+    CbDist = distributeScaled(CbParam,double(S(2)),double(qRsRange(2)),double(qRsMin(2)));
+    
+//
+//    
+//    // theta is the rotation in radians about the luminocity axis
+//    // 0 <= theta < 2 Pi and theta should have been adjusted using
+//    // theta = adjustTheta(theta,nBits);
+//    
+//    int nBits = srcInfo::bitDepth -1; // The number of bits in which to store the numeric value of the matrix (-1 to account for the sign bit)
+//    double rRange = std::pow(2,nBits);
+//    
+//    
+//    //  nRScale is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
+//    nRScale = Vec<double, 3>(1/std::sqrt(3), \
+//                             (std::sqrt(1.5))/(2.*std::cos(CV_PI/6. - std::fmod(theta - CV_PI/6., CV_PI/3.))), \
+//                             (std::sqrt(1.5))/(2.*std::cos(CV_PI/6. - std::fmod(theta,            CV_PI/3.))));
+//    
+//    switch (int(std::floor(6* (std::fmod(theta, CV_PI/2.))/CV_PI)))
+//    {
+//        case 0:
+//            fRScale = Vec<double, 3>(1,(-2*SinPlus)/rRange,(-2*CosPlus)/rRange);
+//            fR = cv::Matx<sWrkType, 3, 3>(
+//                                          1,1,1,\
+//                                          sWrkType(rRange/2.), sWrkType(-(rRange*Cos*CscPlus)/2.), sWrkType( (rRange*CscPlus*SinMinus)/2.),\
+//                                          sWrkType(rRange/2.), sWrkType( (rRange*Sin*SecPlus)/2.), sWrkType(-(rRange*SecPlus*CosMinus)/2.)
+//                                          );
+//            RRange[0] =  sWrkType(3 * srcInfo::max);                               RMin[0] = 0;                           RMax[0] = RRange[0];
+//            RRange[1] =  sWrkType(    srcInfo::max * rRange * CscPlus * Cos);      RMin[1] = sWrkType(-1 * RRange[1]/2);  RMax[1] = RRange[1]/2;
+//            RRange[2] =  sWrkType(    srcInfo::max * rRange * SecPlus * CosMinus); RMin[2] = sWrkType(-1 * RRange[2]/2);  RMax[2] = RRange[2]/2;
+//            break;
+//        case 1:
+//            fRScale = Vec<double, 3>(1,(2*Cos)/rRange,(-2*Sin)/rRange);
+//            fR = cv::Matx<sWrkType, 3, 3>(
+//                                          1,1,1,\
+//                                          sWrkType(-(rRange*Sec*SinPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Sec*SinMinus)/2.),\
+//                                          sWrkType( (rRange*Csc*CosPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Csc*CosMinus)/2.)
+//                                          );
+//            RRange[0] = sWrkType( 3 * srcInfo::max);                           RMin[0] = 0;                           RMax[0] = RRange[0];
+//            RRange[1] = sWrkType(     srcInfo::max * rRange * SinPlus  * Sec); RMin[1] = sWrkType(-1 * RRange[1]/2);  RMax[1] = RRange[1]/2;
+//            RRange[2] = sWrkType(     srcInfo::max * rRange * CosMinus * Csc); RMin[2] = sWrkType(-1 * RRange[2]/2);  RMax[2] = RRange[2]/2;
+//            
+//            
+//            break;
+//        case 2:
+//            fRScale = Vec<double, 3>(1,(-2*SinMinus)/rRange,(2*CosMinus)/rRange);
+//            fR = cv::Matx<sWrkType, 3, 3>(
+//                                          1,1,1,\
+//                                          sWrkType( (rRange*CscMinus*SinPlus)/2.), sWrkType(-(rRange*Cos*CscMinus)/2.), sWrkType(rRange/2.),\
+//                                          sWrkType(-(rRange*SecMinus*CosPlus)/2.), sWrkType(-(rRange*Sin*SecMinus)/2.), sWrkType(rRange/2.)
+//                                          );
+//            
+//            RRange[0] = sWrkType( 3 * srcInfo::max);                               RMin[0] = 0;                           RMax[0] = RRange[0];
+//            RRange[1] = sWrkType(-1 * srcInfo::max * rRange * CscMinus * SinPlus); RMin[1] = sWrkType(-1 * RRange[1]/2);  RMax[1] = RRange[1]/2;
+//            RRange[2] = sWrkType(     srcInfo::max * rRange * SecMinus * Sin);     RMin[2] = sWrkType(-1 * RRange[2]/2);  RMax[2] = RRange[2]/2;
+//            
+//            break;
+//        default:
+//            fRScale = Vec<double, 3>();
+//            fR = cv::Matx<sWrkType, 3, 3>();
+//            RRange = Vec<sWrkType, 3>();  RMin = Vec<sWrkType, 3>();  RMax = Vec<sWrkType, 3>();
+//    };
+//    
+//    fScale[0] = rRScale[0] * fRScale[0];     fScale[1] = rRScale[1] * fRScale[1];     fScale[2] = rRScale[2] * fRScale[2];
+//    scale[0] = rRScale[0] * nRScale[0];      scale[1] = rRScale[1] * nRScale[1];      scale[2] = rRScale[2] * nRScale[2];
+//    
+//    uRRange[0] = 1.0; uRMin[0] = 0;    uRMax[0] = 1.0;
+//    uRRange[1] = 1.0; uRMin[1] = -0.5; uRMax[1] = 0.5;
+//    uRRange[2] = 1.0; uRMin[2] = -0.5; uRMax[2] = 0.5;
 };
 
-//template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setRanges(){
+//template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(){
 //    // Setup internal data
 //    cv::Matx<sWrkType, 3, 8> RGBBox({
 //        0, 1, 0, 0, 0, 1, 1, 1,
@@ -10034,7 +10324,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setTransformF
 //    
 //};
 
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setRanges(){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(){
     // Setup internal data
     cv::Matx<sWrkType, 3, 8> RGBBox({
         0, 1, 0, 0, 0, 1, 1, 1,
@@ -10051,75 +10341,33 @@ template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setRanges(){
     
 };
 
-
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setuCinSrc(Vec<double, 3> newC){
-    uC_src = newC; // The center point for the distribution function in the source color space scaled to 0:1
-    uC_wrk = toRot(uC_src);
-    qC_wrk = toWrk(uC_wrk);
-    qC_src = toSrc(uC_src);
-};
-
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setuC(Vec<double, 3> newC){
-    Vec<double, 3> shift(0,0.5,0.5);
-    Vec<double, 3> newC_src_temp(newC(indxA),newC(indxB),newC(indxC));
-    uC_wrk = newC_src_temp; // The center point for the distribution function in the source color space
-    uC_src = fromRot(uC_wrk);
-    qC_wrk = toWrk(uC_wrk);
-    qC_src = toSrc(uC_wrk);
-};
-
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setG(Vec<double, 3> newG){
-    uG[0] = newG(indxA); uG[1] = newG(indxB); uG[2] = newG(indxC);
-};
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setRedDistributionErf(){
-    setRedDistributionErf(qC_wrk[dstRGBIndices[0]],uG[dstRGBIndices[0]]);
-};
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setRedDistributionErf(  int center, double gradient){
-    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   gradient, center, wrkType((srcInfo::max - srcInfo::min) * RMin[0]), wrkType((srcInfo::max - srcInfo::min) * (RMin[0]+RRange[0])), dstType(dstInfo::min), dstType(dstInfo::max));
-};
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setGreenDistributionErf(){
-    setGreenDistributionErf(qC_wrk[dstRGBIndices[1]],uG[dstRGBIndices[1]]);
-};
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setGreenDistributionErf(int center, double gradient){
-    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( gradient, center, wrkType((srcInfo::max - srcInfo::min) * RMin[1]), wrkType((srcInfo::max - srcInfo::min) * (RMin[1]+RRange[1])), dstType(dstInfo::min), dstType(dstInfo::max));
-};
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setBlueDistributionErf(){
-    setBlueDistributionErf(qC_wrk[dstRGBIndices[2]],uG[dstRGBIndices[2]]);
-};
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::setBlueDistributionErf( int center, double gradient){
-    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  gradient, center, wrkType((srcInfo::max - srcInfo::min) * RMin[2]), wrkType((srcInfo::max - srcInfo::min) * (RMin[2]+RRange[2])), dstType(dstInfo::min), dstType(dstInfo::max));
-};
-
-template<int src_t, int dst_t> cv::RGB2Rot_int<src_t, dst_t>::RGB2Rot_int(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> newG, cv::Vec<double, 3> newC){
-    // newC and newG are assumed to be in the dst axis ordering.
-    init(newG,newC,theta);
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _uG, cv::Vec<double, 3> _uC){
+    // _uC and _uG are assumed to be in the dst axis ordering.
+    init(_uG,_uC,theta);
     setTransformFromAngle(theta);
     setRGBIndices(srcBlueIdx, dstBlueIdx);
-    setuC(newC); // asumes that C is in rotated color space and with a dstBlueIdx
-    setG(newG);
-    setRedDistributionErf();
-    setGreenDistributionErf();
-    setBlueDistributionErf();
 };
 
-template<int src_t, int dst_t> cv::RGB2Rot_int<src_t, dst_t>::RGB2Rot_int(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC){
-    cv::Vec<double, 3> c{newC[0],newC[1],newC[2]};
-    cv::Vec<double, 3> g{newG[0],newG[1],newG[2]};
-    init(g, c, theta);
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  _uG, std::vector<double> _uC){
+    cv::Vec<double, 3> uC{_uC[0],_uC[1],_uC[2]};
+    cv::Vec<double, 3> uG{_uG[0],_uG[1],_uG[2]};
+    init(uG, uC, theta);
     setTransformFromAngle(theta);
     setRGBIndices(srcBlueIdx, dstBlueIdx);
-    setuC(c); // asumes that C is in rotated color space and with a dstBlueIdx
-    setG(g);
-    setRedDistributionErf();
-    setGreenDistributionErf();
-    setBlueDistributionErf();
 };
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(){
+    init(0.2,0.5,0.0);
+    setTransformFromAngle(0.0);
+    setRGBIndices(2, 2);
+}
 
-template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::init(cv::Vec<double, 3> g, cv::Vec<double, 3> c, double theta){
+
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::init(cv::Vec<double, 3> uG, cv::Vec<double, 3> uC, double theta){
     // Find the working range
-    cv::distributeErfParameters<src_t, dst_t> par[3]{*new cv::distributeErfParameters<src_t, dst_t>(-1.0*g(0), c(0)),
-                                                     *new cv::distributeErfParameters<src_t, dst_t>(-1.0*g(1), c(1)),
-                                                     *new cv::distributeErfParameters<src_t, dst_t>(-1.0*g(2), c(2))};
+    cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)> par[3]{
+                                                     *new cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>(-1.0*uG(0), uC(0)),
+                                                     *new cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>(-1.0*uG(1), uC(1)),
+                                                     *new cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>(-1.0*uG(2), uC(2))};
     double vTheta = CV_PI/6. - std::fmod(theta - CV_PI/6., CV_PI/3.);
     double pTheta = CV_PI/6. - std::fmod(theta,            CV_PI/3.);
     L = Vec<double, 3>(std::sqrt(3), \
@@ -10132,55 +10380,73 @@ template<int src_t, int dst_t> void cv::RGB2Rot_int<src_t, dst_t>::init(cv::Vec<
         RRange[i] = sWrkType(srcL(i) * (srcInfo::max - srcInfo::min));
     }
     
-    RMin[0] = 0; RMax[0] = sWrkType(RRange[0]/2);
+    RMin[0] = 0; RMax[0] = sWrkType(RRange[0]);
     RMin[1] = sWrkType(-1*RRange[1]/2); RMax[1] = sWrkType(RRange[1]/2);
     RMin[2] = sWrkType(-1*RRange[2]/2); RMax[2] = sWrkType(RRange[2]/2);
     
     // Set the distribution region boundary constants.
-    redParam.set(-1.0*g(0), c(0));
-    redParam.setRange(RMin[0],RMax[0],dstInfo::min,dstInfo::max);
-    greenParam.set(-1.0*g(1), c(1));
-    greenParam.setRange(RMin[1],RMax[1],dstInfo::min,dstInfo::max);
-    blueParam.set(-1.0*g(2), c(2));
-    blueParam.setRange(RMin[2],RMax[2],dstInfo::min,dstInfo::max);
+    LParam.init();
+    LParam.set(-1.0*uG(0), uC(0));
+    LParam.setRange(RMin[0],RMax[0],dstInfo::min,dstInfo::max);
+    CaParam.init();
+    CaParam.set(-1.0*uG(1), uC(1));
+    CaParam.setRange(RMin[1],RMax[1],dstInfo::min,dstInfo::max);
+    CbParam.init();
+    CbParam.set(-1.0*uG(2), uC(2));
+    CbParam.setRange(RMin[2],RMax[2],dstInfo::min,dstInfo::max);
     
     // Initialise parameters with default values.
-    indxA = 0; indxB = 1; indxC = 2;
     
     for(int i = 0; i < dstInfo::channels; i++){
         for(int j = 0; j < srcInfo::channels; j++){
             if (j==i) {
                 fR(i,j) = 1;
+                qRs(i,j)= 1;
             }else{
                 fR(i,j) = 0;// Dont add the alpha channel to the color mix.
+                qRs(i,j)= 0;
             }
         }
     }
     
 };
-template<int src_t, int dst_t> cv::RGB2Rot_int<src_t, dst_t>::RGB2Rot_int(){
-    init(0.2,0.5,0.0);
+
+
+template<int src_t, int dst_t> inline typename cv::Vec<typename cv::Data_Type<dst_t>::type,3> cv::RGB2Rot<src_t, dst_t>::apply(typename cv::Vec<typename cv::Data_Type<src_t>::type,3> src)
+{
+    typename cv::Vec<typename cv::Data_Type<dst_t>::type,3> dst{0,0,0};
+    sWrkType X = src[srcIndx[0]]*qRs(0,0) + src[srcIndx[1]]*qRs(0,1) + src[srcIndx[2]]*qRs(0,2); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+    sWrkType Y = src[srcIndx[0]]*qRs(1,0) + src[srcIndx[1]]*qRs(1,1) + src[srcIndx[2]]*qRs(1,2); // could be used in place of * scale
+    sWrkType Z = src[srcIndx[0]]*qRs(2,0) + src[srcIndx[1]]*qRs(2,1) + src[srcIndx[2]]*qRs(2,2); // Find shift which fits RRange into the desired bit depth.
+    
+    (* LDist)(X, dst[dstIndx[0]]);
+    (*CaDist)(Y, dst[dstIndx[1]]);
+    (*CbDist)(Z, dst[dstIndx[2]]);
+    return dst;
 }
 
-template<int src_t, int dst_t> inline void cv::RGB2Rot_int<src_t, dst_t>::operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const
+
+template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const
 {
     n *= dstInfo::channels;
     for(int i = 0; i < n; i += dstInfo::channels, src += srcInfo::channels)
     {
-        wrkType X = src[0]*qfR[0][0] + src[1]*qfR[0][1] + src[2]*qfR[0][2]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
-        wrkType Y = src[0]*qfR[1][0] + src[1]*qfR[1][1] + src[2]*qfR[1][2]; // could be used in place of * scale
-        wrkType Z = src[0]*qfR[2][0] + src[1]*qfR[2][1] + src[2]*qfR[2][2]; // Find shift which fits RRange into the desired bit depth.
+        sWrkType X = src[srcIndx[0]]*qRs(0,0) + src[srcIndx[1]]*qRs(0,1) + src[srcIndx[2]]*qRs(0,2); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+        sWrkType Y = src[srcIndx[0]]*qRs(1,0) + src[srcIndx[1]]*qRs(1,1) + src[srcIndx[2]]*qRs(1,2); // could be used in place of * scale
+        sWrkType Z = src[srcIndx[0]]*qRs(2,0) + src[srcIndx[1]]*qRs(2,1) + src[srcIndx[2]]*qRs(2,2); // Find shift which fits RRange into the desired bit depth.
         
-        (*redScale)(X, dst[i  ]);
-        (*greenScale)(Y, dst[i+1]);
-        (*blueScale)(Z, dst[i+2]);
+        (* LDist)(X, dst[i+dstIndx[0]]);
+        (*CaDist)(Y, dst[i+dstIndx[1]]);
+        (*CbDist)(Z, dst[i+dstIndx[2]]);
     }
 }
 
-template class cv::RGB2Rot_int<CV_8UC3,CV_8UC3>;
-template class cv::RGB2Rot_int<CV_8UC4,CV_8UC3>;
+template class cv::RGB2Rot<CV_8UC3,CV_8UC3>;
+template class cv::RGB2Rot<CV_8UC4,CV_8UC3>;
 
-cv::Vec<int, 3> dqAS( double theta){
+// RGB2Rot helper functions.
+
+typename cv::Vec<int, 3> cv::dqAS( double theta){
     switch (int(std::floor(3* (std::fmod(theta, CV_PI))/CV_PI)))
     {
         case 0:
@@ -10198,324 +10464,34 @@ cv::Vec<int, 3> dqAS( double theta){
     
 }
 
-// ***************************************************************************************************************************
+// Algorithm 2: A function which returns the angular position of a compromise between the perturbations to the channels.
+// oPhiA and oPhiB gives the position of the extreme perturbations.
+// chanPerturbation returns the angle and the perturbation at that angle.
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRGBIndices(int srcBlueIdx, int dstBlueIdx){
-    wrkType _M[dstInfo::channels][srcInfo::channels];
-    wrkType _TRange[dstInfo::channels], _TMin[dstInfo::channels];
-    
-    for (int i=0; i<dstInfo::channels; i++) {
-        for (int j=0; j<srcInfo::channels; j++) {
-            _M[i][j] = M[i][j];
-        }
-        _TRange[i] = TRange[i];
-        _TMin[i] = TMin[i];
-    }
-    
-    srcRGBIndices[0] = (srcBlueIdx+2)%4; srcRGBIndices[1] = 1; srcRGBIndices[2] = srcBlueIdx; // (blueIdx+2)%4 = 2 if blueIdx = 0
-    dstRGBIndices[0] = (dstBlueIdx+2)%4; dstRGBIndices[1] = 1; dstRGBIndices[2] = dstBlueIdx; //                 0 if blueIdx = 2
-    for(int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
-            M[i][j] = _M[dstRGBIndices[i]][srcRGBIndices[j]];
-        }
-        TRange[i] = _TRange[dstRGBIndices[i]];
-        TMin[i]   = _TMin[  dstRGBIndices[i]];
-    }
-};
-
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransform(cv::Matx<int, 3, 3>& _T){
-    T = _T;
-    // Setup internal data
-    setRanges();
-    // Rescale to avoid bit overflow during transform.
-    
-    int TitRowSum[3] = {
-        static_cast<int>(std::abs(T(0,0))+std::abs(T(0,1))+std::abs(T(0,2))),
-        static_cast<int>(std::abs(T(1,0))+std::abs(T(1,1))+std::abs(T(1,2))),
-        static_cast<int>(std::abs(T(2,0))+std::abs(T(2,1))+std::abs(T(2,2)))
-    };
-    // Find left most bit.
-    int TitRowLog2Sum[3] = {0,0,0};
-    for (int i=0; i<=2; i++) {
-        while (TitRowSum[i] >>= 1) ++TitRowLog2Sum[i];
-    }
-    
-    // MWB is the number of bits needed for the Working Type storage.
-    // a[0] srcMax + a[1] srcMax + a[2] srcMax  = ( a[0] + a[1] + a[2]) * srcMax
-    // MWB = log2(( a[0] + a[1] + a[2]) * srcMax) = log2( a[0] + a[1] + a[2]) + log2( srcMax )
-    cv::Matx<int, 3, 1> MWB({
-        TitRowLog2Sum[0] + CV_MAT_DEPTH_BITS(src_t),
-        TitRowLog2Sum[1] + CV_MAT_DEPTH_BITS(src_t),
-        TitRowLog2Sum[2] + CV_MAT_DEPTH_BITS(src_t)
-    });
-    
-    int excessWBFactor[3] = {
-        (int) ceil(pow(2, TitRowLog2Sum[0] - CV_MAT_DEPTH_BITS(src_t))),
-        (int) ceil(pow(2, TitRowLog2Sum[1] - CV_MAT_DEPTH_BITS(src_t))),
-        (int) ceil(pow(2, TitRowLog2Sum[2] - CV_MAT_DEPTH_BITS(src_t)))
-    };
-    
-    M[0][0] = T(0,0)/excessWBFactor[0]; M[0][1] = T(0,1)/excessWBFactor[0]; M[0][2] = T(0,2)/excessWBFactor[0];
-    M[1][0] = T(1,0)/excessWBFactor[1]; M[1][1] = T(1,1)/excessWBFactor[1]; M[1][2] = T(1,2)/excessWBFactor[1];
-    M[2][0] = T(2,0)/excessWBFactor[2]; M[2][1] = T(2,1)/excessWBFactor[2]; M[2][2] = T(2,2)/excessWBFactor[2];
-    
-    setRanges();
-    
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta ){
-    // theta is the rotation in radians about the luminocity axis
-    // preserve gives ranges where the axis scaling should not reduce information.
-    // values outside the preserve range are vulnerable to truncation.
-    
-    // nT is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
-    uT = cv::Matx<double, 3, 3>( \
-                                0.3333333333333333,0.3333333333333333,0.3333333333333333, \
-                                ((-1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*( std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,\
-                                (      std::cos(theta)*(1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.)))/2.,\
-                                (( 1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(-std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,\
-                                (( 1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,\
-                                ((-1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*std::sin(theta))/2.,\
-                                (( 1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
-    
-    int nBits = srcInfo::bitDepth -1; // The number of bits in which to store the numeric value of the matrix (-1 to account for the sign bit)
-    double rRange = std::pow(2,nBits);
-    double newTheta = theta; // adjustTheta(theta,nBits);
-    
-    double Cos      = std::cos(newTheta);
-    double CosPlus  = std::cos(CV_PI/6. + newTheta);
-    double CosMinus = std::cos(CV_PI/6. - newTheta);
-    
-    double Sin      = std::sin(newTheta);
-    double SinPlus  = std::sin(CV_PI/6. + newTheta);
-    double SinMinus = std::sin(CV_PI/6. - newTheta);
-    
-    double Csc      = 1./std::sin(newTheta);
-    double CscPlus  = 1./std::sin(CV_PI/6. + newTheta);
-    double CscMinus = 1./std::sin(CV_PI/6. - newTheta);
-    
-    double Sec      = 1./std::cos(newTheta);
-    double SecPlus  = 1./std::cos(CV_PI/6. + newTheta);
-    double SecMinus = 1./std::cos(CV_PI/6. - newTheta);
-    
-    switch (int(std::floor(6* (std::fmod(theta, CV_PI/2.))/CV_PI)))
-    {
-        case 0:
-            fRScale = Vec<double, 3>(1,(-2*SinPlus)/rRange,(-2*CosPlus)/rRange);
-            fR = cv::Matx<sWrkType, 3, 3>(
-                                          1, 1, 1,
-                                          sWrkType(rRange/2.), sWrkType(-(rRange*Cos*CscPlus)/2.), sWrkType( (rRange*CscPlus*SinMinus)/2.),
-                                          sWrkType(rRange/2.), sWrkType( (rRange*Sin*SecPlus)/2.), sWrkType(-(rRange*SecPlus*CosMinus)/2.)
-                                          );
-            break;
-        case 1:
-            fRScale = Vec<double, 3>(1,(2*Cos)/rRange,(-2*Sin)/rRange);
-            fR = cv::Matx<sWrkType, 3, 3>(
-                                          1, 1, 1,
-                                          sWrkType(-(rRange*Sec*SinPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Sec*SinMinus)/2.),
-                                          sWrkType( (rRange*Csc*CosPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Csc*CosMinus)/2.)
-                                          );
-            break;
-        case 2:
-            fRScale = Vec<double, 3>(1,(-2*SinMinus)/rRange,(2*CosMinus)/rRange);
-            fR = cv::Matx<sWrkType, 3, 3>(
-                                          1, 1, 1,
-                                          sWrkType( (rRange*CscMinus*SinPlus)/2.), sWrkType(-(rRange*Cos*CscMinus)/2.), sWrkType(rRange/2.),
-                                          sWrkType(-(rRange*SecMinus*CosPlus)/2.), sWrkType(-(rRange*Sin*SecMinus)/2.), sWrkType(rRange/2.)
-                                          );
-            break;
-        default:
-            fR = cv::Matx<sWrkType, 3, 3>();
-    }
-    
-    uiT = cv::Matx<double, 3, 3>(1.,
-                                 (-2.*std::cos(theta - (CV_PI*std::floor(0.5 + (3.*theta)/CV_PI))/3.)*(std::cos(theta) + std::sqrt(3.)*std::sin(theta)))/3.,
-                                 ( 2.*std::cos((CV_PI - 6.*std::fmod(theta, CV_PI/3.))/6.)*(-(std::sqrt(3.)*std::cos(theta)) + std::sin(theta)))/3.,
-                                 1.,
-                                 ( 4.*std::cos(theta)*std::cos(theta - (CV_PI*std::floor(0.5 + (3.*theta)/CV_PI))/3.))/3.,
-                                 (-4.*std::cos((CV_PI - 6.*std::fmod(theta, CV_PI/3.))/6.)*std::sin(theta))/3.,
-                                 1.,
-                                 (2.*std::cos(theta - (CV_PI*std::floor(0.5 + (3.*theta)/CV_PI))/3.)*(-std::cos(theta) + std::sqrt(3.)*std::sin(theta)))/3.,
-                                 (2.*std::cos((CV_PI - 6.*std::fmod(theta, CV_PI/3.))/6.)*(std::sqrt(3.)*std::cos(theta) + std::sin(theta)))/3.
-                                 );
-    
-    uTRange[0] = 1.0; uTMin[0] = 0;    uTMax[0] = 1.0;
-    uTRange[1] = 1.0; uTMin[1] = -0.5; uTMax[1] = 0.5;
-    uTRange[2] = 1.0; uTMin[2] = -0.5; uTMax[2] = 0.5;
-    
-    TRange[0] = srcInfo::max; TMin[0] = 0;
-    TRange[1] = srcInfo::max/2.0; TMin[1] = -1.0 * srcInfo::max/2.0;
-    TRange[2] = srcInfo::max/2.0; TMin[2] = -1.0 * srcInfo::max/2.0;
-    
-    M[0][0] = uT(0,0) * srcInfo::max; M[0][1] = uT(0,1) * srcInfo::max; M[0][2] = uT(0,2) * srcInfo::max;
-    M[1][0] = uT(1,0) * srcInfo::max; M[1][1] = uT(1,1) * srcInfo::max; M[1][2] = uT(1,2) * srcInfo::max;
-    M[2][0] = uT(2,0) * srcInfo::max; M[2][1] = uT(2,1) * srcInfo::max; M[2][2] = uT(2,2) * srcInfo::max;
-    
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(){
-    // Setup internal data
-    cv::Matx<sWrkType, 3, 8> RGBBox({ \
-        0, 1, 0, 0, 0, 1, 1, 1, \
-        0, 0, 1, 0, 1, 0, 1, 1, \
-        0, 0, 0, 1, 1, 1, 0, 1  \
-    });
-    cv::Matx<wrkType, 3, 8> RGBBoxInNew = T * RGBBox;
-    cv::Matx<wrkType, 3, 1> RGBCubeMax = cv::MaxInRow<wrkType, 3, 8>(RGBBoxInNew);
-    cv::Matx<wrkType, 3, 1> RGBCubeMin = cv::MinInRow<wrkType, 3, 8>(RGBBoxInNew);
-    cv::Matx<wrkType, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
-    
-    TMin[0] = RGBCubeMin(0,0); TMax[0] = RGBCubeMax(0,0); TRange[0] = RGBCubeRange(0,0);
-    TMin[1] = RGBCubeMin(1,0); TMax[1] = RGBCubeMax(1,0); TRange[1] = RGBCubeRange(1,0);
-    TMin[2] = RGBCubeMin(2,0); TMax[2] = RGBCubeMax(2,0); TRange[2] = RGBCubeRange(2,0);
-    
-};
-
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuCinSrc(Vec<double, 3> newC){
-    int C[3]; // The center point for the distribution function in the rotated color space
-    Vec<double, 3> newC_src_temp(newC(indxA),newC(indxB),newC(indxC));
-    uC_src = newC_src_temp; // The center point for the distribution function in the source color space scaled to 0:1
-    uC_wrk = uT * uC_src - uTMin;
-    qC_wrk[0] = TRange[0] * uC_wrk(0); qC_wrk[1] = TRange[1] * uC_wrk(1); qC_wrk[2] = TRange[2] * uC_wrk(2);
-    qC_src[0] = (srcInfo::max - srcInfo::min) * uC_src(0); qC_src[1] = (srcInfo::max - srcInfo::min) * uC_src(1); qC_src[2] = (srcInfo::max - srcInfo::min) * uC_src(2);
-    C[0] = TRange[0] * uC_wrk(0); C[1] = TRange[1] * uC_wrk(1); C[2] = TRange[2] * uC_wrk(2);
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setCinSrc(Vec<int, 3> newC_src){
-    Vec<srcType, 3> newC_src_temp(srcType(newC_src(indxA)),srcType(newC_src(indxB)),srcType(newC_src(indxC)));
-    qC_src = newC_src_temp; // The center point for the distribution function in the source color space
-    uC_src = qC_src/(srcInfo::max - srcInfo::min);
-    uC_wrk = uT * uC_src - uTMin;
-    qC_wrk[0] = TRange[0] * uC_wrk(0)+ TMin[0];
-    qC_wrk[1] = TRange[1] * uC_wrk(1)+ TMin[1];
-    qC_wrk[2] = TRange[2] * uC_wrk(2)+ TMin[2];
-    C[0] = TRange[0] * uC_wrk(0) + TMin[0]; C[1] = TRange[1] * uC_wrk(1) + TMin[1]; C[2] = TRange[2] * uC_wrk(2) + TMin[2];
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuC(Vec<double, 3> newC){
-    Vec<double, 3> shift(0,0.5,0.5);
-    Vec<double, 3> newC_src_temp(newC(indxA),newC(indxB),newC(indxC));
-    uC_wrk = newC_src_temp; // The center point for the distribution function in the source color space
-    qC_wrk[0] = (dstInfo::max - dstInfo::min) * uC_wrk[0] + dstInfo::min;
-    qC_wrk[1] = (dstInfo::max - dstInfo::min) * uC_wrk[1] + dstInfo::min;
-    qC_wrk[2] = (dstInfo::max - dstInfo::min) * uC_wrk[2] + dstInfo::min;
-    uC_src = uiT * (uC_wrk - shift);
-    qC_src[0] = (srcInfo::max - srcInfo::min) * uC_src[0] + srcInfo::min;
-    qC_src[1] = (srcInfo::max - srcInfo::min) * uC_src[1] + srcInfo::min;
-    qC_src[2] = (srcInfo::max - srcInfo::min) * uC_src[2] + srcInfo::min;
-    
-    C[0] = TRange[0] * uC_wrk(0) + TMin[0]; C[1] = TRange[1] * uC_wrk(1) + TMin[1]; C[2] = TRange[2] * uC_wrk(2) + TMin[2];
-    
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setC(Vec<int, 3> newC){
-    Vec<double, 3> shift(0,0.5,0.5);
-    C[0] = newC(indxA); C[1] = newC(indxB); C[2] = newC(indxC);
-    qC_wrk[0] = newC(indxA); qC_wrk[1] = newC(indxB); qC_wrk[2] = newC(indxC);
-    uC_wrk[0] = (newC(indxA)- TMin[0])/TRange[0];
-    uC_wrk[1] = (newC(indxB)- TMin[1])/TRange[1];
-    uC_wrk[2] = (newC(indxC)- TMin[2])/TRange[2];
-    uC_src = uiT * (uC_wrk - shift);
-    qC_src[0] = (srcInfo::max - srcInfo::min) * uC_src(0) + srcInfo::min;
-    qC_src[1] = (srcInfo::max - srcInfo::min) * uC_src(1) + srcInfo::min;
-    qC_src[2] = (srcInfo::max - srcInfo::min) * uC_src(2) + srcInfo::min;
-};
-
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setG(Vec<double, 3> newG){
-    qG[0] = newG(indxA); qG[1] = newG(indxB); qG[2] = newG(indxC);
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuG(Vec<double, 3> newG){
-    qG[0] = newG(indxA); qG[1] = newG(indxB); qG[2] = newG(indxC);
-};
-
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributionErf(){
-    setRedDistributionErf(C[dstRGBIndices[0]],qG[dstRGBIndices[0]]);
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributionErf(  int center, double gradient){
-    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * (TMin[0]+TRange[0])), dstType(dstInfo::min), dstType(dstInfo::max));
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistributionErf(){
-    setGreenDistributionErf(C[dstRGBIndices[1]],qG[dstRGBIndices[1]]);
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistributionErf(int center, double gradient){
-    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * (TMin[1]+TRange[1])), dstType(dstInfo::min), dstType(dstInfo::max));
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributionErf(){
-    setBlueDistributionErf(C[dstRGBIndices[2]],qG[dstRGBIndices[2]]);
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributionErf( int center, double gradient){
-    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * (TMin[2]+TRange[2])), dstType(dstInfo::min), dstType(dstInfo::max));
-};
-
-template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> newG, cv::Vec<int, 3> newC){
-    
-    init();
-    setTransform(T);
-    setRGBIndices(srcBlueIdx, dstBlueIdx);
-    setC(newC); // asumes that C is in rotated color space and with a dstBlueIdx
-    setG(newG);
-    setRedDistributionErf();
-    setGreenDistributionErf();
-    setBlueDistributionErf();
-};
-
-template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> newG, cv::Vec<double, 3> newC){
-    
-    init();
-    setTransformFromAngle(theta);
-    setRGBIndices(srcBlueIdx, dstBlueIdx);
-    setuC(newC); // asumes that C is in rotated color space and with a dstBlueIdx
-    setG(newG);
-    setRedDistributionErf();
-    setGreenDistributionErf();
-    setBlueDistributionErf();
-};
-
-template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC){
-    init();
-    setTransformFromAngle(theta);
-    setRGBIndices(srcBlueIdx, dstBlueIdx);
-    cv::Vec<double, 3> c{newC[0],newC[1],newC[2]};
-    cv::Vec<double, 3> g{newG[0],newG[1],newG[2]};
-    setuC(c); // asumes that C is in rotated color space and with a dstBlueIdx
-    setG(g);
-    setRedDistributionErf();
-    setGreenDistributionErf();
-    setBlueDistributionErf();
-};
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::init(){
-    indxA = 0; indxB = 1; indxC = 2;
-    
-    for(int i = 0; i < dstInfo::channels; i++){
-        for(int j = 0; j < srcInfo::channels; j++){
-            if (j==i) {
-                M[i][j] = 1;
-            }else{
-                M[i][j] = 0;// Dont add the alpha channel to the color mix.
-            }
-        }
-    }
-    
-    TMin[0] = srcInfo::min; TMax[0] = srcInfo::min; TRange[0] = srcInfo::max - srcInfo::min;
-    TMin[1] = srcInfo::min; TMax[1] = srcInfo::max; TRange[1] = srcInfo::max - srcInfo::min;
-    TMin[2] = srcInfo::min; TMax[2] = srcInfo::max; TRange[2] = srcInfo::max - srcInfo::min;
-};
-template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(){
-    init();
+double cv::oPhiA(int l, int n){
+    return std::atan(l * std::sqrt(3.0) / ((1<<n) - 1));
 }
 
-template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const
-{
-    n *= dstInfo::channels;
-    for(int i = 0; i < n; i += dstInfo::channels, src += srcInfo::channels)
-    {
-        wrkType X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
-        wrkType Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2]; // could be used in place of * scale
-        wrkType Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2]; // Find shift which fits TRange into the desired bit depth.
-        
-        (*redScale)(X, dst[i  ]);
-        (*greenScale)(Y, dst[i+1]);
-        (*blueScale)(Z, dst[i+2]);
-    }
+double cv::oPhiB(int l, int n){
+    return std::atan(l / ( (1<<(n-2)) * std::sqrt(3.0) ));
 }
 
-template class cv::RGB2Rot<CV_8UC3,CV_8UC3>;
-template class cv::RGB2Rot<CV_8UC4,CV_8UC3>;
+cv::Vec<double,2> cv::chanPerturbation(int i, double alpha, double beta, int n){
+    cv::Vec<double,2> out;
+    double bI = double((1<<(n-3))); // bI = 2^(n-3)
+    int iota = std::floor(7*bI - std::sqrt(i*i - 2*i*bI + 49*bI*bI));
+    double nPhiA, uPhiA, nPhiB, uPhiB;
+    if ( (i+iota) % 2 == 0){
+        nPhiA = oPhiA(i+iota+1,n); uPhiA = oPhiA(i+iota,n);
+        nPhiB = oPhiB(i-iota-1,n); uPhiB = oPhiB(i-iota,n);
+    } else {
+        nPhiA = oPhiA(i+iota,n); uPhiA = oPhiA(i+iota+1,n);
+        nPhiB = oPhiB(i-iota,n); uPhiB = oPhiB(i-iota-1,n);
+    }
+    out(0) = (beta * uPhiB * (uPhiA - nPhiA) + alpha * uPhiA * (nPhiB - uPhiB) )/(beta * (uPhiA - nPhiA) + alpha * (nPhiB - uPhiB));
+    out(1) = (beta * alpha * (uPhiA - uPhiB) )/(beta * (uPhiA - nPhiA) + alpha * (nPhiB - uPhiB));
+    return out;
+}
 
 
 //! converts image from one color space to another

@@ -520,7 +520,10 @@ Cv64suf;
 #define CV_USRTYPE6 15
 
 #define CV_MAT_DEPTH_MASK       (CV_DEPTH_MAX - 1)
-#define CV_MAT_DEPTH(type)    ((type) & CV_MAT_DEPTH_MASK) // CV_MAT_DEPTH(flags) applies the mask to the bits in flags.
+#if CV_MAT_DEPTH_MASK == 15
+int i = CV_MAT_DEPTH_MASK;
+#endif
+#define CV_MAT_DEPTH(type)    ((type) & (CV_MAT_DEPTH_MASK)) // CV_MAT_DEPTH(flags) applies the mask to the bits in flags.
 
 #define CV_DEPTH_BYTES_MAGIC ( \
 (CV_64F_DEPTH_BYTES_LOG2 << (CV_64F *2))|(CV_32F_DEPTH_BYTES_LOG2 << (CV_32F *2))|\

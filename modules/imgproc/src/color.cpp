@@ -10022,20 +10022,26 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRGBIndices(int
 //};
 //
 template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot<src_t, dst_t>::fromRot(Vec<double, 3> pnt){
-    Vec<double, 3> out = pnt;
-    out[0] +=   uRMin[0]; out[1] +=   uRMin[1]; out[2] +=   uRMin[2];
-    out[0] /= nRScale[0]; out[1] /= nRScale[1]; out[2] /= nRScale[2];
-    out[0] *= rRScale[0]; out[1] *= rRScale[1]; out[2] *= rRScale[2];// column multiplication is consistent with use of the inverse equal to the transpose
-    return rR.t() * out;
+    // This function performs the inverse of pnt = iL rRScale (rR . out) + {0,.5,.5}
+    // Becasue inv( iL rRScale rR ) = Transpose( iL rRScale rR )
+    
+    cv::Vec<double,3> rRScaleXiLXpnt, rot, out;
+    
+    rRScaleXiLXpnt(0) = rRScale(0)*iL(0)*(pnt(dstIndx[0]));
+    rRScaleXiLXpnt(1) = rRScale(1)*iL(1)*(pnt(dstIndx[1])-0.5);
+    rRScaleXiLXpnt(2) = rRScale(2)*iL(2)*(pnt(dstIndx[2])-0.5);
+    rot = rR.t()*rRScaleXiLXpnt;
+    out(srcIndx[0]) = rot(0); out(srcIndx[1]) = rot(1); out(srcIndx[2]) = rot(2);
+    return out;
 };
 template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot<src_t, dst_t>::toRot(Vec<double, 3> src){
     // src is assumed to be in the 0:1 unit range.
     // The ordering of the src elemebts is specified by the blue index specified in the constructor.
     // out will be in the 0:1 unit range but in the LCaCb space.
     Vec<double, 3> out;
-    out(0) = src(srcIndx[0])*qRs(0,0) + src(srcIndx[1])*qRs(0,1) + src(srcIndx[2])*qRs(0,2); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
-    out(1) = src(srcIndx[0])*qRs(1,0) + src(srcIndx[1])*qRs(1,1) + src(srcIndx[2])*qRs(1,2); // could be used in place of * scale
-    out(2) = src(srcIndx[0])*qRs(2,0) + src(srcIndx[1])*qRs(2,1) + src(srcIndx[2])*qRs(2,2); // Find shift which fits RRange into the desired bit depth.
+    out(dstIndx[0]) = rRScale(0)*iL(0)*(src(srcIndx[0])*rR(0,0) + src(srcIndx[1])*rR(0,1) + src(srcIndx[2])*rR(0,2)); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+    out(dstIndx[1]) = rRScale(1)*iL(1)*(src(srcIndx[0])*rR(1,0) + src(srcIndx[1])*rR(1,1) + src(srcIndx[2])*rR(1,2))+0.5; // could be used in place of * scale
+    out(dstIndx[2]) = rRScale(2)*iL(2)*(src(srcIndx[0])*rR(2,0) + src(srcIndx[1])*rR(2,1) + src(srcIndx[2])*rR(2,2))+0.5; // Find shift which fits RRange into the desired bit depth.
     return out;
 };
 
@@ -10075,30 +10081,18 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     double Csc   = 1./std::sin(theta);    double CscPlus  = 1./std::sin(CV_PI/6. + theta);    double CscMinus = 1./std::sin(CV_PI/6. - theta);
     double Sec   = 1./std::cos(theta);    double SecPlus  = 1./std::cos(CV_PI/6. + theta);    double SecMinus = 1./std::cos(CV_PI/6. - theta);
     
-    rR = cv::Matx<double, 3, 3>( 1.,       1.,   1., \
-                                -SinPlus,  Cos, -SinMinus, \
-                                -CosPlus, -Sin,  CosMinus );
-    
-    //  rRScale scales to give the unscaled rotated ranges.
-    rRScale = Vec<double, 3>(std::sqrt(0.333333333333333333333), std::sqrt(0.666666666666666666666), std::sqrt(0.666666666666666666666));
- 
     setReducedRotationMatrix(theta );
     
-    
     // Find Lambda2 equivalent in RGB
-    cv::Vec<double,3> rRScaleXiLXl1c;
-    cv::Vec<double,3> rRScaleXiLXl2c;
     
-    rRScaleXiLXl1c(0) = rRScale(0)*iL(0)*(LParam.uLambda1);
-    rRScaleXiLXl1c(1) = rRScale(1)*iL(1)*(CaParam.uLambda1-0.5);
-    rRScaleXiLXl1c(2) = rRScale(2)*iL(2)*(CbParam.uLambda1-0.5);
-    rRScaleXiLXl2c(0) = rRScale(0)*iL(0)*(LParam.uLambda2);
-    rRScaleXiLXl2c(1) = rRScale(1)*iL(1)*(CaParam.uLambda2-0.5);
-    rRScaleXiLXl2c(2) = rRScale(2)*iL(2)*(CbParam.uLambda2-0.5);
+    cv::Vec<double,3> lambda1LCaCb,lambda2LCaCb;
+    lambda1LCaCb(0) = LParam.uLambda1; lambda1LCaCb(1) = CaParam.uLambda1; lambda1LCaCb(2) = CbParam.uLambda1;
+    lambda2LCaCb(0) = LParam.uLambda2; lambda2LCaCb(1) = CaParam.uLambda2; lambda2LCaCb(2) = CbParam.uLambda2;
     
-    cv::Vec<double,3> lambda1RGB,lambda2RGB, lambdaRGB;
-    lambda1RGB = rR.t()*rRScaleXiLXl1c;
-    lambda2RGB = rR.t()*rRScaleXiLXl2c;
+    cv::Vec<double,3> lambda1RGB, lambda2RGB, lambdaRGB;
+    lambda1RGB = fromRot(lambda1LCaCb);
+    lambda2RGB = fromRot(lambda2LCaCb);
+
     
     for (int i=0; i<3; i++) {
         if (lambda1RGB(i)< lambda2RGB(i)) {
@@ -10239,126 +10233,27 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     
     CbDist = distributeScaled(CbParam,double(S(2)),double(qRsRange(2)),double(qRsMin(2)));
     
-//
-//    
-//    // theta is the rotation in radians about the luminocity axis
-//    // 0 <= theta < 2 Pi and theta should have been adjusted using
-//    // theta = adjustTheta(theta,nBits);
-//    
-//    int nBits = srcInfo::bitDepth -1; // The number of bits in which to store the numeric value of the matrix (-1 to account for the sign bit)
-//    double rRange = std::pow(2,nBits);
-//    
-//    
-//    //  nRScale is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
-//    nRScale = Vec<double, 3>(1/std::sqrt(3), \
-//                             (std::sqrt(1.5))/(2.*std::cos(CV_PI/6. - std::fmod(theta - CV_PI/6., CV_PI/3.))), \
-//                             (std::sqrt(1.5))/(2.*std::cos(CV_PI/6. - std::fmod(theta,            CV_PI/3.))));
-//    
-//    switch (int(std::floor(6* (std::fmod(theta, CV_PI/2.))/CV_PI)))
-//    {
-//        case 0:
-//            fRScale = Vec<double, 3>(1,(-2*SinPlus)/rRange,(-2*CosPlus)/rRange);
-//            fR = cv::Matx<sWrkType, 3, 3>(
-//                                          1,1,1,\
-//                                          sWrkType(rRange/2.), sWrkType(-(rRange*Cos*CscPlus)/2.), sWrkType( (rRange*CscPlus*SinMinus)/2.),\
-//                                          sWrkType(rRange/2.), sWrkType( (rRange*Sin*SecPlus)/2.), sWrkType(-(rRange*SecPlus*CosMinus)/2.)
-//                                          );
-//            RRange[0] =  sWrkType(3 * srcInfo::max);                               RMin[0] = 0;                           RMax[0] = RRange[0];
-//            RRange[1] =  sWrkType(    srcInfo::max * rRange * CscPlus * Cos);      RMin[1] = sWrkType(-1 * RRange[1]/2);  RMax[1] = RRange[1]/2;
-//            RRange[2] =  sWrkType(    srcInfo::max * rRange * SecPlus * CosMinus); RMin[2] = sWrkType(-1 * RRange[2]/2);  RMax[2] = RRange[2]/2;
-//            break;
-//        case 1:
-//            fRScale = Vec<double, 3>(1,(2*Cos)/rRange,(-2*Sin)/rRange);
-//            fR = cv::Matx<sWrkType, 3, 3>(
-//                                          1,1,1,\
-//                                          sWrkType(-(rRange*Sec*SinPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Sec*SinMinus)/2.),\
-//                                          sWrkType( (rRange*Csc*CosPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Csc*CosMinus)/2.)
-//                                          );
-//            RRange[0] = sWrkType( 3 * srcInfo::max);                           RMin[0] = 0;                           RMax[0] = RRange[0];
-//            RRange[1] = sWrkType(     srcInfo::max * rRange * SinPlus  * Sec); RMin[1] = sWrkType(-1 * RRange[1]/2);  RMax[1] = RRange[1]/2;
-//            RRange[2] = sWrkType(     srcInfo::max * rRange * CosMinus * Csc); RMin[2] = sWrkType(-1 * RRange[2]/2);  RMax[2] = RRange[2]/2;
-//            
-//            
-//            break;
-//        case 2:
-//            fRScale = Vec<double, 3>(1,(-2*SinMinus)/rRange,(2*CosMinus)/rRange);
-//            fR = cv::Matx<sWrkType, 3, 3>(
-//                                          1,1,1,\
-//                                          sWrkType( (rRange*CscMinus*SinPlus)/2.), sWrkType(-(rRange*Cos*CscMinus)/2.), sWrkType(rRange/2.),\
-//                                          sWrkType(-(rRange*SecMinus*CosPlus)/2.), sWrkType(-(rRange*Sin*SecMinus)/2.), sWrkType(rRange/2.)
-//                                          );
-//            
-//            RRange[0] = sWrkType( 3 * srcInfo::max);                               RMin[0] = 0;                           RMax[0] = RRange[0];
-//            RRange[1] = sWrkType(-1 * srcInfo::max * rRange * CscMinus * SinPlus); RMin[1] = sWrkType(-1 * RRange[1]/2);  RMax[1] = RRange[1]/2;
-//            RRange[2] = sWrkType(     srcInfo::max * rRange * SecMinus * Sin);     RMin[2] = sWrkType(-1 * RRange[2]/2);  RMax[2] = RRange[2]/2;
-//            
-//            break;
-//        default:
-//            fRScale = Vec<double, 3>();
-//            fR = cv::Matx<sWrkType, 3, 3>();
-//            RRange = Vec<sWrkType, 3>();  RMin = Vec<sWrkType, 3>();  RMax = Vec<sWrkType, 3>();
-//    };
-//    
-//    fScale[0] = rRScale[0] * fRScale[0];     fScale[1] = rRScale[1] * fRScale[1];     fScale[2] = rRScale[2] * fRScale[2];
-//    scale[0] = rRScale[0] * nRScale[0];      scale[1] = rRScale[1] * nRScale[1];      scale[2] = rRScale[2] * nRScale[2];
-//    
-//    uRRange[0] = 1.0; uRMin[0] = 0;    uRMax[0] = 1.0;
-//    uRRange[1] = 1.0; uRMin[1] = -0.5; uRMax[1] = 0.5;
-//    uRRange[2] = 1.0; uRMin[2] = -0.5; uRMax[2] = 0.5;
 };
 
-//template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(){
-//    // Setup internal data
-//    cv::Matx<sWrkType, 3, 8> RGBBox({
-//        0, 1, 0, 0, 0, 1, 1, 1,
-//        0, 0, 1, 0, 1, 0, 1, 1,
-//        0, 0, 0, 1, 1, 1, 0, 1});
-//    cv::Matx<sWrkType, 3, 8> RGBBoxInNew = fR * RGBBox;
-//    cv::Matx<sWrkType, 3, 1> RGBCubeMax = cv::MaxInRow<wrkType, 3, 8>(RGBBoxInNew);
-//    cv::Matx<sWrkType, 3, 1> RGBCubeMin = cv::MinInRow<wrkType, 3, 8>(RGBBoxInNew);
-//    cv::Matx<sWrkType, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
-//    
-//    RMin[0] = RGBCubeMin(0,0); RMax[0] = RGBCubeMax(0,0); RRange[0] = RGBCubeRange(0,0);
-//    RMin[1] = RGBCubeMin(1,0); RMax[1] = RGBCubeMax(1,0); RRange[1] = RGBCubeRange(1,0);
-//    RMin[2] = RGBCubeMin(2,0); RMax[2] = RGBCubeMax(2,0); RRange[2] = RGBCubeRange(2,0);
-//    
-//};
-
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(){
-    // Setup internal data
-    cv::Matx<sWrkType, 3, 8> RGBBox({
-        0, 1, 0, 0, 0, 1, 1, 1,
-        0, 0, 1, 0, 1, 0, 1, 1,
-        0, 0, 0, 1, 1, 1, 0, 1});
-    cv::Matx<sWrkType, 3, 8> RGBBoxInNew = fR * RGBBox;
-    cv::Matx<sWrkType, 3, 1> RGBCubeMax = cv::MaxInRow<wrkType, 3, 8>(RGBBoxInNew);
-    cv::Matx<sWrkType, 3, 1> RGBCubeMin = cv::MinInRow<wrkType, 3, 8>(RGBBoxInNew);
-    cv::Matx<sWrkType, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
-    
-    RMin[0] = RGBCubeMin(0,0); RMax[0] = RGBCubeMax(0,0); RRange[0] = RGBCubeRange(0,0);
-    RMin[1] = RGBCubeMin(1,0); RMax[1] = RGBCubeMax(1,0); RRange[1] = RGBCubeRange(1,0);
-    RMin[2] = RGBCubeMin(2,0); RMax[2] = RGBCubeMax(2,0); RRange[2] = RGBCubeRange(2,0);
-    
-};
 
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _uG, cv::Vec<double, 3> _uC){
     // _uC and _uG are assumed to be in the dst axis ordering.
+    setRGBIndices(srcBlueIdx, dstBlueIdx);
     init(_uG,_uC,theta);
     setTransformFromAngle(theta);
-    setRGBIndices(srcBlueIdx, dstBlueIdx);
 };
 
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  _uG, std::vector<double> _uC){
+    setRGBIndices(srcBlueIdx, dstBlueIdx);
     cv::Vec<double, 3> uC{_uC[0],_uC[1],_uC[2]};
     cv::Vec<double, 3> uG{_uG[0],_uG[1],_uG[2]};
     init(uG, uC, theta);
     setTransformFromAngle(theta);
-    setRGBIndices(srcBlueIdx, dstBlueIdx);
 };
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(){
+    setRGBIndices(2, 2);
     init(0.2,0.5,0.0);
     setTransformFromAngle(0.0);
-    setRGBIndices(2, 2);
 }
 
 

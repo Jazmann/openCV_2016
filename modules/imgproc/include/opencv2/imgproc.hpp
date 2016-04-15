@@ -1314,6 +1314,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         void init(cv::Vec<double, 3> , cv::Vec<double, 3>, const double);
         void setRanges();
         void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
+        void setReducedRotationMatrix(double theta );
         void setTransformFromAngle(double theta );
         
         Vec<typename cv::Data_Type<dst_t>::type,3> apply(typename cv::Vec<typename cv::Data_Type<src_t>::type, 3> src);

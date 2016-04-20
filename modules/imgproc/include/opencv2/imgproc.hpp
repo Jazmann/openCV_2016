@@ -1284,7 +1284,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         cv::Matx<double, 3, 2> lambdaRGB; // The discard region in the RGB space
         double alpha, beta; // The relative importance of the chromatic channels.
         
-        Vec<double, 3> rRScale, nRScale, fRScale;
+        Vec<double, 3> rRScale;
         cv::Matx<double, 3, 3> rR;
         
         cv::Matx<sWrkType, 3, 3> fR;
@@ -1293,6 +1293,10 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         cv::Matx<sWrkType, 3, 3> qRs;
         sWrkType qfR[3][3];
         double fScale[3], scale[3];
+        
+        cv::Matx<double,3,2>   uWOBOLimits;
+        cv::Matx<sWrkType,3,2> qWOBOLimits;
+        Matx<dstType,2,2> dColorLimits;
         
         Vec<double, dstInfo::channels> uRRange, uRMin, uRMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
         
@@ -1308,9 +1312,18 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> toWrk(Vec<double, 3> pnt);
         Vec<typename cv::Data_Type<src_t>::type, 3>  toSrc(Vec<double, 3> pnt);
         Vec<typename cv::Data_Type<dst_t>::type, 3>  toDst(Vec<double, 3> pnt);
-        Vec<double, 3> fromRot(Vec<double, 3> pnt);
-        Vec<double, 3>   toRot(Vec<double, 3> pnt);
-        
+        Vec<double, 3> fromRot(Vec<double, 3> pnt); // LCaCb to RGB unit range with channel ordering.
+        Vec<double, 3>   toRot(Vec<double, 3> pnt); // RGB to LCaCb unit range with channel ordering.
+        Vec<double, 3> fromRot_(Vec<double, 3> pnt); // LCaCb to RGB unit range ignoring channel ordering.
+        Vec<double, 3>   toRot_(Vec<double, 3> pnt); // RGB to LCaCb unit range ignoring channel ordering.
+        // WOBO and quarternary classifier routines
+        Matx<double,6,3> WOBOpath( cv::Vec<double,3> pnt ); // Takes a LCaCb point and returns the path taken with changing luminocity.
+        double WOBOslack( double val );
+//        bool WOBO( double L, double Ca, double Cb);
+        bool WOBO( sWrkType L, sWrkType Ca, sWrkType Cb) const;
+        bool color(dstType Ca, dstType Cb) const;
+        uchar classifier( bool wobo, bool color) const;
+        // Setup routines.
         void init(cv::Vec<double, 3> , cv::Vec<double, 3>, const double);
         void setRanges();
         void setRGBIndices(int srcBlueIdx, int dstBlueIdx);

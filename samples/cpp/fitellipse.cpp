@@ -73,7 +73,7 @@ template<int dataType> void printImg( cv::InputArray _mat, const char* name){
     using typeInfo = cv::Data_Type<dataType>;
     using type = typename cv::Data_Type<dataType>::type;
     const int rows = mat.rows, cols = mat.cols;
-    const int channels = mat.channels();
+    int channels = mat.channels();
     
     char fmt[10];
     if(CV_MAT_DEPTH(dataType) == CV_64F || CV_MAT_DEPTH(dataType) == CV_32F){
@@ -127,10 +127,37 @@ template<int dataType> void printImg( cv::InputArray _mat, const char* name){
                 i++;
             }
         }
+        case 4:
+        {
+            MatIterator_<Vec<type,4>> it, end;
+            int i=0;
+            for( it = mat.begin<Vec<type,4>>(), end = mat.end<Vec<type,4>>(); it != end; ++it)
+            {
+                int col = i % cols;
+                int row = floor(i/cols);
+                if(col==0){fprintf (stdout, "{");}
+                fprintf (stdout, "{");
+                fprintf (stdout, fmt, (*it)[0]); fprintf(stdout, ", ");
+                fprintf (stdout, fmt, (*it)[1]); fprintf(stdout, ", ");
+                fprintf (stdout, fmt, (*it)[2]); fprintf(stdout, ", ");
+                fprintf (stdout, fmt, (*it)[3]); fprintf(stdout, "} ");
+                if(col<cols-1){
+                    fprintf(stdout, ", ");
+                }else{
+                    fprintf(stdout, "}\n ");
+                    if(row<rows-1){
+                        fprintf(stdout, ",\n");
+                        
+                    }
+                }
+                i++;
+            }
+        }
+
     }
     fprintf (stdout, "};\n");
 
-       }
+    }
 
 
 //template<int dataType> void printImg( cv::InputArray _mat, const char* name){
@@ -341,6 +368,36 @@ int main( int argc, char** argv )
         waitKey(); // Wait for a key stroke; the same function arranges events processing
     }
     
+    // Check convertColor with classifier
+    
+    if (yesno("Run Check convertColor with classifier Test?")) {
+        double theta = 0.902576829326826;
+        cv::Vec<double, 3> uS{3., 0.0261007, 0.0115076};
+        cv::Vec<double, 3> uG{0.235702, 27.0915, 61.4471};
+        cv::Vec<double, 3> uC{0.5, 0.356556, 0.478808};
+        RGB2Rot<CV_8UC3,CV_8UC4> rot(2, 2, theta, uG, uC);
+        // create a new 256x256 image
+        Mat rgbImg(Size(256,256),CV_8UC3);
+        for (int r=0; r <= 255; r++) {
+            for (int g=0; g <= 255; g++) {
+                char b=255-ceil((r+g)/2.0) ;
+                Vec3b rgbColor{r,g,b};
+                rgbImg.at<Vec3b>(Point(r,g)) = rgbColor;
+            }
+        }
+        
+        Mat LCaCbImg(Size(256,256),CV_8UC4);
+        cv::convertColor<CV_8UC3,CV_8UC4>(rgbImg, LCaCbImg, rot);
+        
+        printImg<CV_8UC4>(LCaCbImg,"LCaCbImg");
+        
+        namedWindow("RGB Out",1);
+        imshow("RGB Out", rgbImg);
+        namedWindow("convertColor LCaCb Out",1);
+        imshow("convertColor LCaCb Out", LCaCbImg);
+        waitKey(); // Wait for a key stroke; the same function arranges events processing
+    }
+
     // Check floating point method.
     if (yesno("Run Floating Point Method Test?")) {
         double theta = 0.902576829326826;

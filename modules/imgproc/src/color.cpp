@@ -10045,6 +10045,30 @@ template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot<src_t, dst_t>::toR
     return out;
 };
 
+template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot<src_t, dst_t>::fromRot_(Vec<double, 3> pnt){
+    // This function performs the inverse of pnt = iL rRScale (rR . out) + {0,.5,.5}
+    // Becasue inv( iL rRScale rR ) = Transpose( iL rRScale rR )
+    
+    cv::Vec<double,3> rRScaleXiLXpnt;
+    
+    rRScaleXiLXpnt(0) = rRScale(0)*iL(0)*(pnt(0));
+    rRScaleXiLXpnt(1) = rRScale(1)*iL(1)*(pnt(1)-0.5);
+    rRScaleXiLXpnt(2) = rRScale(2)*iL(2)*(pnt(2)-0.5);
+    
+    return rR.t()*rRScaleXiLXpnt;
+};
+template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot<src_t, dst_t>::toRot_(Vec<double, 3> src){
+    // src is assumed to be in the 0:1 unit range.
+    // The ordering of the src elemebts is specified by the blue index specified in the constructor.
+    // out will be in the 0:1 unit range but in the LCaCb space.
+    Vec<double, 3> out;
+    out(0) = rRScale(0)*iL(0)*(src(0)*rR(0,0) + src(1)*rR(0,1) + src(2)*rR(0,2)); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+    out(1) = rRScale(1)*iL(1)*(src(0)*rR(1,0) + src(1)*rR(1,1) + src(2)*rR(1,2))+0.5; // could be used in place of * scale
+    out(2) = rRScale(2)*iL(2)*(src(0)*rR(2,0) + src(1)*rR(2,1) + src(2)*rR(2,2))+0.5; // Find shift which fits RRange into the desired bit depth.
+    return out;
+};
+
+
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setReducedRotationMatrix(double theta )
 {
@@ -10068,6 +10092,81 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setReducedRotatio
     
 }
 
+
+template<int src_t, int dst_t> typename cv::Matx<double,6,3> cv::RGB2Rot<src_t, dst_t>:: WOBOpath( cv::Vec<double,3> pnt_ ){
+    Vec<double,3> pnt = fromRot(pnt_);
+    cv::Matx<double,6,3> rgbPath, out;
+    cv::Vec<int,3> order;
+    if (pnt(0)<pnt(1)) {
+        if (pnt(1)<pnt(2)) {
+            order = cv::Vec<int,3> {0,1,2};     // pnt(0) <= pnt(1) <= pnt(2)
+        } else {
+            // pnt(0) < pnt(1) && pnt(2) <= pnt(1)
+            if (pnt(0)<pnt(2)) {
+                order = cv::Vec<int,3> {0,2,1}; // pnt(0) <  pnt(2) <= pnt(1)
+            } else {
+                order = cv::Vec<int,3> {2,0,1}; // pnt(2) <= pnt(0) <= pnt(1)
+            }
+        }
+    } else {
+        // pnt(1) <= pnt(0)
+        if (pnt(0) < pnt(2)) {
+            order = cv::Vec<int,3> {1,0,2};     // pnt(1) <= pnt(0) < pnt(2)
+        } else {
+            // pnt(2) <= pnt(0) && pnt(1) <= pnt(0)
+            if (pnt(1)<pnt(2)) {
+                order = cv::Vec<int,3> {1,2,0}; // pnt(1) <  pnt(2) <= pnt(0)
+            } else {
+                order = cv::Vec<int,3> {2,1,0}; // pnt(2) <= pnt(1) <= pnt(0)
+            }
+        }
+    }
+    int a = pnt(order(0)), b = pnt(order(1)), c = pnt(order(2));
+    rgbPath(0,order(0)) = 0.;        rgbPath(0,order(1)) = 0.;        rgbPath(0,order(2)) = 0.;
+    rgbPath(1,order(0)) = 0.;        rgbPath(1,order(1)) = 0.;        rgbPath(1,order(2)) = c - b;
+    rgbPath(2,order(0)) = 0.;        rgbPath(2,order(1)) = b - a;     rgbPath(2,order(2)) = c - a;
+    rgbPath(3,order(0)) = a + (1-c); rgbPath(3,order(1)) = b + (1-c); rgbPath(3,order(2)) = 1.;
+    rgbPath(4,order(0)) = a + (1-b); rgbPath(4,order(1)) = 1.;        rgbPath(4,order(2)) = 1.;
+    rgbPath(5,order(0)) = 1.;        rgbPath(5,order(1)) = 1.;        rgbPath(5,order(2)) = 1.;
+    for (int i=0; i<=5; i++) {
+        Vec<double,3> temp = toRot(Vec<double,3>{rgbPath(i,0), rgbPath(i,1), rgbPath(i,2)});
+        out(i,0) = temp(0); out(i,1) = temp(1); out(i,2) = temp(2);
+    }
+    
+    return out;
+}
+
+template<int src_t, int dst_t> double cv::RGB2Rot<src_t, dst_t>:: WOBOslack( double val ){
+    double a=0.1;
+    if (val<0.5) {
+        return (1-a)*val;
+    } else {
+        return (1+a)*val;
+    }
+}
+
+//template<int src_t, int dst_t> bool cv::RGB2Rot<src_t, dst_t>:: WOBO( double L, double Ca, double Cb){
+//  return (uWOBOLimits(0,0) > L  || L  > uWOBOLimits(0,1)) &&
+//         (uWOBOLimits(1,0) < Ca && Ca < uWOBOLimits(1,1)) &&
+//         (uWOBOLimits(2,0) < Cb && Cb < uWOBOLimits(2,1));
+//}
+
+template<int src_t, int dst_t> bool cv::RGB2Rot<src_t, dst_t>:: WOBO( sWrkType L, sWrkType Ca, sWrkType Cb) const {
+    return (qWOBOLimits(0,0) > L  || L  > qWOBOLimits(0,1)) &&
+           (qWOBOLimits(1,0) < Ca && Ca < qWOBOLimits(1,1)) &&
+           (qWOBOLimits(2,0) < Cb && Cb < qWOBOLimits(2,1));
+}
+
+template<int src_t, int dst_t> bool cv::RGB2Rot<src_t, dst_t>:: color(dstType Ca, dstType Cb) const {
+    return (dColorLimits(0,0) < Ca && Ca < dColorLimits(0,1)) &&
+           (dColorLimits(1,0) < Cb && Cb < dColorLimits(1,1));
+}
+
+template<int src_t, int dst_t>  uchar cv::RGB2Rot<src_t, dst_t>:: classifier( bool wobo, bool color) const {
+    return (color<<1) + (wobo ^ color);
+}
+
+
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta )
 {
     
@@ -10075,19 +10174,13 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     double theta2 = std::fmod(theta, CV_PI/3.);
     double theta6 = std::fmod(theta, CV_PI);
     
-    double Cos      = std::cos(theta);    double CosPlus  = std::cos(CV_PI/6. + theta);    double CosMinus = std::cos(CV_PI/6. - theta);
-    double Sin      = std::sin(theta);    double SinPlus  = std::sin(CV_PI/6. + theta);    double SinMinus = std::sin(CV_PI/6. - theta);
-    
-    double Csc   = 1./std::sin(theta);    double CscPlus  = 1./std::sin(CV_PI/6. + theta);    double CscMinus = 1./std::sin(CV_PI/6. - theta);
-    double Sec   = 1./std::cos(theta);    double SecPlus  = 1./std::cos(CV_PI/6. + theta);    double SecMinus = 1./std::cos(CV_PI/6. - theta);
-    
     setReducedRotationMatrix(theta );
     
     // Find Lambda2 equivalent in RGB
     
-    cv::Vec<double,3> lambda1LCaCb,lambda2LCaCb;
-    lambda1LCaCb(0) = LParam.uLambda1; lambda1LCaCb(1) = CaParam.uLambda1; lambda1LCaCb(2) = CbParam.uLambda1;
-    lambda2LCaCb(0) = LParam.uLambda2; lambda2LCaCb(1) = CaParam.uLambda2; lambda2LCaCb(2) = CbParam.uLambda2;
+    cv::Vec<double,3> lambda1LCaCb, lambda2LCaCb;
+    lambda1LCaCb(dstIndx[0]) = LParam.uLambda1; lambda1LCaCb(dstIndx[1]) = CaParam.uLambda1; lambda1LCaCb(dstIndx[2]) = CbParam.uLambda1;
+    lambda2LCaCb(dstIndx[0]) = LParam.uLambda2; lambda2LCaCb(dstIndx[1]) = CaParam.uLambda2; lambda2LCaCb(dstIndx[2]) = CbParam.uLambda2;
     
     cv::Vec<double,3> lambda1RGB, lambda2RGB, lambdaRGB;
     lambda1RGB = fromRot(lambda1LCaCb);
@@ -10101,7 +10194,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
             lambdaRGB(i) = lambda1RGB(i);
         }
     }
-    
+
     // Find the relative importance of the channels.
     Vec<int,3> lossyElementsQ;
     
@@ -10174,8 +10267,8 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     {
         case 0:
             qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
-                                          -1*Ap,  -1*U, -1*Am,\
-                                          -1*Bp, -1*Bm,  -1*U
+                                           -1*Ap,  -1*U, -1*Am,\
+                                           -1*Bp, -1*Bm,  -1*U
                                           );
             break;
         case 1:
@@ -10232,6 +10325,38 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     CaDist = distributeScaled(CaParam,double(S(1)),double(qRsRange(1)),double(qRsMin(1)));
     
     CbDist = distributeScaled(CbParam,double(S(2)),double(qRsRange(2)),double(qRsMin(2)));
+    
+    // Find WOBO limits
+    cv::Vec<double,3> cornerA{ LParam.uC, CaParam.uLambda1, CbParam.uLambda1 };
+    cv::Vec<double,3> cornerB{ LParam.uC, CaParam.uLambda2, CbParam.uLambda1 };
+    cv::Vec<double,3> cornerC{ LParam.uC, CaParam.uLambda1, CbParam.uLambda2 };
+    cv::Vec<double,3> cornerD{ LParam.uC, CaParam.uLambda2, CbParam.uLambda2 };
+    
+    Matx<double,6,3> WOBOpathA = WOBOpath(cornerA), WOBOpathB = WOBOpath(cornerB), WOBOpathC = WOBOpath(cornerC), WOBOpathD = WOBOpath(cornerD);
+    Vec<double,3> pathMins{1.,1.,1.}, pathMaxs{0.,0.,0.};
+    for (int i=0; i<=5; i++) {
+        for (int j=0; j<3; j++) {
+            if(pathMins(j)>WOBOpathA(i,j)){  pathMins(j)=WOBOpathA(i,j); }
+            if(pathMins(j)>WOBOpathB(i,j)){  pathMins(j)=WOBOpathB(i,j); }
+            if(pathMins(j)>WOBOpathC(i,j)){  pathMins(j)=WOBOpathC(i,j); }
+            if(pathMins(j)>WOBOpathD(i,j)){  pathMins(j)=WOBOpathD(i,j); }
+            if(pathMaxs(j)<WOBOpathA(i,j)){  pathMaxs(j)=WOBOpathA(i,j); }
+            if(pathMaxs(j)<WOBOpathB(i,j)){  pathMaxs(j)=WOBOpathB(i,j); }
+            if(pathMaxs(j)<WOBOpathC(i,j)){  pathMaxs(j)=WOBOpathC(i,j); }
+            if(pathMaxs(j)<WOBOpathD(i,j)){  pathMaxs(j)=WOBOpathD(i,j); }
+        }
+    }
+    
+    for (int j=0; j<3; j++) {
+        uWOBOLimits(j,0) = WOBOslack(pathMins(j));
+        uWOBOLimits(j,1) = WOBOslack(pathMaxs(j));
+        qWOBOLimits(j,0) =  qRsRange(j) * uWOBOLimits(j,0) +  qRsMin(j);
+        qWOBOLimits(j,1) =  qRsRange(j) * uWOBOLimits(j,1) +  qRsMin(j);
+        
+    }
+    // Set Color Limits.
+    dColorLimits = *new Matx<dstType,2,2> {CaParam.disMin+1, CaParam.disMax-1, \
+                                           CbParam.disMin+1, CbParam.disMax-1};
     
 };
 
@@ -10292,8 +10417,8 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::init(cv::Vec<doub
     
     // Initialise parameters with default values.
     
-    for(int i = 0; i < dstInfo::channels; i++){
-        for(int j = 0; j < srcInfo::channels; j++){
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
             if (j==i) {
                 fR(i,j) = 1;
                 qRs(i,j)= 1;
@@ -10333,11 +10458,17 @@ template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()
         (* LDist)(X, dst[i+dstIndx[0]]);
         (*CaDist)(Y, dst[i+dstIndx[1]]);
         (*CbDist)(Z, dst[i+dstIndx[2]]);
+        if(dstInfo::channels > 3){
+           dstType c = dstType(classifier( WOBO(X,Y,Z), color(dst[i+dstIndx[1]],dst[i+dstIndx[2]])));
+           dst[i+3] = dstType(classifier( WOBO(X,Y,Z), color(dst[i+dstIndx[1]],dst[i+dstIndx[2]])));
+        }
     }
 }
 
 template class cv::RGB2Rot<CV_8UC3,CV_8UC3>;
 template class cv::RGB2Rot<CV_8UC4,CV_8UC3>;
+template class cv::RGB2Rot<CV_8UC3,CV_8UC4>;
+template class cv::RGB2Rot<CV_8UC4,CV_8UC4>;
 
 // RGB2Rot helper functions.
 
@@ -10392,6 +10523,8 @@ cv::Vec<double,2> cv::chanPerturbation(int i, double alpha, double beta, int n){
 //! converts image from one color space to another
 template class cv::colorSpaceConverter<CV_8UC3,CV_8UC3>;
 template class cv::colorSpaceConverter<CV_8UC4,CV_8UC3>;
+template class cv::colorSpaceConverter<CV_8UC3,CV_8UC4>;
+template class cv::colorSpaceConverter<CV_8UC4,CV_8UC4>;
 
 template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
 {
@@ -10402,7 +10535,6 @@ template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::Ou
     // CV_Assert( colorConverter.srcInfo::channels == src.channels() );
     
     if (dcn <= 0) dcn = 3;
-    CV_Assert( scn >= 3 && dcn == 3 );
     
     _dst.create(sz, CV_MAKETYPE(depth, dcn));
     dst = _dst.getMat();
@@ -10417,6 +10549,8 @@ template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::Ou
 
 template void cv::convertColor<CV_8UC3,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC3, CV_8UC3>& colorConverter);
 template void cv::convertColor<CV_8UC4,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC4, CV_8UC3>& colorConverter);
+template void cv::convertColor<CV_8UC3,CV_8UC4>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC3, CV_8UC4>& colorConverter);
+template void cv::convertColor<CV_8UC4,CV_8UC4>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC4, CV_8UC4>& colorConverter);
 
 
 

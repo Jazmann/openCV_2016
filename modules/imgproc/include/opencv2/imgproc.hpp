@@ -1285,14 +1285,18 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         double alpha, beta; // The relative importance of the chromatic channels.
         
         Vec<double, 3> rRScale;
-        cv::Matx<double, 3, 3> rR;
+        cv::Matx<double, 3, 3> rR{1.,0.,0., \
+                                  0.,1.,0., \
+                                  0.,0.,1.};;
         
-        cv::Matx<sWrkType, 3, 3> fR;
         Vec<sWrkType, 3> RRange, RMin, RMax;
         
-        cv::Matx<sWrkType, 3, 3> qRs;
-        sWrkType qfR[3][3];
-        double fScale[3], scale[3];
+        cv::Matx<sWrkType, 3, 3> qRs{1,0,0, \
+                                     0,1,0, \
+                                     0,0,1};
+        cv::Vec<wrkType,3> qRsMin, qRsMax, qRsRange;
+        cv::Vec<double,3> S;
+
         
         cv::Matx<double,3,2>   uWOBOLimits;
         cv::Matx<sWrkType,3,2> qWOBOLimits;
@@ -1312,10 +1316,31 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> toWrk(Vec<double, 3> pnt);
         Vec<typename cv::Data_Type<src_t>::type, 3>  toSrc(Vec<double, 3> pnt);
         Vec<typename cv::Data_Type<dst_t>::type, 3>  toDst(Vec<double, 3> pnt);
-        Vec<double, 3> fromRot(Vec<double, 3> pnt); // LCaCb to RGB unit range with channel ordering.
-        Vec<double, 3>   toRot(Vec<double, 3> pnt); // RGB to LCaCb unit range with channel ordering.
-        Vec<double, 3> fromRot_(Vec<double, 3> pnt); // LCaCb to RGB unit range ignoring channel ordering.
-        Vec<double, 3>   toRot_(Vec<double, 3> pnt); // RGB to LCaCb unit range ignoring channel ordering.
+     //   Vec<double, 3> fromRot(Vec<double, 3> pnt); // LCaCb to RGB unit range with channel ordering.
+     //   Vec<double, 3>   toRot(Vec<double, 3> pnt); // RGB to LCaCb unit range with channel ordering.
+        
+        Matx<double, 1, 3> fromRot(Matx<double, 1, 3> pnt); // LCaCb to RGB unit range ignoring channel ordering.
+        Matx<double, 3, 1> fromRot(Matx<double, 3, 1> pnt);
+        Vec<double, 3>     fromRot(Vec<double, 3> pnt);
+        void fromRot(double src[3], double dst[3]);  // Internal conversion function
+        
+        Matx<double, 1, 3> toRot(Matx<double, 1, 3> pnt); // RGB to LCaCb unit range ignoring channel ordering.
+        Matx<double, 3, 1> toRot(Matx<double, 3, 1> pnt);
+        Vec<double, 3>     toRot(Vec<double, 3> pnt);
+        void toRot(double src[3], double dst[3]);  // Internal conversion function
+        
+        Matx<double, 1, 3> fromRot_(Matx<double, 1, 3> pnt); // LCaCb to RGB unit range ignoring channel ordering.
+        Matx<double, 3, 1> fromRot_(Matx<double, 3, 1> pnt);
+        Vec<double, 3>     fromRot_(Vec<double, 3> pnt);
+        void fromRot__(double src[3], double dst[3]);  // Internal conversion function
+        
+        Matx<double, 1, 3> toRot_(Matx<double, 1, 3> pnt); // RGB to LCaCb unit range ignoring channel ordering.
+        Matx<double, 3, 1> toRot_(Matx<double, 3, 1> pnt);
+        Vec<double, 3>     toRot_(Vec<double, 3> pnt);
+        void toRot__(double src[3], double dst[3]);  // Internal conversion function
+        
+        Matx<double,3,2> fromRotRanges( Matx<double,3,2> rng );
+        
         // WOBO and quarternary classifier routines
         Matx<double,6,3> WOBOpath( cv::Vec<double,3> pnt ); // Takes a LCaCb point and returns the path taken with changing luminocity.
         double WOBOslack( double val );
@@ -1328,6 +1353,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         void setRanges();
         void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
         void setReducedRotationMatrix(double theta );
+        void setIntegerRotationMatrix(double theta );
         void setTransformFromAngle(double theta );
         
         Vec<typename cv::Data_Type<dst_t>::type,3> apply(typename cv::Vec<typename cv::Data_Type<src_t>::type, 3> src);

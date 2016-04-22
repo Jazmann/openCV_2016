@@ -1281,7 +1281,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         Vec<double, 3>  L; // The rotated axis lengths
         Vec<double, 3> iL; // The reciprocal of the rotated axis lengths
         Vec<double, 3> srcL; // The required axis lengths
-        cv::Matx<double, 3, 2> lambdaRGB; // The discard region in the RGB space
+        cv::Matx<double,3,2> lambdaLCaCb, lambdaRGB; // The discard region in the LCaCb and RGB space
         double alpha, beta; // The relative importance of the chromatic channels.
         
         Vec<double, 3> rRScale;
@@ -1332,15 +1332,18 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         Matx<double, 1, 3> fromRot_(Matx<double, 1, 3> pnt); // LCaCb to RGB unit range ignoring channel ordering.
         Matx<double, 3, 1> fromRot_(Matx<double, 3, 1> pnt);
         Vec<double, 3>     fromRot_(Vec<double, 3> pnt);
-        void fromRot__(double src[3], double dst[3]);  // Internal conversion function
+        void fromRot_(double src[3], double dst[3]);  // Internal conversion function
         
         Matx<double, 1, 3> toRot_(Matx<double, 1, 3> pnt); // RGB to LCaCb unit range ignoring channel ordering.
         Matx<double, 3, 1> toRot_(Matx<double, 3, 1> pnt);
         Vec<double, 3>     toRot_(Vec<double, 3> pnt);
-        void toRot__(double src[3], double dst[3]);  // Internal conversion function
+        void toRot_(double src[3], double dst[3]);  // Internal conversion function
         
         Matx<double,3,2> fromRotRanges( Matx<double,3,2> rng );
+        Matx<double,3,2> toRotRanges( Matx<double,3,2> rng );
         
+        
+        double suggestNewAngle(double theta);
         // WOBO and quarternary classifier routines
         Matx<double,6,3> WOBOpath( cv::Vec<double,3> pnt ); // Takes a LCaCb point and returns the path taken with changing luminocity.
         double WOBOslack( double val );
@@ -1350,6 +1353,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         uchar classifier( bool wobo, bool color) const;
         // Setup routines.
         void init(cv::Vec<double, 3> , cv::Vec<double, 3>, const double);
+        void setAxisLengths(double theta);
         void setRanges();
         void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
         void setReducedRotationMatrix(double theta );

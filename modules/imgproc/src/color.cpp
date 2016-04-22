@@ -10087,23 +10087,23 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::toRot(double src[
 
 template<int src_t, int dst_t> cv::Matx<double, 1, 3> cv::RGB2Rot<src_t, dst_t>::fromRot_(Matx<double, 1, 3> src){
     double rot[3];
-    fromRot__(src.val, rot);
+    fromRot_(src.val, rot);
     cv::Matx<double, 1, 3> out(rot[0],rot[1],rot[2]);
     return out;
 };
 template<int src_t, int dst_t> cv::Matx<double, 3, 1> cv::RGB2Rot<src_t, dst_t>::fromRot_(Matx<double, 3, 1> src){
     double rot[3];
-    fromRot__(src.val, rot);
+    fromRot_(src.val, rot);
     cv::Matx<double, 3, 1> out(rot[0],rot[1],rot[2]);
     return out;
 };
 template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot<src_t, dst_t>::fromRot_(Vec<double, 3> src){
     double rot[3];
-    fromRot__(src.val, rot);
+    fromRot_(src.val, rot);
     cv::Vec<double, 3> out(rot[0],rot[1],rot[2]);
     return out;
 };
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::fromRot__(double src[3], double dst[3]){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::fromRot_(double src[3], double dst[3]){
     // This function performs the inverse of pnt = iL rRScale (rR . out) + {0,.5,.5}
     // Becasue inv( iL rRScale rR ) = Transpose( iL rRScale rR )
     
@@ -10120,23 +10120,23 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::fromRot__(double 
 
 template<int src_t, int dst_t> cv::Matx<double, 1, 3> cv::RGB2Rot<src_t, dst_t>::toRot_(Matx<double, 1, 3> src){
     double rot[3];
-    toRot__(src.val, rot);
+    toRot_(src.val, rot);
     cv::Matx<double, 1, 3> out(rot[0],rot[1],rot[2]);
     return out;
 };
 template<int src_t, int dst_t> cv::Matx<double, 3, 1> cv::RGB2Rot<src_t, dst_t>::toRot_(Matx<double, 3, 1> src){
     double rot[3];
-    toRot__(src.val, rot);
+    toRot_(src.val, rot);
     cv::Matx<double, 3, 1> out(rot[0],rot[1],rot[2]);
     return out;
 };
 template<int src_t, int dst_t> cv::Vec<double, 3> cv::RGB2Rot<src_t, dst_t>::toRot_(Vec<double, 3> src){
     double rot[3];
-    toRot__(src.val, rot);
+    toRot_(src.val, rot);
     cv::Vec<double, 3> out(rot[0],rot[1],rot[2]);
     return out;
 };
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::toRot__(double src[3], double dst[3]){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::toRot_(double src[3], double dst[3]){
     // src is assumed to be in the 0:1 unit range.
     // out will be in the 0:1 unit range but in the LCaCb space.
     dst[0] = rRScale(0)*iL(0)*(src[0]*rR(0,0) + src[1]*rR(0,1) + src[2]*rR(0,2)); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
@@ -10145,6 +10145,33 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::toRot__(double sr
 };
 
 
+template<int src_t, int dst_t> cv::Matx<double,3,2> cv::RGB2Rot<src_t, dst_t>:: fromRotRanges( cv::Matx<double,3,2> rng ){
+    cv::Matx<double,3,1> rgb1 = fromRot_(rng.col(0)), rgb2 = fromRot_(rng.col(1));
+    cv::Matx<double,3,2> rgb;
+    
+    for (int i=0; i<3; i++) {
+        if (rgb1(i)< rgb2(i)) {
+            rgb(i,0) = rgb1(i); rgb(i,1) = rgb2(i);
+        } else {
+            rgb(i,0) = rgb2(i); rgb(i,1) = rgb1(i);
+        }
+    }
+    return rgb;
+}
+
+template<int src_t, int dst_t> cv::Matx<double,3,2> cv::RGB2Rot<src_t, dst_t>:: toRotRanges( cv::Matx<double,3,2> rng ){
+    cv::Matx<double,3,1> rgb1 = toRot_(rng.col(0)), rgb2 = toRot_(rng.col(1));
+    cv::Matx<double,3,2> rgb;
+    
+    for (int i=0; i<3; i++) {
+        if (rgb1(i)< rgb2(i)) {
+            rgb(i,0) = rgb1(i); rgb(i,1) = rgb2(i);
+        } else {
+            rgb(i,0) = rgb2(i); rgb(i,1) = rgb1(i);
+        }
+    }
+    return rgb;
+}
 
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setReducedRotationMatrix(double theta )
@@ -10312,37 +10339,9 @@ template<int src_t, int dst_t>  uchar cv::RGB2Rot<src_t, dst_t>:: classifier( bo
 }
 
 
-template<int src_t, int dst_t> cv::Matx<double,3,2> cv::RGB2Rot<src_t, dst_t>:: fromRotRanges( cv::Matx<double,3,2> rng ){
-    cv::Matx<double,3,1> rgb1 = fromRot(rng.col(0)), rgb2 = fromRot(rng.col(1));
-    cv::Matx<double,3,2> rgb;
-    
-    for (int i=0; i<3; i++) {
-        if (rgb1(i)< rgb2(i)) {
-            rgb(i,1) = rgb1(i); rgb(i,2) = rgb2(i);
-        } else {
-            rgb(i,1) = rgb2(i); rgb(i,2) = rgb1(i);
-        }
-    }
-    return rgb;
-}
-
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta )
+template<int src_t, int dst_t> double cv::RGB2Rot<src_t, dst_t>::suggestNewAngle(double theta )
 {
-    
     double theta1 = std::fmod(theta, CV_PI/6.);
-    double theta2 = std::fmod(theta, CV_PI/3.);
-    double theta6 = std::fmod(theta, CV_PI);
-    
-    setReducedRotationMatrix(theta );
-    
-    // Find Lambda2 equivalent in RGB
-    
-    cv::Matx<double,3,2> lambdaLCaCb, lambdaRGB;
-    lambdaLCaCb(dstIndx[0],0) = LParam.uLambda1; lambdaLCaCb(dstIndx[1],0) = CaParam.uLambda1; lambdaLCaCb(dstIndx[2],0) = CbParam.uLambda1;
-    lambdaLCaCb(dstIndx[0],1) = LParam.uLambda2; lambdaLCaCb(dstIndx[1],1) = CaParam.uLambda2; lambdaLCaCb(dstIndx[2],1) = CbParam.uLambda2;
-    
-    lambdaRGB = fromRotRanges(lambdaLCaCb);
-
     // Find the relative importance of the channels.
     Vec<int,3> lossyElementsQ;
     
@@ -10350,8 +10349,8 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     double maxLoss1=0.0;
     for (int i=0; i<3; i++) {
         if (lossyElementsQ(i)) {
-            if (lambdaRGB(i)>maxLoss1) {
-                maxLoss1 = lambdaRGB(i);
+            if (lambdaRGB(i,1)>maxLoss1) {
+                maxLoss1 = lambdaRGB(i,1);
             }
         }
     }
@@ -10359,8 +10358,8 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     double maxLoss2=0.0;
     for (int i=0; i<3; i++) {
         if (lossyElementsQ(i)) {
-            if (lambdaRGB(i)>maxLoss2) {
-                maxLoss2 = lambdaRGB(i);
+            if (lambdaRGB(i,1)>maxLoss2) {
+                maxLoss2 = lambdaRGB(i,1);
             }
         }
     }
@@ -10394,15 +10393,33 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
         indxM--;
         anglePertM = chanPerturbation(indxM, alpha, beta, srcInfo::bitDepth);
     }
-    if (anglePertP(0) - theta1 < theta1 - anglePertP(1)) {
-        angle = theta - theta1 + anglePertP(0);
+    if (anglePertP(0) - theta1 < theta1 - anglePertM(0)) {
+        angle = theta + anglePertP(0) - theta1;
         pert = anglePertP(1);
     } else {
         angle = theta - theta1 + anglePertM(0);
         pert = anglePertM(1);
     }
     
-    setIntegerRotationMatrix( theta );
+    return angle;
+}
+
+
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta )
+{
+    
+    setReducedRotationMatrix(theta );
+    
+    // Find Lambda2 equivalent in RGB
+    
+    lambdaLCaCb(dstIndx[0],0) = LParam.uLambda1; lambdaLCaCb(dstIndx[1],0) = CaParam.uLambda1; lambdaLCaCb(dstIndx[2],0) = CbParam.uLambda1;
+    lambdaLCaCb(dstIndx[0],1) = LParam.uLambda2; lambdaLCaCb(dstIndx[1],1) = CaParam.uLambda2; lambdaLCaCb(dstIndx[2],1) = CbParam.uLambda2;
+    
+    lambdaRGB = fromRotRanges(lambdaLCaCb);
+
+    double angle = suggestNewAngle( theta );
+    
+    setIntegerRotationMatrix( angle );
  
     // Design the distribution function.
     
@@ -10467,20 +10484,24 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(){
     setTransformFromAngle(0.0);
 }
 
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setAxisLengths(double theta){
+    double vTheta = CV_PI/6. - std::fmod(theta - CV_PI/6., CV_PI/3.);
+    double pTheta = CV_PI/6. - std::fmod(theta,            CV_PI/3.);
+    L = Vec<double, 3>(std::sqrt(3), \
+                       (std::sqrt(1.5)) * std::sin(vTheta) + (std::sqrt(2.0)) * std::cos(vTheta), \
+                       (std::sqrt(1.5)) * std::sin(pTheta) + (std::sqrt(2.0)) * std::cos(pTheta));
+    iL = Vec<double, 3>(1.0/L(0), 1.0/L(1), 1.0/L(2));
+};
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::init(cv::Vec<double, 3> uG, cv::Vec<double, 3> uC, double theta){
+    
+    setAxisLengths( theta );
+    
     // Find the working range
     cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)> par[3]{
                                                      *new cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>(-1.0*uG(0), uC(0)),
                                                      *new cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>(-1.0*uG(1), uC(1)),
                                                      *new cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>(-1.0*uG(2), uC(2))};
-    double vTheta = CV_PI/6. - std::fmod(theta - CV_PI/6., CV_PI/3.);
-    double pTheta = CV_PI/6. - std::fmod(theta,            CV_PI/3.);
-    L = Vec<double, 3>(std::sqrt(3), \
-                      (std::sqrt(1.5)) * std::sin(vTheta) + (std::sqrt(2.0)) * std::cos(vTheta), \
-                      (std::sqrt(1.5)) * std::sin(pTheta) + (std::sqrt(2.0)) * std::cos(pTheta));
-    iL = Vec<double, 3>(1.0/L(0), 1.0/L(1), 1.0/L(2));
-    
     for(int i = 0; i < 3; i++){
         srcL(i) = MIN(par[i].K * par[i].uM, L(i));
         RRange[i] = sWrkType(srcL(i) * (srcInfo::max - srcInfo::min));
@@ -10491,14 +10512,28 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::init(cv::Vec<doub
     RMin[2] = sWrkType(-1*RRange[2]/2); RMax[2] = sWrkType(RRange[2]/2);
     
     // Set the distribution region boundary constants.
+    for(int i = 0; i < 3; i++){
+        par[i].setRange(RMin[i],RMax[i],dstInfo::min,dstInfo::max);
+    }
+    
     LParam.init();
     LParam.set(-1.0*uG(0), uC(0));
-    LParam.setRange(RMin[0],RMax[0],dstInfo::min,dstInfo::max);
     CaParam.init();
     CaParam.set(-1.0*uG(1), uC(1));
-    CaParam.setRange(RMin[1],RMax[1],dstInfo::min,dstInfo::max);
     CbParam.init();
     CbParam.set(-1.0*uG(2), uC(2));
+    for(int i = 0; i < 3; i++){
+        srcL(i) = MIN(par[i].K * par[i].uM, L(i));
+        RRange[i] = sWrkType(srcL(i) * (srcInfo::max - srcInfo::min));
+    }
+    
+    RMin[0] = 0; RMax[0] = sWrkType(RRange[0]);
+    RMin[1] = sWrkType(-1*RRange[1]/2); RMax[1] = sWrkType(RRange[1]/2);
+    RMin[2] = sWrkType(-1*RRange[2]/2); RMax[2] = sWrkType(RRange[2]/2);
+    
+    // Set the distribution region boundary constants.
+    LParam.setRange(RMin[0],RMax[0],dstInfo::min,dstInfo::max);
+    CaParam.setRange(RMin[1],RMax[1],dstInfo::min,dstInfo::max);
     CbParam.setRange(RMin[2],RMax[2],dstInfo::min,dstInfo::max);
     
 };

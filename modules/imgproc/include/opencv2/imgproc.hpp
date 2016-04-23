@@ -1303,7 +1303,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         Matx<dstType,2,2> dColorLimits;
         
         Vec<double, dstInfo::channels> uRRange, uRMin, uRMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
-        
+        cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)> distParam[3];
         distributeErfParameters<sWrkInfo::channelType, dstInfo::channelType> LParam, CaParam, CbParam;
         depthConverter<sWrkInfo::channelType, dstInfo::channelType> *LDist = nullptr, *CaDist = nullptr, *CbDist = nullptr;
         
@@ -1352,7 +1352,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         bool color(dstType Ca, dstType Cb) const;
         uchar classifier( bool wobo, bool color) const;
         // Setup routines.
-        void init(cv::Vec<double, 3> , cv::Vec<double, 3>, const double);
+        void setDistParams(cv::Vec<double, 3> , cv::Vec<double, 3>);
         void setAxisLengths(double theta);
         void setRanges();
         void setRGBIndices(int srcBlueIdx, int dstBlueIdx);

@@ -10146,17 +10146,31 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::toRot_(double src
 
 
 template<int src_t, int dst_t> cv::Matx<double,3,2> cv::RGB2Rot<src_t, dst_t>:: fromRotRanges( cv::Matx<double,3,2> rng ){
-    cv::Matx<double,3,1> rgb1 = fromRot_(rng.col(0)), rgb2 = fromRot_(rng.col(1));
-    cv::Matx<double,3,2> rgb;
+    cv::Matx<double,8,3> rngCube{rng(0,0),rng(1,0),rng(2,0),
+                                 rng(0,0),rng(1,0),rng(2,1),
+                                 rng(0,0),rng(1,1),rng(2,0),
+                                 rng(0,0),rng(1,1),rng(2,1),
+                                 rng(0,1),rng(1,0),rng(2,0),
+                                 rng(0,1),rng(1,0),rng(2,1),
+                                 rng(0,1),rng(1,1),rng(2,0),
+                                 rng(0,1),rng(1,1),rng(2,1) };
     
-    for (int i=0; i<3; i++) {
-        if (rgb1(i)< rgb2(i)) {
-            rgb(i,0) = rgb1(i); rgb(i,1) = rgb2(i);
-        } else {
-            rgb(i,0) = rgb2(i); rgb(i,1) = rgb1(i);
+    cv::Matx<double,3,2> rngRGB{1.,0.,1.,0.,1.,0.};
+    
+    for (int i=0; i<8; i++) {
+        cv::Matx<double,1,3> rgb = fromRot_(rngCube.row(i));
+        
+        for (int j=0; j<3; j++) {
+            if (rngRGB(j,0) > rgb(j)) { rngRGB(j,0) = rgb(j);}
+            if (rngRGB(j,1) < rgb(j)) { rngRGB(j,1) = rgb(j);}
         }
     }
-    return rgb;
+    for (int j=0; j<3; j++) {
+        if (rngRGB(j,0) < 0.) { rngRGB(j,0) = 0.;}
+        if (rngRGB(j,1) > 1.) { rngRGB(j,1) = 1.;}
+    }
+
+    return rngRGB;
 }
 
 template<int src_t, int dst_t> cv::Matx<double,3,2> cv::RGB2Rot<src_t, dst_t>:: toRotRanges( cv::Matx<double,3,2> rng ){
@@ -10467,7 +10481,8 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _uG, cv::Vec<double, 3> _uC){
     // _uC and _uG are assumed to be in the dst axis ordering.
     setRGBIndices(srcBlueIdx, dstBlueIdx);
-    init(_uG,_uC,theta);
+    setAxisLengths(theta);
+    setDistParams(_uG, _uC);
     setTransformFromAngle(theta);
 };
 
@@ -10475,12 +10490,16 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
     setRGBIndices(srcBlueIdx, dstBlueIdx);
     cv::Vec<double, 3> uC{_uC[0],_uC[1],_uC[2]};
     cv::Vec<double, 3> uG{_uG[0],_uG[1],_uG[2]};
-    init(uG, uC, theta);
+    setAxisLengths(theta);
+    setDistParams(uG, uC);
     setTransformFromAngle(theta);
 };
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(){
+    double theta = 0.0;
+    cv::Vec<double, 3> uG(0.2,0.2,0.2),  uC(0.5,0.5,0.5);
     setRGBIndices(2, 2);
-    init(0.2,0.5,0.0);
+    setAxisLengths(theta);
+    setDistParams(uG, uC);
     setTransformFromAngle(0.0);
 }
 
@@ -10493,41 +10512,17 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setAxisLengths(do
     iL = Vec<double, 3>(1.0/L(0), 1.0/L(1), 1.0/L(2));
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::init(cv::Vec<double, 3> uG, cv::Vec<double, 3> uC, double theta){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setDistParams(cv::Vec<double, 3> uG, cv::Vec<double, 3> uC){
     
-    setAxisLengths( theta );
     
+    LParam.init();   LParam.set(-1.0*uG(0), uC(0));    srcL(0) = MIN( LParam.K *  LParam.uM, L(0));
+    CaParam.init();  CaParam.set(-1.0*uG(1), uC(1));    srcL(1) = MIN(CaParam.K * CaParam.uM, L(1));
+    CbParam.init();  CbParam.set(-1.0*uG(2), uC(2));    srcL(2) = MIN(CbParam.K * CbParam.uM, L(2));
     // Find the working range
-    cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)> par[3]{
-                                                     *new cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>(-1.0*uG(0), uC(0)),
-                                                     *new cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>(-1.0*uG(1), uC(1)),
-                                                     *new cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)>(-1.0*uG(2), uC(2))};
     for(int i = 0; i < 3; i++){
-        srcL(i) = MIN(par[i].K * par[i].uM, L(i));
         RRange[i] = sWrkType(srcL(i) * (srcInfo::max - srcInfo::min));
     }
-    
-    RMin[0] = 0; RMax[0] = sWrkType(RRange[0]);
-    RMin[1] = sWrkType(-1*RRange[1]/2); RMax[1] = sWrkType(RRange[1]/2);
-    RMin[2] = sWrkType(-1*RRange[2]/2); RMax[2] = sWrkType(RRange[2]/2);
-    
-    // Set the distribution region boundary constants.
-    for(int i = 0; i < 3; i++){
-        par[i].setRange(RMin[i],RMax[i],dstInfo::min,dstInfo::max);
-    }
-    
-    LParam.init();
-    LParam.set(-1.0*uG(0), uC(0));
-    CaParam.init();
-    CaParam.set(-1.0*uG(1), uC(1));
-    CbParam.init();
-    CbParam.set(-1.0*uG(2), uC(2));
-    for(int i = 0; i < 3; i++){
-        srcL(i) = MIN(par[i].K * par[i].uM, L(i));
-        RRange[i] = sWrkType(srcL(i) * (srcInfo::max - srcInfo::min));
-    }
-    
-    RMin[0] = 0; RMax[0] = sWrkType(RRange[0]);
+    RMin[0] = 0;                        RMax[0] = sWrkType(RRange[0]);
     RMin[1] = sWrkType(-1*RRange[1]/2); RMax[1] = sWrkType(RRange[1]/2);
     RMin[2] = sWrkType(-1*RRange[2]/2); RMax[2] = sWrkType(RRange[2]/2);
     
@@ -10537,7 +10532,6 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::init(cv::Vec<doub
     CbParam.setRange(RMin[2],RMax[2],dstInfo::min,dstInfo::max);
     
 };
-
 
 template<int src_t, int dst_t> inline typename cv::Vec<typename cv::Data_Type<dst_t>::type,3> cv::RGB2Rot<src_t, dst_t>::apply(typename cv::Vec<typename cv::Data_Type<src_t>::type,3> src)
 {

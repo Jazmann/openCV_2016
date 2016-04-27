@@ -10496,7 +10496,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
 };
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(){
     double theta = 0.0;
-    cv::Vec<double, 3> uG(0.2,0.2,0.2),  uC(0.5,0.5,0.5);
+    cv::Vec<double, 3> uG(-0.2,-0.2,-0.2),  uC(0.5,0.5,0.5);
     setRGBIndices(2, 2);
     setAxisLengths(theta);
     setDistParams(uG, uC);
@@ -10512,12 +10512,12 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setAxisLengths(do
     iL = Vec<double, 3>(1.0/L(0), 1.0/L(1), 1.0/L(2));
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setDistParams(cv::Vec<double, 3> uG, cv::Vec<double, 3> uC){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setDistParams(cv::Vec<double, 3> uSG, cv::Vec<double, 3> uC){
     
     
-    LParam.init();   LParam.set(-1.0*uG(0), uC(0));    srcL(0) = MIN( LParam.K *  LParam.uM, L(0));
-    CaParam.init();  CaParam.set(-1.0*uG(1), uC(1));    srcL(1) = MIN(CaParam.K * CaParam.uM, L(1));
-    CbParam.init();  CbParam.set(-1.0*uG(2), uC(2));    srcL(2) = MIN(CbParam.K * CbParam.uM, L(2));
+     LParam.init();   LParam.set(uSG(0), uC(0));   LParam.setup();  srcL(0) = MIN( LParam.K *  LParam.uM, L(0));
+    CaParam.init();  CaParam.set(uSG(1), uC(1));  CaParam.setup();  srcL(1) = MIN(CaParam.K * CaParam.uM, L(1));
+    CbParam.init();  CbParam.set(uSG(2), uC(2));  CbParam.setup();  srcL(2) = MIN(CbParam.K * CbParam.uM, L(2));
     // Find the working range
     for(int i = 0; i < 3; i++){
         RRange[i] = sWrkType(srcL(i) * (srcInfo::max - srcInfo::min));
@@ -10527,7 +10527,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setDistParams(cv:
     RMin[2] = sWrkType(-1*RRange[2]/2); RMax[2] = sWrkType(RRange[2]/2);
     
     // Set the distribution region boundary constants.
-    LParam.setRange(RMin[0],RMax[0],dstInfo::min,dstInfo::max);
+     LParam.setRange(RMin[0],RMax[0],dstInfo::min,dstInfo::max);
     CaParam.setRange(RMin[1],RMax[1],dstInfo::min,dstInfo::max);
     CbParam.setRange(RMin[2],RMax[2],dstInfo::min,dstInfo::max);
     
@@ -10653,6 +10653,62 @@ template void cv::convertColor<CV_8UC3,CV_8UC4>(cv::InputArray _src, cv::OutputA
 template void cv::convertColor<CV_8UC4,CV_8UC4>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC4, CV_8UC4>& colorConverter);
 
 
+template<int src_t> void cv::runReach(cv::InputArray _src, int end[2], int start[2], int vec[2])
+{
+    using srcInfo = cv_Data_Type<src_t>;
+    using srcType = typename cv_Data_Type<src_t>::type;
+    int low=1, high=2;
+    int reach[2]{start[0],start[1]};
+    int steps;
+    cv::Mat src = _src.getMat();
+    const int channels = src.channels();
+    // Find the number of steps to the edge.
+    int steps0 = src.rows + src.cols;
+    int steps1 = src.rows + src.cols;
+    end[0] = start[0]; end[1] = start[1];
+    if(vec[0]<0){steps0 = floor(start[0]/(-1*vec[0]));};
+    if(vec[0]>0){steps0 = floor((src.rows-start[0])/vec[0]);};
+    if(vec[1]<0){steps1 = floor(start[1]/(-1*vec[1]));};
+    if(vec[1]>0){steps1 = floor((src.cols-start[1])/vec[1]);};
+    if(steps0 < steps1)
+        {
+            steps = steps0;
+        } else {
+            steps = steps1;
+        }
+    
+    if (channels==1) {
+        for (int i=1; i<=steps; i++) {
+            reach[0] += vec[0]; reach[1] += vec[1];
+            int pxl = src.at<srcType>(reach[0],reach[1]);
+            if (pxl >= high) {
+                end[0] = reach[0]; end[1] = reach[1];
+            } else {
+                //  if( low <= pxl < high) { continue without updating end. }
+                if( pxl < low)  { break;}
+            }
+            
+        }
+    } else {
+        Mat_<Vec<srcType, CV_MAT_CN(src_t)>> _src = src;
+        for (int i=1; i<=steps; i++) {
+            reach[0] += vec[0]; reach[1] += vec[1];
+            int pxl = _src(reach[0],reach[1])[channels-1];
+            if (pxl >= high) {
+                end[0] = reach[0]; end[1] = reach[1];
+            } else {
+                //  if( low <= pxl < high) { continue without updating end. }
+                if( pxl < low)  { break;}
+            }
+            
+        }
+    }
+    }
+
+template void cv::runReach<CV_8UC1>(cv::InputArray _src, int end[2], int start[2], int vec[2]);
+template void cv::runReach<CV_8UC2>(cv::InputArray _src, int end[2], int start[2], int vec[2]);
+template void cv::runReach<CV_8UC3>(cv::InputArray _src, int end[2], int start[2], int vec[2]);
+template void cv::runReach<CV_8UC4>(cv::InputArray _src, int end[2], int start[2], int vec[2]);
 
 CV_IMPL void
 cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )

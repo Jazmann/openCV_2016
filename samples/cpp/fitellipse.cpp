@@ -214,7 +214,7 @@ template<int src_t,int dst_t> void printDist( depthConverter<src_t, dst_t> *dis,
         src[indx] = srcType(i);
         (*dis)(src[indx],dst[indx]);
         fprintf (stdout, buf,src[indx],dst[indx]);
-        if (i<srcInfo::max){fprintf (stdout, ",");};
+        if (i<srcInfo::max-step+1){fprintf (stdout, ",");};
         if (i % 10 ==0){fprintf (stdout, "\n");};
     }
     fprintf (stdout, "};\n");
@@ -304,14 +304,18 @@ int main( int argc, char** argv )
     if (yesno("Run Rotation with the actual values Test?")) {
         double theta = 0.902576829326826;
         cv::Vec<double, 3> uS{3., 0.0261007, 0.0115076};
-        cv::Vec<double, 3> uG{0.235702, 27.0915, 61.4471};
+        cv::Vec<double, 3> uG{-0.235702, -27.0915, -61.4471};
         cv::Vec<double, 3> uC{0.5, 0.356556, 0.478808};
         
         RGB2Rot<CV_8UC3,CV_8UC3> rot(2, 2, theta, uG, uC);
+        fprintf(stdout,"(* %s\n *)","Luminocity");
         rot.LParam.print();
-        //  LDist test
         printDist<sWrkInfo::dataType,dst_t>(rot.LDist, "rotLDist");
+        fprintf(stdout,"(* %s\n *)","Chromatic A");
+        rot.CaParam.print();
         printDist<sWrkInfo::dataType,dst_t>(rot.CaDist,"rotCaDist");
+        fprintf(stdout,"(* %s\n *)","Chromatic B");
+        rot.CbParam.print();
         printDist<sWrkInfo::dataType,dst_t>(rot.CbDist,"rotCbDist");
         
         // create a new 256x256 image
@@ -345,8 +349,9 @@ int main( int argc, char** argv )
     if (yesno("Run Check convertColor Test?")) {
         double theta = 0.902576829326826;
         cv::Vec<double, 3> uS{3., 0.0261007, 0.0115076};
-        cv::Vec<double, 3> uG{0.235702, 27.0915, 61.4471};
+        cv::Vec<double, 3> uG{-0.235702, -27.0915, -61.4471};
         cv::Vec<double, 3> uC{0.5, 0.356556, 0.478808};
+
         RGB2Rot<CV_8UC3,CV_8UC3> rot(2, 2, theta, uG, uC);
         // create a new 256x256 image
         Mat rgbImg(Size(256,256),CV_8UC3);
@@ -373,8 +378,9 @@ int main( int argc, char** argv )
     if (yesno("Run Check convertColor with classifier Test?")) {
         double theta = 0.902576829326826;
         cv::Vec<double, 3> uS{3., 0.0261007, 0.0115076};
-        cv::Vec<double, 3> uG{0.235702, 27.0915, 61.4471};
+        cv::Vec<double, 3> uG{-0.235702, -27.0915, -61.4471};
         cv::Vec<double, 3> uC{0.5, 0.356556, 0.478808};
+
         RGB2Rot<CV_8UC3,CV_8UC4> rot(2, 2, theta, uG, uC);
         // create a new 256x256 image
         Mat rgbImg(Size(256,256),CV_8UC3);
@@ -391,6 +397,44 @@ int main( int argc, char** argv )
         
         printImg<CV_8UC4>(LCaCbImg,"LCaCbImg");
         
+        int end[2]{0,0}, start[2]{148,180}, vec[2]{0,1};
+                
+        end[0]  = 0;  end[1]  = 0;
+        start[0]=109;start[1]=181;
+        
+        vec[0]  = 0;  vec[1]  = 1;
+        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        
+        vec[0]  = 0;  vec[1]  =-1;
+        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        
+        vec[0]  = 1;  vec[1]  = 0;
+        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        
+        vec[0]  =-1;  vec[1]  = 0;
+        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        
+        
+        vec[0]  = 1;  vec[1]  = 1;
+        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        
+        vec[0]  = 1;  vec[1]  =-1;
+        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        
+        vec[0]  =-1;  vec[1]  = 1;
+        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        
+        vec[0]  =-1;  vec[1]  =-1;
+        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        
         namedWindow("RGB Out",1);
         imshow("RGB Out", rgbImg);
         namedWindow("convertColor LCaCb Out",1);
@@ -402,8 +446,9 @@ int main( int argc, char** argv )
     if (yesno("Run Floating Point Method Test?")) {
         double theta = 0.902576829326826;
         cv::Vec<double, 3> uS{3., 0.0261007, 0.0115076};
-        cv::Vec<double, 3> uG{0.235702, 27.0915, 61.4471};
+        cv::Vec<double, 3> uG{-0.235702, -27.0915, -61.4471};
         cv::Vec<double, 3> uC{0.5, 0.356556, 0.478808};
+
         RGB2Rot<CV_8UC3,CV_8UC3> rot(2, 2, theta, uG, uC);
         // create a new 256x256 image
         Mat rgbImg(Size(256,256),CV_8UC3);
@@ -459,8 +504,9 @@ int main( int argc, char** argv )
     if (yesno("Run Timings?")) {
         double theta = 0.902576829326826;
         cv::Vec<double, 3> uS{3., 0.0261007, 0.0115076};
-        cv::Vec<double, 3> uG{0.235702, 27.0915, 61.4471};
+        cv::Vec<double, 3> uG{-0.235702, -27.0915, -61.4471};
         cv::Vec<double, 3> uC{0.5, 0.356556, 0.478808};
+
         RGB2Rot<CV_8UC3,CV_8UC3> rot(2, 2, theta, uG, uC);
         
         // Set the distribution region boundary constants.

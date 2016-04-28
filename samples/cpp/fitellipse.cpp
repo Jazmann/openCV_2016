@@ -397,43 +397,90 @@ int main( int argc, char** argv )
         
         printImg<CV_8UC4>(LCaCbImg,"LCaCbImg");
         
-        int end[2]{0,0}, start[2]{148,180}, vec[2]{0,1};
+        int vEnd[2]{0,0}, vStart[2]{109,181}, vVec[2]{0,1};
+        
+        //    end.x  = 0;  end.y  = 0;
+        //    start.x=109;start.y=181;
+        
+        vVec[0]  = 0;  vVec[1]  = 1;
+        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
+        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
+        
+        vVec[0]  = 0;  vVec[1]  =-1;
+        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
+        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
+        
+        vVec[0]  = 1;  vVec[1]  = 0;
+        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
+        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
+        
+        vVec[0]  =-1;  vVec[1]  = 0;
+        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
+        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
+        
+        
+        vVec[0]  = 1;  vVec[1]  = 1;
+        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
+        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
+        
+        vVec[0]  = 1;  vVec[1]  =-1;
+        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
+        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
+        
+        vVec[0]  =-1;  vVec[1]  = 1;
+        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
+        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
+        
+        vVec[0]  =-1;  vVec[1]  =-1;
+        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
+        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
+        
+
+        Point end(0,0), start(109,181), vec(0,1);
                 
-        end[0]  = 0;  end[1]  = 0;
-        start[0]=109;start[1]=181;
+    //    end.x  = 0;  end.y  = 0;
+    //    start.x=109;start.y=181;
         
-        vec[0]  = 0;  vec[1]  = 1;
-        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
-        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        vec.x  = 0;  vec.y  = 1;
+        end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end.x, end.y);
         
-        vec[0]  = 0;  vec[1]  =-1;
-        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
-        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        vec.x  = 0;  vec.y  =-1;
+        end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end.x, end.y);
         
-        vec[0]  = 1;  vec[1]  = 0;
-        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
-        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        vec.x  = 1;  vec.y  = 0;
+        end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end.x, end.y);
         
-        vec[0]  =-1;  vec[1]  = 0;
-        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
-        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        vec.x  =-1;  vec.y  = 0;
+        end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end.x, end.y);
         
         
-        vec[0]  = 1;  vec[1]  = 1;
-        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
-        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        vec.x  = 1;  vec.y  = 1;
+        end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end.x, end.y);
         
-        vec[0]  = 1;  vec[1]  =-1;
-        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
-        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        vec.x  = 1;  vec.y  =-1;
+        end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end.x, end.y);
         
-        vec[0]  =-1;  vec[1]  = 1;
-        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
-        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        vec.x  =-1;  vec.y  = 1;
+        end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end.x, end.y);
         
-        vec[0]  =-1;  vec[1]  =-1;
-        cv::runReach<CV_8UC4>(LCaCbImg, end, start, vec);
-        fprintf (stdout, "end ={%d, %d }\n", end[0], end[1]);
+        vec.x  =-1;  vec.y  =-1;
+        end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
+        fprintf (stdout, "end ={%d, %d }\n", end.x, end.y);
+        
+        // {{127, 163}, {88, 202}}
+        
+        start = Point(127, 163);
+        end   = Point( 88, 202);
+        
+        Mat pnts = fillamentFill<CV_8UC4>(LCaCbImg, start, end);
+         printImg<CV_32SC1>(pnts,"pnts");
         
         namedWindow("RGB Out",1);
         imshow("RGB Out", rgbImg);

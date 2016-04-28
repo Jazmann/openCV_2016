@@ -10653,7 +10653,62 @@ template void cv::convertColor<CV_8UC3,CV_8UC4>(cv::InputArray _src, cv::OutputA
 template void cv::convertColor<CV_8UC4,CV_8UC4>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC4, CV_8UC4>& colorConverter);
 
 
-template<int src_t> void cv::runReach(cv::InputArray _src, int end[2], int start[2], int vec[2])
+template<int src_t> cv::Point cv::runReach(cv::InputArray _src, Point start, Point vec)
+{
+    using srcInfo = cv_Data_Type<src_t>;
+    using srcType = typename cv_Data_Type<src_t>::type;
+    int low=1, high=2;
+    Point end;
+    Point reach = start;
+    int steps;
+    cv::Mat src = _src.getMat();
+    const int channels = src.channels();
+    // Find the number of steps to the edge.
+    int steps0 = src.rows + src.cols;
+    int steps1 = src.rows + src.cols;
+    end = start;
+    if(vec.x<0){steps0 = floor(start.x/(-1*vec.x));};
+    if(vec.x>0){steps0 = floor((src.rows-start.x)/vec.x);};
+    if(vec.y<0){steps1 = floor(start.y/(-1*vec.y));};
+    if(vec.y>0){steps1 = floor((src.cols-start.y)/vec.y);};
+    if(steps0 < steps1)
+    {
+        steps = steps0;
+    } else {
+        steps = steps1;
+    }
+    
+    if (channels==1) {
+        for (int i=1; i<=steps; i++) {
+            reach += vec;
+            int pxl = src.at<srcType>(reach.x,reach.y);
+            if (pxl >= high) {
+                end = reach;
+            } else {
+                //  if( low <= pxl < high) { continue without updating end. }
+                if( pxl < low)  { break;}
+            }
+            
+        }
+    } else {
+        Mat_<Vec<srcType, CV_MAT_CN(src_t)>> _src = src;
+        for (int i=1; i<=steps; i++) {
+            reach += vec;
+            int pxl = _src(reach.x,reach.y)[channels-1];
+            if (pxl >= high) {
+                end = reach;
+            } else {
+                //  if( low <= pxl < high) { continue without updating end. }
+                if( pxl < low)  { break;}
+            }
+            
+        }
+    }
+    return end;
+}
+
+
+template<int src_t> void cv::runReach(cv::InputArray _src, int start[2], int end[2], int vec[2])
 {
     using srcInfo = cv_Data_Type<src_t>;
     using srcType = typename cv_Data_Type<src_t>::type;
@@ -10705,10 +10760,49 @@ template<int src_t> void cv::runReach(cv::InputArray _src, int end[2], int start
     }
     }
 
-template void cv::runReach<CV_8UC1>(cv::InputArray _src, int end[2], int start[2], int vec[2]);
-template void cv::runReach<CV_8UC2>(cv::InputArray _src, int end[2], int start[2], int vec[2]);
-template void cv::runReach<CV_8UC3>(cv::InputArray _src, int end[2], int start[2], int vec[2]);
-template void cv::runReach<CV_8UC4>(cv::InputArray _src, int end[2], int start[2], int vec[2]);
+template void cv::runReach<CV_8UC1>(cv::InputArray _src, int start[2], int end[2], int vec[2]);
+template void cv::runReach<CV_8UC2>(cv::InputArray _src, int start[2], int end[2], int vec[2]);
+template void cv::runReach<CV_8UC3>(cv::InputArray _src, int start[2], int end[2], int vec[2]);
+template void cv::runReach<CV_8UC4>(cv::InputArray _src, int start[2], int end[2], int vec[2]);
+
+template cv::Point cv::runReach<CV_8UC1>(cv::InputArray _src, Point start, Point vec);
+template cv::Point cv::runReach<CV_8UC2>(cv::InputArray _src, Point start, Point vec);
+template cv::Point cv::runReach<CV_8UC3>(cv::InputArray _src, Point start, Point vec);
+template cv::Point cv::runReach<CV_8UC4>(cv::InputArray _src, Point start, Point vec);
+
+template<int src_t> cv::Mat cv::fillamentFill(cv::InputArray _src, Point start, Point end)
+{
+    using srcType = typename cv_Data_Type<src_t>::type;
+    
+    cv::Mat src = _src.getMat();
+    
+    LineIterator iterator(src, start, end, 8, true);
+    
+    int count = iterator.count;
+    Mat pnts(2*count, 2, CV_32S);
+    Point  vec1, vec2;
+    Point_<double> pathVec = (end - start);
+    Point_<double> uPathVec = pathVec/sqrt(pathVec.x*pathVec.x+pathVec.y*pathVec.y);
+    Point_<int> para; para.x = round(uPathVec.x); para.y = round(uPathVec.y);
+    vec1.x =      para.y; vec1.y = -1 * para.x; // Rotate by -Pi/2
+    vec2.x = -1 * para.y; vec2.y =      para.x; // Rotate by  Pi/2
+    for( int i = 0; i < count; i++, ++iterator )
+    {
+        Point aStart = iterator.pos();
+        Point top = runReach<CV_8UC4>(_src, aStart, vec1);
+        Point bot = runReach<CV_8UC4>(_src, aStart, vec2);
+        pnts.at<CV_32S_TYPE>(i,0) = top.x; pnts.at<CV_32S_TYPE>(i,1) = top.y;
+        pnts.at<CV_32S_TYPE>(2*count-i-1,0) = bot.x; pnts.at<CV_32S_TYPE>(2*count-i-1,1) = bot.y;
+    }
+    return pnts;
+    
+    }
+
+template cv::Mat cv::fillamentFill<CV_8UC1>(cv::InputArray _src,  Point start, Point end);
+template cv::Mat cv::fillamentFill<CV_8UC2>(cv::InputArray _src,  Point start, Point end);
+template cv::Mat cv::fillamentFill<CV_8UC3>(cv::InputArray _src,  Point start, Point end);
+template cv::Mat cv::fillamentFill<CV_8UC4>(cv::InputArray _src,  Point start, Point end);
+
 
 CV_IMPL void
 cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )

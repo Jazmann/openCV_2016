@@ -94,9 +94,16 @@ template<int dataType> void printImg( cv::InputArray _mat, const char* name){
             {
                 int col = i % cols;
                 int row = floor(i/cols);
+                if(col==0){fprintf (stdout, "{");}
                 fprintf (stdout, fmt, (*it));
-                if(i < (rows)*(cols)-1){
+                if(col<cols-1){
                     fprintf(stdout, ", ");
+                }else{
+                    fprintf(stdout, "}\n ");
+                    if(row<rows-1){
+                        fprintf(stdout, ",\n");
+                        
+                    }
                 }
                 i++; 
             }
@@ -396,50 +403,9 @@ int main( int argc, char** argv )
         cv::convertColor<CV_8UC3,CV_8UC4>(rgbImg, LCaCbImg, rot);
         
         printImg<CV_8UC4>(LCaCbImg,"LCaCbImg");
-        
-        int vEnd[2]{0,0}, vStart[2]{109,181}, vVec[2]{0,1};
-        
-        //    end.x  = 0;  end.y  = 0;
-        //    start.x=109;start.y=181;
-        
-        vVec[0]  = 0;  vVec[1]  = 1;
-        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
-        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
-        
-        vVec[0]  = 0;  vVec[1]  =-1;
-        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
-        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
-        
-        vVec[0]  = 1;  vVec[1]  = 0;
-        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
-        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
-        
-        vVec[0]  =-1;  vVec[1]  = 0;
-        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
-        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
-        
-        
-        vVec[0]  = 1;  vVec[1]  = 1;
-        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
-        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
-        
-        vVec[0]  = 1;  vVec[1]  =-1;
-        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
-        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
-        
-        vVec[0]  =-1;  vVec[1]  = 1;
-        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
-        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
-        
-        vVec[0]  =-1;  vVec[1]  =-1;
-        cv::runReach<CV_8UC4>(LCaCbImg, vStart, vEnd, vVec);
-        fprintf (stdout, "vEnd ={%d, %d }\n", vEnd[0], vEnd[1]);
-        
+                
 
         Point end(0,0), start(109,181), vec(0,1);
-                
-    //    end.x  = 0;  end.y  = 0;
-    //    start.x=109;start.y=181;
         
         vec.x  = 0;  vec.y  = 1;
         end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
@@ -456,7 +422,6 @@ int main( int argc, char** argv )
         vec.x  =-1;  vec.y  = 0;
         end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
         fprintf (stdout, "end ={%d, %d }\n", end.x, end.y);
-        
         
         vec.x  = 1;  vec.y  = 1;
         end = cv::runReach<CV_8UC4>(LCaCbImg, start, vec);
@@ -480,7 +445,18 @@ int main( int argc, char** argv )
         end   = Point( 88, 202);
         
         Mat pnts = fillamentFill<CV_8UC4>(LCaCbImg, start, end);
-         printImg<CV_32SC1>(pnts,"pnts");
+        printImg<CV_32SC1>(pnts,"pnts");
+        
+        end = runReachToEnd<CV_8UC4>(LCaCbImg,  start, Point(-1,1));
+        fprintf (stdout, "runReachToEnd ={{%d,%d},{%d, %d }}\n", start.x, start.y, end.x, end.y);
+        
+        Mat midPnts = runReachMidlineMat<CV_8UC4>(LCaCbImg,  start, Point(-1,0));
+        printImg<CV_32SC1>(midPnts,"midPnts");
+        
+        cv::Mat3b roiMat = LCaCbImg(cv::Rect(88,163,127,202));
+        cv::Scalar mean;
+        mean =  cv::mean(roiMat);
+        fprintf (stdout, "mean ={%f, %f, %f }\n", mean[0], mean[1], mean[2]);
         
         namedWindow("RGB Out",1);
         imshow("RGB Out", rgbImg);

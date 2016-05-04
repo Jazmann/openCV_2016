@@ -10707,64 +10707,6 @@ template<int src_t> cv::Point cv::runReach(cv::InputArray _src, Point start, Poi
     return end;
 }
 
-
-template<int src_t> void cv::runReach(cv::InputArray _src, int start[2], int end[2], int vec[2])
-{
-    using srcInfo = cv_Data_Type<src_t>;
-    using srcType = typename cv_Data_Type<src_t>::type;
-    int low=1, high=2;
-    int reach[2]{start[0],start[1]};
-    int steps;
-    cv::Mat src = _src.getMat();
-    const int channels = src.channels();
-    // Find the number of steps to the edge.
-    int steps0 = src.rows + src.cols;
-    int steps1 = src.rows + src.cols;
-    end[0] = start[0]; end[1] = start[1];
-    if(vec[0]<0){steps0 = floor(start[0]/(-1*vec[0]));};
-    if(vec[0]>0){steps0 = floor((src.rows-start[0])/vec[0]);};
-    if(vec[1]<0){steps1 = floor(start[1]/(-1*vec[1]));};
-    if(vec[1]>0){steps1 = floor((src.cols-start[1])/vec[1]);};
-    if(steps0 < steps1)
-        {
-            steps = steps0;
-        } else {
-            steps = steps1;
-        }
-    
-    if (channels==1) {
-        for (int i=1; i<=steps; i++) {
-            reach[0] += vec[0]; reach[1] += vec[1];
-            int pxl = src.at<srcType>(reach[0],reach[1]);
-            if (pxl >= high) {
-                end[0] = reach[0]; end[1] = reach[1];
-            } else {
-                //  if( low <= pxl < high) { continue without updating end. }
-                if( pxl < low)  { break;}
-            }
-            
-        }
-    } else {
-        Mat_<Vec<srcType, CV_MAT_CN(src_t)>> _src = src;
-        for (int i=1; i<=steps; i++) {
-            reach[0] += vec[0]; reach[1] += vec[1];
-            int pxl = _src(reach[0],reach[1])[channels-1];
-            if (pxl >= high) {
-                end[0] = reach[0]; end[1] = reach[1];
-            } else {
-                //  if( low <= pxl < high) { continue without updating end. }
-                if( pxl < low)  { break;}
-            }
-            
-        }
-    }
-    }
-
-template void cv::runReach<CV_8UC1>(cv::InputArray _src, int start[2], int end[2], int vec[2]);
-template void cv::runReach<CV_8UC2>(cv::InputArray _src, int start[2], int end[2], int vec[2]);
-template void cv::runReach<CV_8UC3>(cv::InputArray _src, int start[2], int end[2], int vec[2]);
-template void cv::runReach<CV_8UC4>(cv::InputArray _src, int start[2], int end[2], int vec[2]);
-
 template cv::Point cv::runReach<CV_8UC1>(cv::InputArray _src, Point start, Point vec);
 template cv::Point cv::runReach<CV_8UC2>(cv::InputArray _src, Point start, Point vec);
 template cv::Point cv::runReach<CV_8UC3>(cv::InputArray _src, Point start, Point vec);
@@ -10803,6 +10745,82 @@ template cv::Mat cv::fillamentFill<CV_8UC2>(cv::InputArray _src,  Point start, P
 template cv::Mat cv::fillamentFill<CV_8UC3>(cv::InputArray _src,  Point start, Point end);
 template cv::Mat cv::fillamentFill<CV_8UC4>(cv::InputArray _src,  Point start, Point end);
 
+template<int src_t> cv::Point cv::runReachToEnd(cv::InputArray _src, Point start, Point vec)
+{
+    using srcType = typename cv_Data_Type<src_t>::type;
+    cv::Mat src = _src.getMat();
+    double len = 100.0, tol = 2.0;
+    Point  vec1(     vec.y, -1 * vec.x); // Rotate by -Pi/2
+    Point  vec2(-1 * vec.y,      vec.x); // Rotate by  Pi/2
+//    vec1.x =      vec.y; vec1.y = -1 * vec.x; // Rotate by -Pi/2
+//    vec2.x = -1 * vec.y; vec2.y =      vec.x; // Rotate by  Pi/2
+    Point mid = start;
+    while (len > tol) {
+        Point run = runReach<CV_8UC4>(_src, mid, vec);
+        Point dif = run-mid;
+        len = sqrt(dif.x * dif.x + dif.y * dif.y);
+        Point top = runReach<CV_8UC4>(_src, run, vec1);
+        Point bot = runReach<CV_8UC4>(_src, run, vec2);
+        mid = (top+bot)/2;
+    }
+    return mid;
+    
+}
+
+template cv::Point cv::runReachToEnd<CV_8UC1>(cv::InputArray _src,  Point start, Point end);
+template cv::Point cv::runReachToEnd<CV_8UC2>(cv::InputArray _src,  Point start, Point end);
+template cv::Point cv::runReachToEnd<CV_8UC3>(cv::InputArray _src,  Point start, Point end);
+template cv::Point cv::runReachToEnd<CV_8UC4>(cv::InputArray _src,  Point start, Point end);
+
+
+template<int src_t> std::vector<cv::Point> cv::runReachMidline(cv::InputArray _src, Point start, Point vec)
+{
+    cv::Mat src = _src.getMat();
+    double len = 100.0, tol = 2.0;
+    std::vector<Point> midPnts;
+//    Mat midPnts(100,2,CV_32SC1); // max of 100 mid line pnts
+    Point  vec1(     vec.y, -1 * vec.x); // Rotate by -Pi/2
+    Point  vec2(-1 * vec.y,      vec.x); // Rotate by  Pi/2
+    Point mid = start;
+    int i=0;
+    midPnts.push_back(start);
+    while (len > tol) {
+        Point run = runReach<CV_8UC4>(_src, mid, vec);
+        Point dif = run-mid;
+        len = sqrt(dif.x * dif.x + dif.y * dif.y);
+        Point top = runReach<CV_8UC4>(_src, run, vec1);
+        Point bot = runReach<CV_8UC4>(_src, run, vec2);
+        mid = (top+bot)/2;
+        midPnts.push_back(mid);
+   //     midPnts.at<CV_32S_TYPE>(i,0) = mid.x; midPnts.at<CV_32S_TYPE>(i,1) = mid.y;
+        i++;
+    }
+  //  Mat outPnts(midPnts,Range(0,i-1),Range(0,1));
+    return midPnts;
+}
+
+template std::vector<cv::Point> cv::runReachMidline<CV_8UC1>(cv::InputArray _src,  Point start, Point vec);
+template std::vector<cv::Point> cv::runReachMidline<CV_8UC2>(cv::InputArray _src,  Point start, Point vec);
+template std::vector<cv::Point> cv::runReachMidline<CV_8UC3>(cv::InputArray _src,  Point start, Point vec);
+template std::vector<cv::Point> cv::runReachMidline<CV_8UC4>(cv::InputArray _src,  Point start, Point vec);
+
+
+template<int src_t> cv::Mat cv::runReachMidlineMat(cv::InputArray _src, Point start, Point vec)
+{
+    std::vector<Point> midPnts = runReachMidline<src_t>( _src, start, vec);
+    int n = midPnts.size();
+    Mat outPnts(2, n, CV_32SC1);
+    for (int i =0; i<n; i++) {
+        outPnts.at<CV_32S_TYPE>(0,i) = midPnts[i].x;
+        outPnts.at<CV_32S_TYPE>(1,i) = midPnts[i].y;
+    }
+    return outPnts;
+}
+
+template cv::Mat cv::runReachMidlineMat<CV_8UC1>(cv::InputArray _src,  Point start, Point vec);
+template cv::Mat cv::runReachMidlineMat<CV_8UC2>(cv::InputArray _src,  Point start, Point vec);
+template cv::Mat cv::runReachMidlineMat<CV_8UC3>(cv::InputArray _src,  Point start, Point vec);
+template cv::Mat cv::runReachMidlineMat<CV_8UC4>(cv::InputArray _src,  Point start, Point vec);
 
 CV_IMPL void
 cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )

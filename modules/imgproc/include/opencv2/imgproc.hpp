@@ -1414,11 +1414,17 @@ Vec<double,2> CV_EXPORTS chanPerturbation(int i, double alpha, double beta, int 
  */
 template<int src_t, int dst_t> void CV_EXPORTS convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter);
    
-template<int src_t> void CV_EXPORTS runReach(cv::InputArray _src, int start[2], int end[2], int vec[2]);
 template<int src_t> Point CV_EXPORTS runReach(cv::InputArray _src, Point start, Point vec);
     
 template<int src_t> Mat CV_EXPORTS fillamentFill(cv::InputArray _src, Point start, Point end);
     
+template<int src_t> Point CV_EXPORTS runReachToEnd(cv::InputArray _src, Point start, Point vec);
+    
+template<int src_t> typename std::vector<Point> CV_EXPORTS runReachMidline(cv::InputArray _src,  Point start, Point end);
+    
+template<int src_t> Mat CV_EXPORTS runReachMidlineMat(cv::InputArray _src, Point start, Point vec);
+
+
 /** types of intersection between rectangles
 @ingroup imgproc_shape
 */

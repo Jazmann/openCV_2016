@@ -4402,6 +4402,18 @@ is chosen.
 CV_EXPORTS_W void fitLine( InputArray points, OutputArray line, int distType,
                            double param, double reps, double aeps );
 
+CV_EXPORTS_W  static double perpDistToline( float *line, Point pnt);
+    
+CV_EXPORTS_W  static double fitResiduals2D( const Point2f* points, int count, float *line, double *residuals );
+    
+CV_EXPORTS_W  double pointOnLine(float *line, double x);
+    
+CV_EXPORTS_W static void fitLine2D_wods_fixed( const Point2f* points, int count, float *weights, float *line,  const Point2f fixed);
+    
+CV_EXPORTS_W static void kinkFitLine2D( const cv::Point2f * points, int count, int dist, float _param, float reps, float aeps, cv::Point2f * line, int split, double * err, double *tErr );
+    
+CV_EXPORTS_W void kinkFitLine( InputArray _points, OutputArray _line, int distType, double param, double reps, double aeps );
+    
 /** @brief Performs a point-in-contour test.
 
 The function determines whether the point is inside a contour, outside, or lies on an edge (or

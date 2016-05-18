@@ -4402,11 +4402,10 @@ is chosen.
 CV_EXPORTS_W void fitLine( InputArray points, OutputArray line, int distType,
                            double param, double reps, double aeps );
 
-CV_EXPORTS_W  static double perpDistToline( float *line, Point pnt);
+CV_EXPORTS_W  static double perpDistToline( float *line, Point2f pnt);
+CV_EXPORTS_W  static double perpDistToline( Point2f *line, Point2f pnt);
     
-CV_EXPORTS_W  static double fitResiduals2D( const Point2f* points, int count, float *line, double *residuals );
-    
-CV_EXPORTS_W  double pointOnLine(float *line, double x);
+CV_EXPORTS_W  static Point2f pointOnLine(float *line, cv::Point2f pnt);
     
 CV_EXPORTS_W static void fitLine2D_wods_fixed( const Point2f* points, int count, float *weights, float *line,  const Point2f fixed);
     

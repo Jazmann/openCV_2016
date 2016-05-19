@@ -154,41 +154,53 @@ static void fitLine2D_wods( const Point2f* points, int count, float *weights, fl
                         std::sqrt((line[1].x - line[0].x )*(line[1].x - line[0].x ) + (line[1].y - line[0].y )*(line[1].y - line[0].y )));
     }
     
-    static Point2f nearestPointOnline( const Point2f* line, Point2f pnt){
+    static Point2f nearestPointOnline( const Point2f* line, Point2f pnt, int* onLineIndx){
         
         double c = ((pnt.x - line[0].x)*(line[1].x - line[0].x ) + (pnt.y - line[0].y)*(line[1].y - line[0].y )) /
          ((line[1].x - line[0].x )*(line[1].x - line[0].x ) + (line[1].y - line[0].y )*(line[1].y - line[0].y ));
         if (c < 0.0) {
+            *onLineIndx = 0;
             return line[0];
         } else if (c < 1.0 ){
+            *onLineIndx = 1;
             return Point2f((1 - c) * line[0].x + c * line[1].x, (1 - c) * line[0].y + c * line[1].y);
         } else {
+            *onLineIndx = -1;
             return line[1];
         }
     };
     
-static Point2f nearestPointOnPath( const Point2f* path, const int nPath, const Point2f pnt, double* nearestLen){
+static Point2f nearestPointOnPath( const Point2f* path, const int nPath, const Point2f pnt, double* nearestLen, int* nearestIndex){
+    // index is defined such that:
+    // 1 is on line 1 between path[0] & path[1]
+    // 2 is on line 2 between path[1] & path[2]
+    // 0 is off the line near path[0]
+    // -1 is off the line near path[1]
+    // -2 is off the line near path[2]
     Point2f nextPnt, nearestPnt;
     double  nextLen;
-    nearestPnt = nearestPointOnline( path ,  pnt);
+    int onLineIndx;
+    nearestPnt = nearestPointOnline( path ,  pnt, &onLineIndx);
     *nearestLen = distBetweenPoints(nearestPnt, pnt);
+    *nearestIndex = onLineIndx;
     for (int i=1; i < nPath-1; i++) {
-        nextPnt = nearestPointOnline( path + i,  pnt);
+        nextPnt = nearestPointOnline( path + i,  pnt, &onLineIndx);
         nextLen = distBetweenPoints(nextPnt, pnt);
         if(nextLen < *nearestLen){
             nearestPnt = nextPnt;
             *nearestLen = nextLen;
+            *nearestIndex = onLineIndx < 1 ? onLineIndx-i : onLineIndx+i;
         }
     }
     return nearestPnt;
     };
     
-    static double nearestPointsOnPath( const Point2f* path, const int nPath,const Point2f* pnt, const int nPts, Point2f* pathPnt, double* len){
+    static double nearestPointsOnPath( const Point2f* path, const int nPath,const Point2f* pnt, const int nPts, Point2f* pathPnt, double* len, int* indx){
         
         double total = 0.0;
         double comp = 0.0; // A running compensation for lost low-order bits.
         for (int i=0; i < nPts; i++) {
-            pathPnt[i] = nearestPointOnPath( path, nPath, pnt[i], &len[i]);
+            pathPnt[i] = nearestPointOnPath( path, nPath, pnt[i], &len[i], &indx[i]);
             double val = std::abs(len[i]) - comp;
             double t = total + val; // Alas, total is big, val small, so low-order digits of val are lost.
             comp = (t-total) - val; // (t - total) cancels the high-order part of val; subtracting val recovers negative (low part of val)
@@ -826,41 +838,17 @@ static void cv::kinkFitLine2D( const cv::Point2f * points, const int count, int 
         
     }
     line[0]=linePntAa; line[1]=fixed; line[2]=linePntBb;
-
-//    cLim = (lineA[1]/lineA[0]) * (points[split+1].x - points[split].x );
-//    cv::Point cB = pointOnLine(lineB, linePntB);
-//    deltaAB = cB.y - linePntB.y;
-//    if (0 <= deltaAB  && deltaAB <= cLim) {
-//        double x = points[split].x + lineA[0] * (cB.y - linePntB.y)/(lineA[1]);
-//        fixed = cv::Point2f(x, pointOnLine(lineA,x));
-//    } else {
-//        if ( deltaAB > cLim) {
-//            double x = points[split].x + lineA[0] * cLim/(lineA[1]);
-//            fixed = cv::Point2f(x, pointOnLine(lineA,x));
-//            fitLine2D_wods_fixed( points + split, count - split, 0, lineB, fixed);
-//            //
-//        } else {
-//            fixed = linePntB;
-//            fitLine2D_wods_fixed( points + split, count - split, 0, lineB, fixed);
-//        }
-//    }
-//    linePntC = cv::Point2f(points[count-1].x, pointOnLine(lineB, points[count-1].x));
-//    
-//    line[0]=linePntA; line[1]=fixed; line[2]=linePntC;
-    
-    double tErrA, tErrB;
-  // fitResiduals2D( const Point2f* points, int count, float *line, double *residuals )
-  //  tErrA = calcSignedDist2D( points,         split,         lineA, err )/split;
-  //  tErrB = calcSignedDist2D( points + split, count - split, lineB, err + split )/(count - split);
-  //  nearestPointsOnPath( line, 3, points, count, Point2f* pathPnt, err)
     
     Mat pathPnt(count, 2, CV_32F);
-    *tErr = nearestPointsOnPath( line, 3, points, count, pathPnt.ptr<Point2f>() , err);
-  //  tErrA = fitResiduals2D( points,         split,         line, err );
-  //  tErrB = fitResiduals2D( points + split, count - split, line+1, err + split );
-  //
-  //  *tErr = (split * tErrA + (count - split)*tErrB)/count;
+    int pntIndx[count];
+    *tErr = nearestPointsOnPath( line, 3, points, count, pathPnt.ptr<Point2f>() , err, pntIndx);
     
+    
+    fprintf(stdout,"%s", "AppendTo[pntIndx, {");
+    for (int i=0; i<count-1; i++) {
+        fprintf(stdout, " %d,",pntIndx[i]);
+    }
+    fprintf(stdout, " %d}];\n",pntIndx[count-1]);
     
     fprintf(stdout,"%s", "AppendTo[tErrLine, {");
     for (int i=0; i<count-1; i++) {
@@ -901,6 +889,7 @@ void cv::kinkFitLine( InputArray _points, OutputArray _line, int distType, doubl
         points = temp;
     }
     
+    fprintf(stdout, "%s","pntIndx = {};\n");
     fprintf(stdout, "%s","tErrLine = {};\n");
     fprintf(stdout, "%s","err = {};\n");
     fprintf(stdout, "%s","tErr = {};\n");
@@ -929,17 +918,24 @@ void cv::kinkFitLine( InputArray _points, OutputArray _line, int distType, doubl
       //  lineStraight[2].x = points.at<float>(end,0);   lineStraight[2].y = pointOnLine(lineA, lineStraight[2].x);
         
         Mat pathPnt(npoints2, 2, CV_32F);
-        tErrStraight = nearestPointsOnPath( lineStraight, 3, points.ptr<Point2f>(), npoints2, pathPnt.ptr<Point2f>() , err);
+        int pntIndx[npoints2];
+        tErrStraight = nearestPointsOnPath( lineStraight, 3, points.ptr<Point2f>(), npoints2, pathPnt.ptr<Point2f>() , err, pntIndx);
         
     //    tErrStraight = fitResiduals2D( points.ptr<Point2f>(), npoints2, lineStraight, err );
         tErr = tErrStraight;
-        tErrLast = tErrStraight; tErrStart = tErrStraight; tErrEnd = tErrStraight;
+        tErrLast = tErrStraight; tErrStart = 0.; tErrEnd = 0.;
         line[0]      = lineStraight[0]; line[1]      = lineStraight[1]; line[2]      = lineStraight[2];
         lineEnd[0]   = lineStraight[0]; lineEnd[1]   = lineStraight[1]; lineEnd[2]   = lineStraight[2];
         lineStart[0] = lineStraight[0]; lineStart[1] = lineStraight[1]; lineStart[2] = lineStraight[2];
         
         fprintf(stdout, "AppendTo[bounds, { %d, %d, %d, %d, %d}];\n",start,splitA,mid,splitB,end);
         
+        
+        fprintf(stdout,"%s", "AppendTo[pntIndx, {");
+        for (int i=0; i<npoints2-1; i++) {
+            fprintf(stdout, " %d,",pntIndx[i]);
+        }
+        fprintf(stdout, " %d}];\n",pntIndx[npoints2-1]);
         
         fprintf(stdout,"%s", "AppendTo[tErrLine, {");
         for (int i=0; i<npoints2-1; i++) {
@@ -975,14 +971,27 @@ void cv::kinkFitLine( InputArray _points, OutputArray _line, int distType, doubl
                 if(tErr<tErrLast){
                     end   = splitLast;
                     tErrEnd = tErrLast;
+                    
                     splitLast = splitNext; // splitLast is the last tested position
-                    splitNext = splitA;
-                    chooseA=true;
+                    
+                    mid = int((start+end)/2);
+                    splitA = int((start + mid)/2);
+                    splitB = int((end   + mid)/2);
+                    tErrLast = tErr;
+                    
+                    splitNext = splitB;
+                    chooseA=false;
                 } else {
                     start = splitNext;
                     tErrStart = tErr;
                     lineStart[0]=line[0]; lineStart[1]=line[1]; lineStart[2]=line[2];
                     splitLast = splitNext; // splitLast is the last tested position
+                    
+                    mid = int((start+end)/2);
+                    splitA = int((start + mid)/2);
+                    splitB = int((end   + mid)/2);
+                    tErrLast = tErr;
+
                     splitNext = splitB;
                     chooseA=false;
                 }
@@ -991,21 +1000,29 @@ void cv::kinkFitLine( InputArray _points, OutputArray _line, int distType, doubl
                     start = splitLast;
                     tErrStart = tErrLast;
                     splitLast = splitNext; // splitLast is the last tested position
-                    splitNext = splitB;
-                    chooseA=false;
+                    
+                    mid = int((start+end)/2);
+                    splitA = int((start + mid)/2);
+                    splitB = int((end   + mid)/2);
+                    tErrLast = tErr;
+
+                    splitNext = splitA;
+                    chooseA=true;
                 } else {
                     end   = splitNext;
                     tErrEnd = tErr;
                     lineEnd[0]=line[0]; lineEnd[1]=line[1]; lineEnd[2]=line[2];
                     splitLast = splitNext; // splitLast is the last tested position
+                    
+                    mid = int((start+end)/2);
+                    splitA = int((start + mid)/2);
+                    splitB = int((end   + mid)/2);
+                    tErrLast = tErr;
+
                     splitNext = splitA;
                     chooseA=true;
                 }
             }
-            mid = int((start+end)/2);
-            splitA = int((start + mid)/2);
-            splitB = int((end   + mid)/2);
-            tErrLast = tErr;
         }
         
         if(end-start == 3){
@@ -1158,10 +1175,37 @@ void cv::kinkFitLine( InputArray _points, OutputArray _line, int distType, doubl
             tErr = tErrStraight;
         }
         
+        // Mathematica output for final values
+        
+        tErr = nearestPointsOnPath( line, 3, points.ptr<Point2f>(), npoints2, pathPnt.ptr<Point2f>() , err, pntIndx);
+        
+        fprintf(stdout,"%s", "AppendTo[pntIndx, {");
+        for (int i=0; i<npoints2-1; i++) {
+            fprintf(stdout, " %d,",pntIndx[i]);
+        }
+        fprintf(stdout, " %d}];\n",pntIndx[npoints2-1]);
+        
+        fprintf(stdout,"%s", "AppendTo[tErrLine, {");
+        for (int i=0; i<npoints2-1; i++) {
+            fprintf(stdout, "Line[{{%f,%f},{%f,%f}}],",pathPnt.at<float>(i,0),pathPnt.at<float>(i,1), points.at<float>(i,0),points.at<float>(i,1));
+        }
+        fprintf(stdout, "Line[{{%f,%f},{%f,%f}}]}];\n",pathPnt.at<float>(npoints2-1,0),pathPnt.at<float>(npoints2-1,1),
+                points.at<float>(npoints2-1,0),points.at<float>(npoints2-1,1));
+        
+        
+        fprintf(stdout,"%s", "AppendTo[err, {");
+        for (int i=0; i<npoints2-1; i++) {
+            fprintf(stdout, " %f,",err[i]);
+        }
+        fprintf(stdout, " %f}];\n",err[npoints2-1]);
+        
         fprintf(stdout, "AppendTo[tErr, { %f}];\n",tErr);
         fprintf(stdout, "AppendTo[bounds, { %d, %d, %d, %d, %d}];\n",start,splitA,mid,splitB,end);
         fprintf(stdout, "AppendTo[split, { %d }];\n",splitLast);
         fprintf(stdout, "AppendTo[line, {{%f, %f}, {%f, %f},{%f, %f}}];\n", line[0].x, line[0].y, line[1].x, line[1].y, line[2].x, line[2].y);
+        
+        // end Mathematica output
+        
     }
     else
         CV_Error(CV_StsBadArg, "kinkFit currently only works on 2D data.");;

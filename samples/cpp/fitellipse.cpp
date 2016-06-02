@@ -27,6 +27,9 @@ std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in thi
 using namespace cv;
 using namespace std;
 
+
+
+
 class Timer
 {
 public:
@@ -244,6 +247,439 @@ bool yesno(String question){
     }
 
 
+class Ellipse{
+private:
+    double angleRad, angleDeg;
+public:
+    bool radians = true;
+    double a, b;
+    cv::Point2f center;
+    double* angle;
+    
+    Ellipse( double a, double b, cv::Point2f center, double angle, bool radians = true);
+    Ellipse( cv::RotatedRect rect);
+    
+    void setRadians(bool radQ);
+    void setAngle(double ang);
+    void constrainAngle();
+    Point2f pointOnEllipse(double _angle);
+    Mat pointsOnArc(double ang1, double ang2, int n);
+    void print();
+};
+
+Ellipse::Ellipse( double _a, double _b, cv::Point2f _center, double _angle, bool _radians){
+    this->center = _center;
+    this->a = _a;
+    this->b = _b;
+    this->setRadians(_radians);
+    this->setAngle(_angle);
+}
+
+Ellipse::Ellipse( typename cv::RotatedRect rect){
+    this->center = rect.center;
+    this->a = rect.size.width/2.0;
+    this->b = rect.size.height/2.0;
+    this->setRadians(false);
+    this->setAngle(rect.angle);
+}
+
+void Ellipse::setRadians(bool radQ){
+    this->radians = radQ;
+    if(radQ){
+        this->angle = &this->angleRad;
+    } else {
+        this->angle = &this->angleDeg;
+    }
+}
+
+void Ellipse::setAngle(double ang){
+    if(this->radians){
+        this->angleRad = ang;
+        this->angleDeg = ang * 180./CV_PI;
+    } else {
+        this->angleDeg = ang;
+        this->angleRad = ang * CV_PI /180.;
+    }
+    this->constrainAngle();
+    
+}
+
+void Ellipse::constrainAngle(){
+    double _a;
+    double radMod = fmod(this->angleRad + CV_PI, 2. * CV_PI);
+    if(radMod < 0){ radMod += 2.0 * CV_PI;}
+    this->angleRad = radMod - CV_PI;
+    
+    if (this->angleRad > 3. * CV_PI / 4. ) {
+        this->angleRad += CV_PI;
+    } else if(this->angleRad <  -3. * CV_PI / 4.) {
+        this->angleRad -= CV_PI;
+    } else if(this->angleRad >  CV_PI / 4. ){
+        this->angleRad -= CV_PI/2.;
+        _a = this->b;
+        this->b = this->a;
+        this->a = _a;
+    } else if(this->angleRad < -1. *  CV_PI / 4. ){
+        this->angleRad += CV_PI/2.;
+        _a = this->b;
+        this->b = this->a;
+        this->a = _a;
+    }
+    this->angleDeg = this->angleRad * 180./CV_PI;
+}
+
+Point2f Ellipse::pointOnEllipse(double _ang){
+    Point2f out;
+    double ang;
+    if(this->radians){
+        ang = _ang;
+    } else {
+        ang = _ang * CV_PI /180.;
+    }
+    double sqrtD = std::sqrt((b*b)*(std::cos(ang) * std::cos(ang) ) + (a*a)*(std::sin(ang) * std::sin(ang) ));
+    
+    out.x = this->center.x + (a*b*std::cos(ang)*std::cos(this->angleRad))/sqrtD - (a*b*std::sin(ang)*std::sin(this->angleRad))/sqrtD;
+    
+    out.y = this->center.y + (a*b*std::sin(ang)*std::cos(this->angleRad))/sqrtD + (a*b*std::cos(ang)*std::sin(this->angleRad))/sqrtD;
+    
+    return out;
+}
+
+Mat Ellipse::pointsOnArc(double _ang1, double _ang2, int n){
+    Mat out(n,2,CV_32F);
+    double ang1, ang2, angStep;
+    if(this->radians){
+        ang1 = _ang1; ang2 = _ang2;
+    } else {
+        ang1 = _ang1 * CV_PI /180.;
+        ang2 = _ang2 * CV_PI /180.;
+    }
+    angStep = (ang2-ang1)/(n-1);
+    for (int i=0; i<n; i += 1) {
+        double ang = ang1 + i * angStep;
+        Point2f pnt = this->pointOnEllipse(ang);
+        out.at<float>(i,0) = pnt.x;
+        out.at<float>(i,1) = pnt.y;
+    }
+    
+    return out;
+}
+
+
+void Ellipse::print(){
+    fprintf (stdout, "ellipse={ {%f, %f},{ %f, %f}, %f };\n",this->center.x, this->center.y, this->a, this->b, *this->angle);
+}
+
+template<int src_t> static void findFrameOrientation(Mat img, Point * midPnt, Point * perpVec){
+    
+    int length = 0, len;
+    Point end, start, vec, longStart, longEnd;
+    img.type();
+    
+    end = Point(0,0); start = Point(0,0); vec = Point(1,0);
+    
+    length = runReachLongest<src_t>(img, &start, &end, vec);
+    longStart = start; longEnd = end;
+    *perpVec = Point(0,1);
+    
+    end = Point(0,0); start = Point(0,img.cols-1); vec = Point(1,0);
+    
+    len = runReachLongest<src_t>(img, &start, &end, vec);
+    if (len > length) {
+        length = len;
+        longStart = start; longEnd = end;
+        *perpVec = Point(0,-1);
+    }
+    
+    end = Point(0,0); start = Point(0,0); vec = Point(0,1);
+    
+    len = runReachLongest<src_t>(img, &start, &end, vec);
+    if (len > length) {
+        length = len;
+        longStart = start; longEnd = end;
+        *perpVec = Point(1,0);
+    }
+    
+    end = Point(0,0); start = Point(img.rows-1,0); vec = Point(0,1);
+    
+    len = runReachLongest<src_t>(img, &start, &end, vec);
+    if (len > length) {
+        length = len;
+        longStart = start; longEnd = end;
+        *perpVec = Point(-1,0);
+    }
+    
+    midPnt->x = (longStart.x+longEnd.x)/2.0;
+    midPnt->y = (longStart.y+longEnd.y)/2.0;
+
+}
+
+template<typename T> void meanMedian(std::vector<T> vals, double frac, double * mm, double * tol){
+    double u=0.0, l=0.0, total=0.0;
+    std::sort(vals.begin(), vals.end());
+    
+    int indxL=int(((1.0-frac)/2.0)*vals.size());
+    int indxH=int(((1.0+frac)/2.0)*vals.size());
+    
+    for (int i=indxL; i < indxH; ++i) {
+        total += vals[i];
+    }
+    
+    * mm = total/(indxH-indxL);
+    
+    u = *mm-vals[indxL];
+    l = vals[indxH]-*mm;
+    * tol = u > l? u : l;
+}
+
+enum pointClass:CV_8U_TYPE{unclassified, tip, distal, middle, onFrame, abnormality};
+
+class fingerTipModel{
+private:
+public:
+    Point2f d00, d01, d10, d11;
+    Ellipse curve;
+    double theta0, theta1; // The angles from the center of the ellipse to the trapezium edges.
+    double dWidth, mWidth; // The widths of the Distal and Middle finger parts.
+    
+    // Position and orientation of the model in the image.
+    // Updated by supplying edge and midline points found by fillament fill.
+    Point2f pos;
+    double angle;
+    
+    
+    fingerTipModel(Point2f d00, Point2f d01, Point2f d10, Point2f d11, Ellipse curve);
+    
+    void findThetas();
+    void findWidths();
+    
+    void alignCurveToTrapezium();
+    void alignToEllipseCenter();
+    void allignToAreaCentroid();
+    
+    void print();
+};
+
+
+void fingerTipModel::print(){
+    fprintf (stdout, "Trapezium={ {%f, %f},{ %f, %f},{ %f, %f},{ %f, %f} };\n",d00.x, d00.y, d01.x, d01.y, d10.x, d10.y, d11.x, d11.y);
+    fprintf (stdout, "ellipse={ {%f, %f},{ %f, %f}, %f };\n",this->curve.center.x, this->curve.center.y, this->curve.a, this->curve.b, *this->curve.angle);
+}
+
+
+fingerTipModel::fingerTipModel(Point2f _d00, Point2f _d01, Point2f _d10, Point2f _d11, Ellipse _curve):d00(_d00),d01(_d01),d10(_d10),d11(_d11),curve(_curve){
+    findThetas();
+    findWidths();
+};
+
+void fingerTipModel::findThetas(){
+    Point2f vec;
+    vec = d01 - curve.center;
+    theta0 = atan2(vec.y, vec.x);
+    vec = d11 - curve.center;
+    theta1 = atan2(vec.y, vec.x);
+};
+
+void fingerTipModel::findWidths(){
+    Point2f vec = ((d00-d10)+(d01-d11))/2.;
+    dWidth = std::sqrt((vec.x * vec.x)+(vec.y * vec.y));
+};
+
+void fingerTipModel::alignCurveToTrapezium(){
+    // fix ellipse to trapezium pnts.
+    Mat fivePnts(5,2,CV_32F);
+    fivePnts = curve.pointsOnArc(theta0,theta1,5);
+    fivePnts.at<float>(0,0) = d01.x;
+    fivePnts.at<float>(0,1) = d01.y;
+    fivePnts.at<float>(4,0) = d11.x;
+    fivePnts.at<float>(4,1) = d11.y;
+    
+    RotatedRect rect = fitEllipseDirect(fivePnts);
+    curve = Ellipse(rect);
+    curve.setRadians(true);
+    
+};
+
+int classifyPointOnFrame(InputArray _img, InputArray _edgePnts, InputArray _midPnts, InputOutputArray _edgePntsClass, InputOutputArray _midPntsClass){
+    
+    Mat img = _img.getMat();
+    Mat edgePnts = _edgePnts.getMat();
+    Mat midPnts = _midPnts.getMat();
+    Mat edgePntsClass = _edgePntsClass.getMat();
+    Mat midPntsClass = _midPntsClass.getMat();
+    
+    int count = midPnts.rows;
+    int rows = img.rows, cols = img.cols;
+    
+    int frameCount=0;
+    for (int i=0; i<count; i++) {
+        int j = 2*count-i-1;
+        Point top = edgePnts.at<Point>(i,0);
+        Point bot = edgePnts.at<Point>(j,0);
+        Point mid = midPnts.at<Point>(i,0);
+        
+        bool topOnFrameQ = top.x==0||top.x==rows-1||top.y==0||top.y==cols-1;
+        bool botOnFrameQ = bot.x==0||bot.x==rows-1||bot.y==0||bot.y==cols-1;
+        
+        if (topOnFrameQ) {
+            edgePntsClass.at<pointClass>(i,0) = onFrame;
+            midPntsClass.at<pointClass>(i,0)  = onFrame;
+            frameCount++;
+            
+        }
+        if (botOnFrameQ) {
+            edgePntsClass.at<pointClass>(j,0) = onFrame;
+            midPntsClass.at<pointClass>(i,0)  = onFrame;
+            frameCount++;
+            
+        }
+    }
+    
+    printImg<CV_8U>(edgePntsClass,"edgePntsClass");
+    printImg<CV_8U>(midPntsClass,"midPntsClass");
+    
+    return frameCount;
+}
+
+
+int classifyPointOnTipInitial(Point perpVec, InputArray _edgePnts, InputArray _midPnts, InputOutputArray _edgePntsClass, InputOutputArray _midPntsClass){
+    
+    Mat edgePnts = _edgePnts.getMat();
+    Mat midPnts = _midPnts.getMat();
+    Mat edgePntsClass = _edgePntsClass.getMat();
+    Mat midPntsClass = _midPntsClass.getMat();
+    
+    int count = midPnts.rows;
+    
+    std::vector<int> filLengths;
+    filLengths.reserve(count);
+    
+    for (int i=0; i<count; i++) {
+        int j = 2*count-i-1;
+        Point top = edgePnts.at<Point>(i,0);
+        Point bot = edgePnts.at<Point>(j,0);
+        Point mid = midPnts.at<Point>(i,0);
+        
+        if (midPntsClass.at<pointClass>(i,0)  != onFrame ) {
+            if (perpVec.x==0) {
+                filLengths.push_back(std::abs(top.x-bot.x));
+            } else {
+                filLengths.push_back(std::abs(top.y-bot.y));
+            }
+        }
+        
+    }
+    
+    Mat fillLengthsM(filLengths);
+    
+    double mm, tol;
+    meanMedian<int>(filLengths, 0.33, &mm, &tol);
+    
+    // tip Classification.
+    int tipCount=0;
+    for (int i=count-1; i >= 0; --i) {
+        int j = 2*count-i-1;
+        Point top = edgePnts.at<Point>(i,0);
+        Point bot = edgePnts.at<Point>(j,0);
+        Point mid = midPnts.at<Point>(i,0);
+        
+        if (edgePntsClass.at<pointClass>(i,0) != unclassified||edgePntsClass.at<pointClass>(j,0) != unclassified||midPntsClass.at<pointClass>(i,0) != unclassified) {
+            continue;
+        }
+        
+        bool onTipQ=false;
+        if (perpVec.x==0) {
+            onTipQ=(std::abs(top.x-bot.x))< mm-tol;
+        } else {
+            onTipQ=(std::abs(top.y-bot.y))< mm-tol;
+        }
+        
+        
+        if (onTipQ) {
+            edgePntsClass.at<pointClass>(i,0) = tip;
+            edgePntsClass.at<pointClass>(j,0) = tip;
+            midPntsClass.at<pointClass>(i,0)  = tip;
+            tipCount++;
+            
+        } else {
+            break;
+        }
+    }
+    
+    return tipCount;
+}
+
+template<typename T> Mat transformPoints(InputArray _pnts, Point origin, double angle){
+    
+    Mat pnts = _pnts.getMat();
+    int count = pnts.rows;
+    
+    // find rotation
+    Matx<double,2,2> Rot = {std::cos(-1.*angle), -1.*std::sin(-1.*angle), std::sin(-1.*angle), std::cos(-1.*angle) };
+    
+    // Put all pnts into neutral orientation origin at line(2) rotated by -digitTheta.
+    Mat pntsN(pnts.rows, pnts.cols, pnts.type());
+    
+    for (int i=0; i<count; i++) {
+        Point_<T> pnt = pnts.at<Point_<T>>(i,0);
+        
+        pntsN.at<T>(i,0) = Rot(0,0) * (pnt.x - origin.x) + Rot(0,1) * (pnt.y - origin.y);
+        pntsN.at<T>(i,1) = Rot(1,0) * (pnt.x - origin.x) + Rot(1,1) * (pnt.y - origin.y);
+    }
+    return pntsN;
+}
+
+Mat extractPntsClassifiedAs(pointClass cls, InputArray _pntsIn, InputArray _pntsClass){
+    
+    Mat pntsIn = _pntsIn.getMat();
+    Mat pntsClass = _pntsClass.getMat();
+    
+    int count = pntsIn.rows;
+    
+    Mat pointsOut;
+    pointsOut.reserve(count);
+    
+    for (int i=0; i<count; i++) {
+        
+        if (pntsClass.at<pointClass>(i,0)  == cls ) {
+            pointsOut.push_back(pntsIn.row(i));
+        }
+        
+    }
+    
+    return pointsOut;
+}
+
+
+Mat extractPntsNotClassifiedAs(pointClass cls, InputArray _pntsIn, InputArray _pntsClass){
+    
+    Mat pntsIn = _pntsIn.getMat();
+    Mat pntsClass = _pntsClass.getMat();
+    
+    int count = pntsIn.rows;
+    
+    Mat pointsOut;
+    pointsOut.reserve(count);
+    
+    for (int i=0; i<count; i++) {
+        
+        if (pntsClass.at<pointClass>(i,0)  != cls ) {
+            pointsOut.push_back(pntsIn.row(i));
+        }
+        
+    }
+    return pointsOut;
+}
+
+
+static cv::Point2f thisPointOnLine(float *line, cv::Point2f pnt)
+{
+    cv::Point2f out;
+    out.x =  line[2] + (line[0]*(line[0]*(pnt.x - line[2]) + line[1]*(pnt.y - line[3])))/(line[0]*line[0] + line[1]*line[1]);
+    out.y = (line[1] * (line[0]*(pnt.x - line[2]) + line[1]*(pnt.y - line[3])))/(line[0]*line[0] + line[1]*line[1]) + line[3];
+    return out;
+}
+
 void processImage(int, void*);
 
 int main( int argc, char** argv )
@@ -445,7 +881,8 @@ int main( int argc, char** argv )
         start = Point(127, 163);
         end   = Point( 88, 202);
         
-        Mat pnts = fillamentFill<CV_8UC4>(LCaCbImg, start, end);
+        Mat pnts, middlePnts;
+        fillamentFill<CV_8UC4>(LCaCbImg, pnts, middlePnts, start, end);
         printImg<CV_32SC1>(pnts,"pnts");
         
         end = runReachToEnd<CV_8UC4>(LCaCbImg,  start, Point(-1,1));
@@ -454,7 +891,8 @@ int main( int argc, char** argv )
         Mat midPnts = runReachMidlineMat<CV_8UC4>(LCaCbImg,  start, Point(-1,0));
         printImg<CV_32SC1>(midPnts,"midPnts");
         
-        cv::Mat3b roiMat = LCaCbImg(cv::Rect(88,163,127,202));
+        
+        cv::Mat3b roiMat = LCaCbImg(cv::Rect(88,163,127,60));// topLeft.x topLeft.y Width height
         cv::Scalar mean;
         mean =  cv::mean(roiMat);
         fprintf (stdout, "mean ={%f, %f, %f }\n", mean[0], mean[1], mean[2]);
@@ -790,78 +1228,323 @@ int main( int argc, char** argv )
             printImg<CV_64FC1>(intTimes,"intTimes");
             
             printImg<CV_64FC1>(floatTimes,"floatTimes");
-            
-//        fprintf (stdout, "floatTimes ={\n");
-//        for( int j = 0; j < runs; j++ )
-//        {
-//            fprintf (stdout, "%14.11f ",floatTimes(j));
-//            if (j<runs-1){fprintf (stdout, ",");};
-//            if (j % 10 ==0){fprintf (stdout, "\n");};
-//        }
-//        fprintf (stdout, "};\n");
-//        
-//        fprintf (stdout, "intTimes ={\n");
-//        for( int j = 0; j < runs; j++ )
-//        {
-//            fprintf (stdout, "%14.11f ",intTimes(j));
-//            if (j<runs-1){fprintf (stdout, ",");};
-//            if (j % 10 ==0){fprintf (stdout, "\n");};
-//        }
-//        fprintf (stdout, "};\n");
+        
     }
-
     
-    Mat rgbImg(Size(256,256),CV_8UC3);
-    for (int r=0; r < rgbImg.rows; r++) {
-        for (int g=0; g < rgbImg.cols; g++) {
-            char b=255-ceil((r+g)/2.0) ;
-            Vec3b rgbColor{r,g,b};
-            rgbImg.at<Vec3b>(Point(r,g)) = rgbColor;
+    // Run ColorSpace Test
+    if (yesno("Run ColorSpace Test?")) {
+        
+        Mat rgbImg(Size(256,256),CV_8UC3);
+        for (int r=0; r < rgbImg.rows; r++) {
+            for (int g=0; g < rgbImg.cols; g++) {
+                char b=255-ceil((r+g)/2.0) ;
+                Vec3b rgbColor{r,g,b};
+                rgbImg.at<Vec3b>(Point(r,g)) = rgbColor;
+            }
         }
-    }
-    printImg<CV_8UC3>(rgbImg,"rgbImgTest");
-    
-    double theta = 0.902576829326826;
-    cv::Vec<double, 3> uS{3., 0.0261007, 0.0115076};
-    cv::Vec<double, 3> uG{0.235702, 27.0915, 61.4471};
-    cv::Vec<double, 3> uC{0.5, 0.356556, 0.478808};
-    RGB2Rot<CV_8UC3,CV_8UC3> rot(2, 2, theta, uG, uC);
-    Mat LCaCbImg(Size(256,256),CV_8UC3);
-    cv::convertColor<CV_8UC3,CV_8UC3>(rgbImg, LCaCbImg, rot);
-    
-    printImg<CV_8UC3>(LCaCbImg,"LCaCbImg");
-    
+        printImg<CV_8UC3>(rgbImg,"rgbImgTest");
+        
+        double theta = 0.902576829326826;
+        cv::Vec<double, 3> uS{3., 0.0261007, 0.0115076};
+        cv::Vec<double, 3> uG{-0.235702, -27.0915, -61.4471};
+        cv::Vec<double, 3> uC{0.5, 0.356556, 0.478808};
+        RGB2Rot<CV_8UC3,CV_8UC3> rot(2, 2, theta, uG, uC);
+        Mat LCaCbImg(rgbImg.size(),CV_8UC3);
+        cv::convertColor<CV_8UC3,CV_8UC3>(rgbImg, LCaCbImg, rot);
+        
+        printImg<CV_8UC3>(LCaCbImg,"LCaCbImg");
+        
+        imshow("source", rgbImg);
+        namedWindow("result", 1);
+        imshow("result", LCaCbImg);
+        
+        // Wait for a key stroke; the same function arranges events processing
+        waitKey();
+        
 
+    }
     
+    // Run FingerModel Test
+    if (yesno("Run FingerModel Test?")) {
+        
+        cv::CommandLineParser parser(argc, argv, "{help h||}{@image|../data/JSkinIndexPad.JPG|}");
+        if (parser.has("help"))
+        {
+            help();
+            return 0;
+        }
+        string filename = parser.get<string>("@image");
+        image = imread(filename, IMREAD_COLOR );
+        if( image.empty() )
+        {
+            cout << "Couldn't open image " << filename << "\n";
+            return 0;
+        }
+        
+        // Setup color Space
+        double theta = 0.902576829326826;
+        cv::Vec<double, 3> uS{3., 0.0600316, 0.0264675};
+        cv::Vec<double, 3> uG{-0.235702, -11.7789, -26.7161};
+        cv::Vec<double, 3> uC{0.5, 0.356556, 0.478808};
+        
+        RGB2Rot<CV_8UC3,CV_8UC4> rot(0, 2, theta, uG, uC);
+        
+        // Convert image to LCaCb
+        Mat LCaCbImg(image.size(),CV_8UC4);
+        cv::convertColor<CV_8UC3,CV_8UC4>(image, LCaCbImg, rot);
+        
+        printImg<CV_8UC4>(LCaCbImg,"LCaCbImg");
+        
+        Point midPnt, perpVec;
+        findFrameOrientation<CV_8UC4>(LCaCbImg, &midPnt, &perpVec);
+        
+        // Find the tip point.
+        Point tipPnt;
+        tipPnt = runReachToEnd<CV_8UC4>(LCaCbImg, midPnt, perpVec);
+        
+        // fillamentFill
+        Mat edgePnts, midPnts;
+        fillamentFill<CV_8UC4>(LCaCbImg, edgePnts, midPnts, midPnt, tipPnt);
+        
+        printImg<CV_32SC1>(edgePnts,"edgePnts");
+        printImg<CV_32SC1>(midPnts,"midPnts");
+        
+        // Exclude Points
+        int count = midPnts.rows;
+        int rows = LCaCbImg.rows, cols = LCaCbImg.cols;
+        
+//        fingerTipModel mdl(Point2f(-1.,1.), Point2f(1.,1.), Point2f(-1.,-1.), Point2f(1.,-1.), Ellipse(1.,1.,Point2f(1.,0.),0.,true));
+        
+        Mat edgePntsClass(edgePnts.rows,  1, CV_8U);
+        edgePntsClass= Mat::zeros(edgePnts.rows,  1, CV_8U);
+        
+        Mat  midPntsClass(edgePnts.rows/2,1, CV_8U);
+        midPntsClass= Mat::zeros(edgePnts.rows/2,  1, CV_8U);
+        
+        printImg<CV_8U>(edgePntsClass,"edgePntsClass");
+        printImg<CV_8U>(midPntsClass,"midPntsClass");
+        
+       int frameCount = classifyPointOnFrame(LCaCbImg, edgePnts, midPnts, edgePntsClass, midPntsClass);
+        
+       int tipCount = classifyPointOnTipInitial(perpVec, edgePnts, midPnts, edgePntsClass, midPntsClass);
+            
+        printImg<CV_8U>(edgePntsClass,"edgePntsClass");
+        printImg<CV_8U>(midPntsClass,"midPntsClass");
+        
+        Mat distalMidPnts = extractPntsClassifiedAs(unclassified, midPnts, midPntsClass);
+
+        printImg<CV_32SC1>(distalMidPnts,"distalMidPnts");
+        
+        cv::Matx<double,3,2> line;
+        kinkFitLine(distalMidPnts, line,CV_DIST_L2,0,0.01,0.01);
+        printImg<CV_64FC1>(line,"line");
+        
+        // find orientation
+        double digitTheta = std::atan2((line(2,1)-line(1,1)),(line(2,0)-line(1,0)));
+        
+        Mat edgePntsN = transformPoints<int>(edgePnts, Point(line(2,0),line(2,1)), digitTheta);
+        Mat  midPntsN = transformPoints<int>(midPnts,  Point(line(2,0),line(2,1)), digitTheta);
+        Mat     lineN = transformPoints<double>(line,  Point(line(2,0),line(2,1)), digitTheta);
+        
+//        Matx<double,2,2> Rot = {std::cos(-1.*digitTheta), -1.*std::sin(-1.*digitTheta), std::sin(-1.*digitTheta), std::cos(-1.*digitTheta) };
+//        
+//        // Put all pnts into neutral orientation origin at line(2) rotated by -digitTheta.
+//        Mat edgePntsN(edgePnts.rows,edgePnts.cols,edgePnts.type());
+//        Mat  midPntsN( midPnts.rows, midPnts.cols, midPnts.type());
+//        cv::Matx<double,3,2> lineN;
+//        for (int i=0; i<2; i++) {
+//            lineN(i,0) = Rot(0,0) * (line(i,0) - line(2,0)) + Rot(0,1) * (line(i,1) - line(2,1));
+//            lineN(i,1) = Rot(1,0) * (line(i,0) - line(2,0)) + Rot(1,1) * (line(i,1) - line(2,1));
+//        }
+//        for (int i=0; i<count; i++) {
+//            int j = 2*count-i-1;
+//            Point top = edgePnts.at<Point>(i,0);
+//            Point bot = edgePnts.at<Point>(j,0);
+//            Point mid = midPnts.at<Point>(i,0);
+//            
+//            edgePntsN.at<int>(i,0) = Rot(0,0) * (top.x - line(2,0)) + Rot(0,1) * (top.y - line(2,1));
+//            edgePntsN.at<int>(i,1) = Rot(1,0) * (top.x - line(2,0)) + Rot(1,1) * (top.y - line(2,1));
+//            
+//            edgePntsN.at<int>(j,0) = Rot(0,0) * (bot.x - line(2,0)) + Rot(0,1) * (bot.y - line(2,1));
+//            edgePntsN.at<int>(j,1) = Rot(1,0) * (bot.x - line(2,0)) + Rot(1,1) * (bot.y - line(2,1));
+//            
+//            midPntsN.at<int>(i,0) = Rot(0,0) * (mid.x - line(2,0)) + Rot(0,1) * (mid.y - line(2,1));
+//            midPntsN.at<int>(i,1) = Rot(1,0) * (mid.x - line(2,0)) + Rot(1,1) * (mid.y - line(2,1));
+//        }
+//        
+        printImg<CV_64FC1>(lineN,"lineN");
+        printImg<CV_32SC1>(edgePntsN,"edgePntsN");
+        printImg<CV_32SC1>(midPntsN,"midPntsN");
+        
+        Mat distalEdgePntsN = extractPntsClassifiedAs(unclassified, edgePntsN, edgePntsClass);
+        
+        Mat distalEdgeAbsN(distalEdgePntsN.rows, 2, CV_32SC1);
+        
+        for (int i=0; i<distalEdgePntsN.rows/2; i++) {
+            int j = distalEdgePntsN.rows-i-1;
+            distalEdgeAbsN.at<int>(2*i,0) = distalEdgePntsN.at<int>(i,0);
+            distalEdgeAbsN.at<int>(2*i,1) = abs(distalEdgePntsN.at<int>(i,1));
+            distalEdgeAbsN.at<int>(2*i+1,0) = distalEdgePntsN.at<int>(j,0);
+            distalEdgeAbsN.at<int>(2*i+1,1) = abs(distalEdgePntsN.at<int>(j,1));
+        }
+        
+        printImg<CV_32SC1>(distalEdgeAbsN,"distalEdgeAbsN");
+        
+        // Parallel line fit
+//        int distPntCount = 2*(count-frameCount-tipCount);
+// //       Mat distalEdgeAbsN(distPntCount, 2, CV_32SC1);
+//        int idx = 0;
+//        for (int i=0; i<count; i++) {
+//            int j = 2*count-i-1;
+//            if (midPntsClass.at<pointClass>(i,0) == unclassified) {
+//                Point top = Point(edgePntsN.at<int>(i,0),abs(edgePntsN.at<int>(i,1)));
+//                Point bot = Point(edgePntsN.at<int>(j,0),abs(edgePntsN.at<int>(j,1)));
+//                distalEdgeAbsN.at<int>(idx,0) = top.x;
+//                distalEdgeAbsN.at<int>(idx,1) = top.y;
+//                idx++;
+//                distalEdgeAbsN.at<int>(idx,0) = bot.x;
+//                distalEdgeAbsN.at<int>(idx,1) = bot.y;
+//                idx++;
+//            }
+//
+//        }
+        cv::Mat  lineTop(1,4,CV_32F);
+        Point2f d1, d2;
+        cv::fitLine(distalEdgeAbsN, lineTop, CV_DIST_L2,0,0.01,0.01);
+        d1.x = float(distalEdgeAbsN.at<int>(0,0));
+        d2.x = float(distalEdgeAbsN.at<int>(distalEdgeAbsN.rows-1,0));
+        d1.y = (lineTop.at<float>(0) * lineTop.at<float>(3) + lineTop.at<float>(1) *(d1.x - lineTop.at<float>(2) ))/lineTop.at<float>(0);
+        d2.y = (lineTop.at<float>(0) * lineTop.at<float>(3) + lineTop.at<float>(1) *(d2.x - lineTop.at<float>(2) ))/lineTop.at<float>(0);
+        
+        printImg<CV_32SC1>(distalEdgeAbsN,"distalEdgeAbsN");
+        printImg<CV_32F>(lineTop,"lineTop");
+         fprintf(stdout, "d1 = {%f,%f};\n",d1.x,d1.y);
+         fprintf(stdout, "d2 = {%f,%f};\n",d2.x,d2.y);
+        
+        Mat distalTipN = extractPntsClassifiedAs(tip, edgePntsN, edgePntsClass);
+        
+//        int idx = 0;
+//        for (int i=0; i<count; i++) {
+//            int j = 2*count-i-1;
+//            if (midPntsClass.at<pointClass>(i,0) == tip) {
+//                Point top = Point(edgePntsN.at<int>(i,0),(edgePntsN.at<int>(i,1)));
+//                Point bot = Point(edgePntsN.at<int>(j,0),(edgePntsN.at<int>(j,1)));
+//                distalTipAbsN.at<int>(idx,0) = top.x;
+//                distalTipAbsN.at<int>(idx,1) = top.y;
+//                idx++;
+//                distalTipAbsN.at<int>(idx,0) = bot.x;
+//                distalTipAbsN.at<int>(idx,1) = bot.y;
+//                idx++;
+//            }
+//            
+//        }
+        
+        RotatedRect tipEllipse = fitEllipseDirect(distalTipN);
+        Ellipse ellipse(tipEllipse);
+        ellipse.setRadians(true);
+        
+        fingerTipModel mdl(d1, d2, Point2f(d1.x,-1.*d1.y), Point2f(d2.x,-1.*d2.y), ellipse);
+        mdl.print();
+        mdl.alignCurveToTrapezium();
+        mdl.print();
+        
+//        Point2f pntFromEllipseCenter = d2 - ellipse.center;
+//        double tipAngle1 = atan2(pntFromEllipseCenter.y, pntFromEllipseCenter.x);
+//                pntFromEllipseCenter = Point2f(d2.x - ellipse.center.x, -1.*d2.y - ellipse.center.y);
+//        double tipAngle2 = atan2(pntFromEllipseCenter.y, pntFromEllipseCenter.x);
+//        
+//        // fix ellipse to trapezium pnts.
+//        Mat fivePnts(5,2,CV_32F);
+//        fivePnts = ellipse.pointsOnArc(tipAngle2,tipAngle1,5);
+//        fivePnts.at<float>(0,0) = d2.x;
+//        fivePnts.at<float>(0,1) = -1. * d2.y;
+//        fivePnts.at<float>(4,0) = d2.x;
+//        fivePnts.at<float>(4,1) = d2.y;
+//        
+//        tipEllipse = fitEllipseDirect(fivePnts);
+//        Ellipse ellipseFixed(tipEllipse);
+//        ellipseFixed.setRadians(true);
+//        
+//        ellipseFixed.print();
+//        
+//        printImg<CV_32F>(fivePnts,"fivePnts");
+        
+        fprintf (stdout, "%s"," ellipsePnts={");
+        for (float i=mdl.theta0; i<mdl.theta1; i += (mdl.theta0-mdl.theta1)/4.) {
+            Point2f pnt = ellipse.pointOnEllipse(double(i));
+            fprintf (stdout, " {%f, %f}",pnt.x, pnt.y);
+            if(i<mdl.theta0-(mdl.theta0-mdl.theta1)/100.){ fprintf (stdout, "%s",", ");}
+        }
+        fprintf (stdout, "%s"," };\n");
+        
+        fprintf (stdout, "%s"," ellipsePnts={");
+        for (float i=mdl.theta1; i<mdl.theta0; i += (mdl.theta0-mdl.theta1)/100.) {
+            Point2f pnt = ellipse.pointOnEllipse(double(i));
+            fprintf (stdout, " {%f, %f}",pnt.x, pnt.y);
+            if(i<mdl.theta0-(mdl.theta0-mdl.theta1)/100.){ fprintf (stdout, "%s",", ");}
+        }
+        fprintf (stdout, "%s"," };\n");
+        
+        fprintf (stdout, "%s"," ellipsePnts={");
+        for (int i=0; i<360; i++) {
+            Point2f pnt = ellipse.pointOnEllipse(double(i));
+            fprintf (stdout, " {%f, %f}",pnt.x, pnt.y);
+            if(i<359){ fprintf (stdout, "%s",", ");}
+        }
+        fprintf (stdout, "%s"," };\n");
+        
+        
+        
+        printImg<CV_32S>(distalTipN,"distalTipN");
+        
+        
+        
+        
+        
+        imshow("source", image);
+        namedWindow("result", 1);
+        imshow("result", LCaCbImg);
+        
+        // Wait for a key stroke; the same function arranges events processing
+        waitKey();
+        
+    
+        }
     // ****************************************************
     
-    cv::CommandLineParser parser(argc, argv,
-        "{help h||}{@image|../data/stuff.jpg|}"
-    );
-    if (parser.has("help"))
-    {
-        help();
-        return 0;
+    
+    
+    // Run Elliptical Fit Test
+    if (yesno("Run Elliptical Fit Test?")) {
+        cv::CommandLineParser parser(argc, argv,
+            "{help h||}{@image|../data/stuff.jpg|}"
+        );
+        if (parser.has("help"))
+        {
+            help();
+            return 0;
+        }
+        string filename = parser.get<string>("@image");
+        image = imread(filename, 0);
+        if( image.empty() )
+        {
+            cout << "Couldn't open image " << filename << "\n";
+            return 0;
+        }
+
+        imshow("source", image);
+        namedWindow("result", 1);
+
+        // Create toolbars. HighGUI use.
+        createTrackbar( "threshold", "result", &sliderPos, 255, processImage );
+        processImage(0, 0);
+
     }
-    string filename = parser.get<string>("@image");
-    image = imread(filename, 0);
-    if( image.empty() )
-    {
-        cout << "Couldn't open image " << filename << "\n";
-        return 0;
-    }
-
-    imshow("source", image);
-    namedWindow("result", 1);
-
-    // Create toolbars. HighGUI use.
-    createTrackbar( "threshold", "result", &sliderPos, 255, processImage );
-    processImage(0, 0);
-
+    
     // Wait for a key stroke; the same function arranges events processing
     waitKey();
     return 0;
-}
+    }
 
 // Define trackbar callback functon. This function find contours,
 // draw it and approximate it by ellipses.

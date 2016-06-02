@@ -10653,6 +10653,22 @@ template void cv::convertColor<CV_8UC3,CV_8UC4>(cv::InputArray _src, cv::OutputA
 template void cv::convertColor<CV_8UC4,CV_8UC4>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC4, CV_8UC4>& colorConverter);
 
 
+int stepsToEdge(int rows, int cols, const cv::Point start, const cv::Point vec){
+    // Find the number of steps to the edge.
+    int steps0 = rows + cols;
+    int steps1 = rows + cols;
+    if(vec.x<0){steps0 = floor(start.x/(-1*vec.x));};
+    if(vec.x>0){steps0 = floor((rows-start.x)/vec.x);};
+    if(vec.y<0){steps1 = floor(start.y/(-1*vec.y));};
+    if(vec.y>0){steps1 = floor((cols-start.y)/vec.y);};
+    if(steps0 < steps1)
+    {
+        return steps0;
+    } else {
+        return steps1;
+    }
+}
+
 template<int src_t> cv::Point cv::runReach(cv::InputArray _src, Point start, Point vec)
 {
     using srcInfo = cv_Data_Type<src_t>;
@@ -10663,24 +10679,11 @@ template<int src_t> cv::Point cv::runReach(cv::InputArray _src, Point start, Poi
     int steps;
     cv::Mat src = _src.getMat();
     const int channels = src.channels();
-    // Find the number of steps to the edge.
-    int steps0 = src.rows + src.cols;
-    int steps1 = src.rows + src.cols;
     end = start;
-    if(vec.x<0){steps0 = floor(start.x/(-1*vec.x));};
-    if(vec.x>0){steps0 = floor((src.rows-start.x)/vec.x);};
-    if(vec.y<0){steps1 = floor(start.y/(-1*vec.y));};
-    if(vec.y>0){steps1 = floor((src.cols-start.y)/vec.y);};
-    if(steps0 < steps1)
-    {
-        steps = steps0;
-    } else {
-        steps = steps1;
-    }
+    steps = stepsToEdge(src.rows, src.cols, start, vec);
     
     if (channels==1) {
         for (int i=1; i<=steps; i++) {
-            reach += vec;
             int pxl = src.at<srcType>(reach.x,reach.y);
             if (pxl >= high) {
                 end = reach;
@@ -10688,12 +10691,12 @@ template<int src_t> cv::Point cv::runReach(cv::InputArray _src, Point start, Poi
                 //  if( low <= pxl < high) { continue without updating end. }
                 if( pxl < low)  { break;}
             }
+            reach += vec;
             
         }
     } else {
         Mat_<Vec<srcType, CV_MAT_CN(src_t)>> _src = src;
         for (int i=1; i<=steps; i++) {
-            reach += vec;
             int pxl = _src(reach.x,reach.y)[channels-1];
             if (pxl >= high) {
                 end = reach;
@@ -10701,6 +10704,7 @@ template<int src_t> cv::Point cv::runReach(cv::InputArray _src, Point start, Poi
                 //  if( low <= pxl < high) { continue without updating end. }
                 if( pxl < low)  { break;}
             }
+            reach += vec;
             
         }
     }
@@ -10712,7 +10716,113 @@ template cv::Point cv::runReach<CV_8UC2>(cv::InputArray _src, Point start, Point
 template cv::Point cv::runReach<CV_8UC3>(cv::InputArray _src, Point start, Point vec);
 template cv::Point cv::runReach<CV_8UC4>(cv::InputArray _src, Point start, Point vec);
 
-template<int src_t> cv::Mat cv::fillamentFill(cv::InputArray _src, Point start, Point end)
+
+
+template<int src_t> cv::Point cv::runReachInv(cv::InputArray _src, Point start, Point vec)
+{
+    using srcInfo = cv_Data_Type<src_t>;
+    using srcType = typename cv_Data_Type<src_t>::type;
+    int low=1, high=2;
+    Point end;
+    Point reach = start;
+    int steps;
+    cv::Mat src = _src.getMat();
+    const int channels = src.channels();
+    end = start;
+    // Find the number of steps to the edge.
+    steps = stepsToEdge(src.rows, src.cols, start, vec);
+    
+    if (channels==1) {
+        for (int i=1; i<=steps; i++) {
+            int pxl = src.at<srcType>(reach.x,reach.y);
+            if (pxl <= low) {
+                end = reach;
+            } else {
+                //  if( low < pxl < high) { continue without updating end. }
+                if( pxl >= high)  { break;}
+            }
+            reach += vec;
+            
+        }
+    } else {
+        Mat_<Vec<srcType, CV_MAT_CN(src_t)>> _src = src;
+        for (int i=1; i<=steps; i++) {
+            int pxl = _src(reach.x,reach.y)[channels-1];
+            if (pxl <= low) {
+                end = reach;
+            } else {
+                //  if( low < pxl < high) { continue without updating end. }
+                if( pxl >= high)  { break;}
+            }
+            reach += vec;
+            
+        }
+    }
+    return end;
+}
+
+template cv::Point cv::runReachInv<CV_8UC1>(cv::InputArray _src, Point start, Point vec);
+template cv::Point cv::runReachInv<CV_8UC2>(cv::InputArray _src, Point start, Point vec);
+template cv::Point cv::runReachInv<CV_8UC3>(cv::InputArray _src, Point start, Point vec);
+template cv::Point cv::runReachInv<CV_8UC4>(cv::InputArray _src, Point start, Point vec);
+
+template<int src_t> int cv::runReachLongest(cv::InputArray _src, Point* start, Point* end, const Point vec)
+{
+    CV_FUNCNAME( "runReachLongest" );
+    using srcInfo = cv_Data_Type<src_t>;
+    using srcType = typename cv_Data_Type<src_t>::type;
+    cv::Mat src = _src.getMat();
+    
+    int low=1, high=2;
+    Point longStart, longEnd;
+    int length = 0, pxl = 0, channels = src.channels();
+    bool onTarget = false;
+    
+    __CV_BEGIN__;
+    
+    CV_ASSERT(src.type()==src_t);
+    
+    if (channels==1) {
+        pxl = src.at<srcType>(start->x,start->y);
+    } else {
+        Mat_<Vec<srcType, CV_MAT_CN(src_t)>> __src = src;
+        int x = start->x;
+        int y = start->y;
+        pxl = __src(start->x,start->y)[channels-1];
+    }
+    onTarget = pxl >= high;
+    
+    while (start->x <= src.rows-1 && start->y <= src.cols-1) {
+        if (onTarget) {
+            *end = cv::runReach<CV_8UC4>(src, *start, vec);
+            float len = std::sqrt((end->x - start->x)*(end->x - start->x)+(end->y - start->y)*(end->y - start->y));
+            if (len > length) {
+                longStart = *start; longEnd = *end;
+                length = std::round(len);
+            }
+        } else {
+            *end = cv::runReachInv<CV_8UC4>(src, *start, vec);
+        }
+        *start = *end+vec;
+        onTarget=!onTarget;
+    }
+    
+
+    *start = longStart; *end = longEnd;
+    
+    __CV_END__;
+    
+    return length;
+    
+}
+
+template int cv::runReachLongest<CV_8UC1>(cv::InputArray _src, Point* start, Point* end, const Point vec);
+template int cv::runReachLongest<CV_8UC2>(cv::InputArray _src, Point* start, Point* end, const Point vec);
+template int cv::runReachLongest<CV_8UC3>(cv::InputArray _src, Point* start, Point* end, const Point vec);
+template int cv::runReachLongest<CV_8UC4>(cv::InputArray _src, Point* start, Point* end, const Point vec);
+
+
+template<int src_t> void cv::fillamentFill(cv::InputArray _src, OutputArray _edgePnts, OutputArray _midPnts, Point start, Point end)
 {
     using srcType = typename cv_Data_Type<src_t>::type;
     
@@ -10721,6 +10831,12 @@ template<int src_t> cv::Mat cv::fillamentFill(cv::InputArray _src, Point start, 
     LineIterator iterator(src, start, end, 8, true);
     
     int count = iterator.count;
+    // Allocate output Arrays.
+    _edgePnts.create(2*count, 2, CV_32S);
+    Mat edgePnts = _edgePnts.getMat();
+    _midPnts.create(  count, 2, CV_32S);
+    Mat midPnts = _midPnts.getMat();
+    
     Mat pnts(2*count, 2, CV_32S);
     Point  vec1, vec2;
     Point_<double> pathVec = (end - start);
@@ -10733,17 +10849,18 @@ template<int src_t> cv::Mat cv::fillamentFill(cv::InputArray _src, Point start, 
         Point aStart = iterator.pos();
         Point top = runReach<CV_8UC4>(_src, aStart, vec1);
         Point bot = runReach<CV_8UC4>(_src, aStart, vec2);
-        pnts.at<CV_32S_TYPE>(i,0) = top.x; pnts.at<CV_32S_TYPE>(i,1) = top.y;
-        pnts.at<CV_32S_TYPE>(2*count-i-1,0) = bot.x; pnts.at<CV_32S_TYPE>(2*count-i-1,1) = bot.y;
+        edgePnts.at<CV_32S_TYPE>(i,0) = top.x; edgePnts.at<CV_32S_TYPE>(i,1) = top.y;
+        edgePnts.at<CV_32S_TYPE>(2*count-i-1,0) = bot.x; edgePnts.at<CV_32S_TYPE>(2*count-i-1,1) = bot.y;
+        midPnts.at<CV_32S_TYPE>(i,0) = (top.x+bot.x)/2;
+        midPnts.at<CV_32S_TYPE>(i,1) = (top.y+bot.y)/2;
     }
-    return pnts;
     
     }
 
-template cv::Mat cv::fillamentFill<CV_8UC1>(cv::InputArray _src,  Point start, Point end);
-template cv::Mat cv::fillamentFill<CV_8UC2>(cv::InputArray _src,  Point start, Point end);
-template cv::Mat cv::fillamentFill<CV_8UC3>(cv::InputArray _src,  Point start, Point end);
-template cv::Mat cv::fillamentFill<CV_8UC4>(cv::InputArray _src,  Point start, Point end);
+template void cv::fillamentFill<CV_8UC1>(cv::InputArray _src, OutputArray _edgePnts, OutputArray _midPnts, Point start, Point end);
+template void cv::fillamentFill<CV_8UC2>(cv::InputArray _src, OutputArray _edgePnts, OutputArray _midPnts, Point start, Point end);
+template void cv::fillamentFill<CV_8UC3>(cv::InputArray _src, OutputArray _edgePnts, OutputArray _midPnts, Point start, Point end);
+template void cv::fillamentFill<CV_8UC4>(cv::InputArray _src, OutputArray _edgePnts, OutputArray _midPnts, Point start, Point end);
 
 template<int src_t> cv::Point cv::runReachToEnd(cv::InputArray _src, Point start, Point vec)
 {

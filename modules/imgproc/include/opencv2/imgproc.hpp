@@ -1416,14 +1416,17 @@ template<int src_t, int dst_t> void CV_EXPORTS convertColor(InputArray _src, Out
    
 template<int src_t> Point CV_EXPORTS runReach(cv::InputArray _src, Point start, Point vec);
     
-template<int src_t> Mat CV_EXPORTS fillamentFill(cv::InputArray _src, Point start, Point end);
+template<int src_t> Point CV_EXPORTS runReachInv(cv::InputArray _src, Point start, Point vec);
+    
+template<int src_t> int CV_EXPORTS runReachLongest(cv::InputArray _src, Point *start, Point *end, const Point vec);
+    
+template<int src_t> void CV_EXPORTS fillamentFill(cv::InputArray _src, OutputArray _edgePnts, OutputArray _midPnts, Point start, Point end);
     
 template<int src_t> Point CV_EXPORTS runReachToEnd(cv::InputArray _src, Point start, Point vec);
     
 template<int src_t> typename std::vector<Point> CV_EXPORTS runReachMidline(cv::InputArray _src,  Point start, Point end);
     
 template<int src_t> Mat CV_EXPORTS runReachMidlineMat(cv::InputArray _src, Point start, Point vec);
-
 
 /** types of intersection between rectangles
 @ingroup imgproc_shape
@@ -4405,7 +4408,7 @@ CV_EXPORTS_W void fitLine( InputArray points, OutputArray line, int distType,
 CV_EXPORTS_W  static double perpDistToline( float *line, Point2f pnt);
 CV_EXPORTS_W  static double perpDistToline( Point2f *line, Point2f pnt);
     
-CV_EXPORTS_W  static Point2f pointOnLine(float *line, cv::Point2f pnt);
+CV_EXPORTS_W  static Point2f pointOnLine(float *line, Point2f pnt);
     
 CV_EXPORTS_W static void fitLine2D_wods_fixed( const Point2f* points, int count, float *weights, float *line,  const Point2f fixed);
     

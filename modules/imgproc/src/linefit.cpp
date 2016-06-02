@@ -334,27 +334,6 @@ static double calcDist2D( const Point2f* points, int count, float *_line, float 
     return sum_dist;
 }
     
-    static double calcSignedDist2D( const Point2f* points, int count, float *_line, float *dist )
-    {
-        int j;
-        float px = _line[2], py = _line[3];
-        float nx = _line[1], ny = -_line[0];
-        double sum_dist = 0.;
-        
-        for( j = 0; j < count; j++ )
-        {
-            float x, y;
-            
-            x = points[j].x - px;
-            y = points[j].y - py;
-            
-            dist[j] = (float) ( nx * x + ny * y );
-            sum_dist += fabs(dist[j]);
-        }
-        
-        return sum_dist;
-    }
-
 static double calcDist3D( const Point3f* points, int count, float *_line, float *dist )
 {
     int j;

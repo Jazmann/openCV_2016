@@ -542,7 +542,7 @@ int classifyPointOnFrame(InputArray _img, InputArray _edgePnts, InputArray _midP
 }
 
 
-int classifyPointOnTipInitial(Point perpVec, InputArray _edgePnts, InputArray _midPnts, InputOutputArray _edgePntsClass, InputOutputArray _midPntsClass){
+void classifyPointInitial(Point perpVec, InputArray _edgePnts, InputArray _midPnts, InputOutputArray _edgePntsClass, InputOutputArray _midPntsClass, int tipCount, int distalCount){
     
     Mat edgePnts = _edgePnts.getMat();
     Mat midPnts = _midPnts.getMat();
@@ -576,7 +576,10 @@ int classifyPointOnTipInitial(Point perpVec, InputArray _edgePnts, InputArray _m
     meanMedian<int>(filLengths, 0.33, &mm, &tol);
     
     // tip Classification.
-    int tipCount=0;
+    tipCount = 0;
+    distalCount = 0;
+    int offTipRun = 0;
+    
     for (int i=count-1; i >= 0; --i) {
         int j = 2*count-i-1;
         Point top = edgePnts.at<Point>(i,0);
@@ -587,13 +590,23 @@ int classifyPointOnTipInitial(Point perpVec, InputArray _edgePnts, InputArray _m
             continue;
         }
         
-        bool onTipQ=false;
+        bool onTipQ=false, onDistalQ=false;
+        double dist;
         if (perpVec.x==0) {
-            onTipQ=(std::abs(top.x-bot.x))< mm-tol;
+            dist = (std::abs(top.x-bot.x));
         } else {
-            onTipQ=(std::abs(top.y-bot.y))< mm-tol;
+            dist = (std::abs(top.y-bot.y));
         }
-        
+        if(dist  < mm-tol && offTipRun < 7){
+            onTipQ=true;
+            offTipRun = 0;
+        } else if(dist > mm-tol && dist < mm+tol){
+            onDistalQ=true;
+            offTipRun++;
+        } else {
+            
+            offTipRun++;
+        }
         
         if (onTipQ) {
             edgePntsClass.at<pointClass>(i,0) = tip;
@@ -601,12 +614,19 @@ int classifyPointOnTipInitial(Point perpVec, InputArray _edgePnts, InputArray _m
             midPntsClass.at<pointClass>(i,0)  = tip;
             tipCount++;
             
+        } else if(onDistalQ){
+            edgePntsClass.at<pointClass>(i,0) = distal;
+            edgePntsClass.at<pointClass>(j,0) = distal;
+            midPntsClass.at<pointClass>(i,0)  = distal;
+            distalCount++;
         } else {
-            break;
+            edgePntsClass.at<pointClass>(i,0) = abnormality;
+            edgePntsClass.at<pointClass>(j,0) = abnormality;
+            midPntsClass.at<pointClass>(i,0)  = abnormality;
+            
         }
     }
     
-    return tipCount;
 }
 
 template<typename T> Mat transformPoints(InputArray _pnts, Point origin, double angle){
@@ -615,7 +635,7 @@ template<typename T> Mat transformPoints(InputArray _pnts, Point origin, double 
     int count = pnts.rows;
     
     // find rotation
-    Matx<double,2,2> Rot = {std::cos(-1.*angle), -1.*std::sin(-1.*angle), std::sin(-1.*angle), std::cos(-1.*angle) };
+    Matx<double,2,2> Rot = {std::cos(angle), -1.*std::sin(angle), std::sin(angle), std::cos(angle) };
     
     // Put all pnts into neutral orientation origin at line(2) rotated by -digitTheta.
     Mat pntsN(pnts.rows, pnts.cols, pnts.type());
@@ -627,6 +647,26 @@ template<typename T> Mat transformPoints(InputArray _pnts, Point origin, double 
         pntsN.at<T>(i,1) = Rot(1,0) * (pnt.x - origin.x) + Rot(1,1) * (pnt.y - origin.y);
     }
     return pntsN;
+}
+
+template<typename T> Mat iTransformPoints(InputArray _pntsN, Point origin, double angle){
+    
+    Mat pntsN = _pntsN.getMat();
+    int count = pntsN.rows;
+    
+    // find rotation
+    Matx<double,2,2> Rot = {std::cos(-1.*angle), -1.*std::sin(-1.*angle), std::sin(-1.*angle), std::cos(-1.*angle) };
+    
+    // Put all pnts into neutral orientation origin at line(2) rotated by -digitTheta.
+    Mat pnts(pntsN.rows, pntsN.cols, pntsN.type());
+    
+    for (int i=0; i<count; i++) {
+        Point_<T> pnt = pntsN.at<Point_<T>>(i,0);
+        
+        pnts.at<T>(i,0) = Rot(0,0) * pnt.x + Rot(0,1) * pnt.y + origin.x;
+        pnts.at<T>(i,1) = Rot(1,0) * pnt.x + Rot(1,1) * pnt.y + origin.y;
+    }
+    return pnts;
 }
 
 Mat extractPntsClassifiedAs(pointClass cls, InputArray _pntsIn, InputArray _pntsClass){
@@ -670,6 +710,51 @@ Mat extractPntsNotClassifiedAs(pointClass cls, InputArray _pntsIn, InputArray _p
     }
     return pointsOut;
 }
+
+
+
+Mat trapeziumFit(InputArray _line, InputArray _pnts){
+    
+    Mat pnts = _pnts.getMat();
+    Matx<double,2,2> line = _line.getMat();
+    
+    int count = pnts.rows;
+    
+    // find orientation
+    double digitTheta = std::atan2((line(1,1)-line(0,1)),(line(1,0)-line(0,0)));
+    
+    Mat pntsN = transformPoints<int>(pnts, Point(line(1,0),line(1,1)), -1.*digitTheta);
+    
+    Mat pntsAbsN(count, 2, CV_32SC1);
+    
+    int xMin = pntsN.at<int>(0,0), xMax = pntsN.at<int>(count-1,0);
+    
+    for (int i=0; i<pntsN.rows; i++) {
+        int x1 = pntsN.at<int>(i,0);
+        if(xMin>x1){xMin=x1;}; if(xMax<x1){xMax=x1;};
+        pntsAbsN.at<int>(i,0) = x1;
+        pntsAbsN.at<int>(i,1) = abs(pntsN.at<int>(i,1));
+    }
+    
+    cv::Mat  lineTop(1,4,CV_32F);
+    cv::fitLine(pntsAbsN, lineTop, CV_DIST_L2, 0, 0.01, 0.01);
+    
+    Mat fitLineN(4,2,CV_32F);
+    fitLineN.at<float>(0,0) = float(xMin);
+    fitLineN.at<float>(0,1) = (lineTop.at<float>(0) * lineTop.at<float>(3) + lineTop.at<float>(1) *(fitLineN.at<float>(0,0) - lineTop.at<float>(2) ))/lineTop.at<float>(0);
+    
+    fitLineN.at<float>(1,0) = float(xMax);
+    fitLineN.at<float>(1,1) = (lineTop.at<float>(0) * lineTop.at<float>(3) + lineTop.at<float>(1) *(fitLineN.at<float>(1,0) - lineTop.at<float>(2) ))/lineTop.at<float>(0);
+    
+    fitLineN.at<float>(2,0) =     fitLineN.at<float>(0,0);
+    fitLineN.at<float>(2,1) = -1.*fitLineN.at<float>(0,1);
+    
+    fitLineN.at<float>(3,0) =     fitLineN.at<float>(1,0);
+    fitLineN.at<float>(3,1) = -1.*fitLineN.at<float>(1,1);
+    Mat fitLineOut = iTransformPoints<float>(fitLineN, Point(line(1,0),line(1,1)), -1.*digitTheta);
+    return fitLineOut;
+}
+
 
 
 static cv::Point2f thisPointOnLine(float *line, cv::Point2f pnt)
@@ -1313,7 +1398,6 @@ int main( int argc, char** argv )
         int count = midPnts.rows;
         int rows = LCaCbImg.rows, cols = LCaCbImg.cols;
         
-//        fingerTipModel mdl(Point2f(-1.,1.), Point2f(1.,1.), Point2f(-1.,-1.), Point2f(1.,-1.), Ellipse(1.,1.,Point2f(1.,0.),0.,true));
         
         Mat edgePntsClass(edgePnts.rows,  1, CV_8U);
         edgePntsClass= Mat::zeros(edgePnts.rows,  1, CV_8U);
@@ -1323,15 +1407,16 @@ int main( int argc, char** argv )
         
         printImg<CV_8U>(edgePntsClass,"edgePntsClass");
         printImg<CV_8U>(midPntsClass,"midPntsClass");
+        int tipCount = 0, distalCount = 0;
         
        int frameCount = classifyPointOnFrame(LCaCbImg, edgePnts, midPnts, edgePntsClass, midPntsClass);
         
-       int tipCount = classifyPointOnTipInitial(perpVec, edgePnts, midPnts, edgePntsClass, midPntsClass);
+        classifyPointInitial(perpVec, edgePnts, midPnts, edgePntsClass, midPntsClass, tipCount, distalCount);
             
         printImg<CV_8U>(edgePntsClass,"edgePntsClass");
         printImg<CV_8U>(midPntsClass,"midPntsClass");
         
-        Mat distalMidPnts = extractPntsClassifiedAs(unclassified, midPnts, midPntsClass);
+        Mat distalMidPnts = extractPntsClassifiedAs(distal, midPnts, midPntsClass);
 
         printImg<CV_32SC1>(distalMidPnts,"distalMidPnts");
         
@@ -1339,135 +1424,37 @@ int main( int argc, char** argv )
         kinkFitLine(distalMidPnts, line,CV_DIST_L2,0,0.01,0.01);
         printImg<CV_64FC1>(line,"line");
         
-        // find orientation
-        double digitTheta = std::atan2((line(2,1)-line(1,1)),(line(2,0)-line(1,0)));
+        Mat distalEdgePnts = extractPntsClassifiedAs(distal, edgePnts, edgePntsClass);
+        cv::Matx<double,2,2> endLine{line(1,0),line(1,1),line(2,0),line(2,1)};
+        Mat trapFit = trapeziumFit(endLine, distalEdgePnts);
         
-        Mat edgePntsN = transformPoints<int>(edgePnts, Point(line(2,0),line(2,1)), digitTheta);
-        Mat  midPntsN = transformPoints<int>(midPnts,  Point(line(2,0),line(2,1)), digitTheta);
-        Mat     lineN = transformPoints<double>(line,  Point(line(2,0),line(2,1)), digitTheta);
-        
-//        Matx<double,2,2> Rot = {std::cos(-1.*digitTheta), -1.*std::sin(-1.*digitTheta), std::sin(-1.*digitTheta), std::cos(-1.*digitTheta) };
+//        // find orientation
+//        double digitTheta = std::atan2((line(2,1)-line(1,1)),(line(2,0)-line(1,0)));
 //        
-//        // Put all pnts into neutral orientation origin at line(2) rotated by -digitTheta.
-//        Mat edgePntsN(edgePnts.rows,edgePnts.cols,edgePnts.type());
-//        Mat  midPntsN( midPnts.rows, midPnts.cols, midPnts.type());
-//        cv::Matx<double,3,2> lineN;
-//        for (int i=0; i<2; i++) {
-//            lineN(i,0) = Rot(0,0) * (line(i,0) - line(2,0)) + Rot(0,1) * (line(i,1) - line(2,1));
-//            lineN(i,1) = Rot(1,0) * (line(i,0) - line(2,0)) + Rot(1,1) * (line(i,1) - line(2,1));
-//        }
-//        for (int i=0; i<count; i++) {
-//            int j = 2*count-i-1;
-//            Point top = edgePnts.at<Point>(i,0);
-//            Point bot = edgePnts.at<Point>(j,0);
-//            Point mid = midPnts.at<Point>(i,0);
-//            
-//            edgePntsN.at<int>(i,0) = Rot(0,0) * (top.x - line(2,0)) + Rot(0,1) * (top.y - line(2,1));
-//            edgePntsN.at<int>(i,1) = Rot(1,0) * (top.x - line(2,0)) + Rot(1,1) * (top.y - line(2,1));
-//            
-//            edgePntsN.at<int>(j,0) = Rot(0,0) * (bot.x - line(2,0)) + Rot(0,1) * (bot.y - line(2,1));
-//            edgePntsN.at<int>(j,1) = Rot(1,0) * (bot.x - line(2,0)) + Rot(1,1) * (bot.y - line(2,1));
-//            
-//            midPntsN.at<int>(i,0) = Rot(0,0) * (mid.x - line(2,0)) + Rot(0,1) * (mid.y - line(2,1));
-//            midPntsN.at<int>(i,1) = Rot(1,0) * (mid.x - line(2,0)) + Rot(1,1) * (mid.y - line(2,1));
-//        }
+//        Mat edgePntsN = transformPoints<int>(edgePnts, Point(line(2,0),line(2,1)), -1.*digitTheta);
+//        Mat  midPntsN = transformPoints<int>(midPnts,  Point(line(2,0),line(2,1)), -1.*digitTheta);
+//        Mat     lineN = transformPoints<double>(line,  Point(line(2,0),line(2,1)), -1.*digitTheta);
 //        
-        printImg<CV_64FC1>(lineN,"lineN");
-        printImg<CV_32SC1>(edgePntsN,"edgePntsN");
-        printImg<CV_32SC1>(midPntsN,"midPntsN");
+//        printImg<CV_64FC1>(lineN,"lineN");
+//        printImg<CV_32SC1>(edgePntsN,"edgePntsN");
+//        printImg<CV_32SC1>(midPntsN,"midPntsN");
         
-        Mat distalEdgePntsN = extractPntsClassifiedAs(unclassified, edgePntsN, edgePntsClass);
+        Mat distalTip = extractPntsClassifiedAs(tip, edgePnts, edgePntsClass);
         
-        Mat distalEdgeAbsN(distalEdgePntsN.rows, 2, CV_32SC1);
-        
-        for (int i=0; i<distalEdgePntsN.rows/2; i++) {
-            int j = distalEdgePntsN.rows-i-1;
-            distalEdgeAbsN.at<int>(2*i,0) = distalEdgePntsN.at<int>(i,0);
-            distalEdgeAbsN.at<int>(2*i,1) = abs(distalEdgePntsN.at<int>(i,1));
-            distalEdgeAbsN.at<int>(2*i+1,0) = distalEdgePntsN.at<int>(j,0);
-            distalEdgeAbsN.at<int>(2*i+1,1) = abs(distalEdgePntsN.at<int>(j,1));
-        }
-        
-        printImg<CV_32SC1>(distalEdgeAbsN,"distalEdgeAbsN");
-        
-        // Parallel line fit
-//        int distPntCount = 2*(count-frameCount-tipCount);
-// //       Mat distalEdgeAbsN(distPntCount, 2, CV_32SC1);
-//        int idx = 0;
-//        for (int i=0; i<count; i++) {
-//            int j = 2*count-i-1;
-//            if (midPntsClass.at<pointClass>(i,0) == unclassified) {
-//                Point top = Point(edgePntsN.at<int>(i,0),abs(edgePntsN.at<int>(i,1)));
-//                Point bot = Point(edgePntsN.at<int>(j,0),abs(edgePntsN.at<int>(j,1)));
-//                distalEdgeAbsN.at<int>(idx,0) = top.x;
-//                distalEdgeAbsN.at<int>(idx,1) = top.y;
-//                idx++;
-//                distalEdgeAbsN.at<int>(idx,0) = bot.x;
-//                distalEdgeAbsN.at<int>(idx,1) = bot.y;
-//                idx++;
-//            }
-//
-//        }
-        cv::Mat  lineTop(1,4,CV_32F);
-        Point2f d1, d2;
-        cv::fitLine(distalEdgeAbsN, lineTop, CV_DIST_L2,0,0.01,0.01);
-        d1.x = float(distalEdgeAbsN.at<int>(0,0));
-        d2.x = float(distalEdgeAbsN.at<int>(distalEdgeAbsN.rows-1,0));
-        d1.y = (lineTop.at<float>(0) * lineTop.at<float>(3) + lineTop.at<float>(1) *(d1.x - lineTop.at<float>(2) ))/lineTop.at<float>(0);
-        d2.y = (lineTop.at<float>(0) * lineTop.at<float>(3) + lineTop.at<float>(1) *(d2.x - lineTop.at<float>(2) ))/lineTop.at<float>(0);
-        
-        printImg<CV_32SC1>(distalEdgeAbsN,"distalEdgeAbsN");
-        printImg<CV_32F>(lineTop,"lineTop");
-         fprintf(stdout, "d1 = {%f,%f};\n",d1.x,d1.y);
-         fprintf(stdout, "d2 = {%f,%f};\n",d2.x,d2.y);
-        
-        Mat distalTipN = extractPntsClassifiedAs(tip, edgePntsN, edgePntsClass);
-        
-//        int idx = 0;
-//        for (int i=0; i<count; i++) {
-//            int j = 2*count-i-1;
-//            if (midPntsClass.at<pointClass>(i,0) == tip) {
-//                Point top = Point(edgePntsN.at<int>(i,0),(edgePntsN.at<int>(i,1)));
-//                Point bot = Point(edgePntsN.at<int>(j,0),(edgePntsN.at<int>(j,1)));
-//                distalTipAbsN.at<int>(idx,0) = top.x;
-//                distalTipAbsN.at<int>(idx,1) = top.y;
-//                idx++;
-//                distalTipAbsN.at<int>(idx,0) = bot.x;
-//                distalTipAbsN.at<int>(idx,1) = bot.y;
-//                idx++;
-//            }
-//            
-//        }
-        
-        RotatedRect tipEllipse = fitEllipseDirect(distalTipN);
+        RotatedRect tipEllipse = fitEllipseDirect(distalTip);
         Ellipse ellipse(tipEllipse);
         ellipse.setRadians(true);
         
-        fingerTipModel mdl(d1, d2, Point2f(d1.x,-1.*d1.y), Point2f(d2.x,-1.*d2.y), ellipse);
+        fingerTipModel mdl(Point2f(trapFit.at<float>(0,0),trapFit.at<float>(0,1)),
+                           Point2f(trapFit.at<float>(1,0),trapFit.at<float>(1,1)),
+                           Point2f(trapFit.at<float>(2,0),trapFit.at<float>(2,1)),
+                           Point2f(trapFit.at<float>(3,0),trapFit.at<float>(3,1)), ellipse);
         mdl.print();
         mdl.alignCurveToTrapezium();
         mdl.print();
-        
-//        Point2f pntFromEllipseCenter = d2 - ellipse.center;
-//        double tipAngle1 = atan2(pntFromEllipseCenter.y, pntFromEllipseCenter.x);
-//                pntFromEllipseCenter = Point2f(d2.x - ellipse.center.x, -1.*d2.y - ellipse.center.y);
-//        double tipAngle2 = atan2(pntFromEllipseCenter.y, pntFromEllipseCenter.x);
-//        
-//        // fix ellipse to trapezium pnts.
-//        Mat fivePnts(5,2,CV_32F);
-//        fivePnts = ellipse.pointsOnArc(tipAngle2,tipAngle1,5);
-//        fivePnts.at<float>(0,0) = d2.x;
-//        fivePnts.at<float>(0,1) = -1. * d2.y;
-//        fivePnts.at<float>(4,0) = d2.x;
-//        fivePnts.at<float>(4,1) = d2.y;
-//        
-//        tipEllipse = fitEllipseDirect(fivePnts);
-//        Ellipse ellipseFixed(tipEllipse);
-//        ellipseFixed.setRadians(true);
-//        
-//        ellipseFixed.print();
-//        
-//        printImg<CV_32F>(fivePnts,"fivePnts");
+        mdl.alignToEllipseCenter();
+        mdl.print();
+
         
         fprintf (stdout, "%s"," ellipsePnts={");
         for (float i=mdl.theta0; i<mdl.theta1; i += (mdl.theta0-mdl.theta1)/4.) {
@@ -1495,7 +1482,7 @@ int main( int argc, char** argv )
         
         
         
-        printImg<CV_32S>(distalTipN,"distalTipN");
+        printImg<CV_32S>(distalTip,"distalTipN");
         
         
         

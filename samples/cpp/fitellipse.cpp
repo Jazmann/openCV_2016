@@ -256,15 +256,26 @@ public:
     cv::Point2f center;
     double* angle;
     
+    cv::Point2f e0,e1,e2,e3;
+    cv::Rect box;
+    
     Ellipse( double a, double b, cv::Point2f center, double angle, bool radians = true);
     Ellipse( cv::RotatedRect rect);
     
     void setRadians(bool radQ);
     void setAngle(double ang);
     void constrainAngle();
+    void extrema();
     Point2f pointOnEllipse(double _angle);
     Mat pointsOnArc(double ang1, double ang2, int n);
+    Point2f intersectionWithLine(Point2f l0,Point2f l1);
     void print();
+    
+    
+    Point2f pointOnEllipseTopFromX(double x);
+    Point2f pointOnEllipseBotFromX(double x);
+    Point2f pointOnEllipseLeftFromY(double y);
+    Point2f pointOnEllipseRightFromY(double y);
 };
 
 Ellipse::Ellipse( double _a, double _b, cv::Point2f _center, double _angle, bool _radians){
@@ -301,7 +312,7 @@ void Ellipse::setAngle(double ang){
         this->angleRad = ang * CV_PI /180.;
     }
     this->constrainAngle();
-    
+    this->extrema();
 }
 
 void Ellipse::constrainAngle(){
@@ -345,6 +356,7 @@ Point2f Ellipse::pointOnEllipse(double _ang){
     return out;
 }
 
+
 Mat Ellipse::pointsOnArc(double _ang1, double _ang2, int n){
     Mat out(n,2,CV_32F);
     double ang1, ang2, angStep;
@@ -365,9 +377,131 @@ Mat Ellipse::pointsOnArc(double _ang1, double _ang2, int n){
     return out;
 }
 
+void  Ellipse::extrema(){
+    double theta2 = fmod(*angle, CV_PI/2.);
+    double cosT = std::cos(theta2), sinT = std::sin(theta2), tanT = std::tan(theta2);
+    double xDiff1 = ((a - b)*(a + b)*sinT)/sqrt((b*b) + (a*a)*(tanT*tanT));
+    double yDiff2 = ((a - b)*(a + b)*sinT)/sqrt((a*a) + (b*b)*(tanT*tanT));
+    double xDiff2 = cosT*sqrt((a*a) + (b*b)*(tanT*tanT));
+    double yDiff1 = cosT*sqrt((b*b) + (a*a)*(tanT*tanT));
+    e0 = Point2f(center.x + xDiff1,center.y + yDiff1);
+    e1 = Point2f(center.x - xDiff1,center.y - yDiff1);
+    e2 = Point2f(center.x - xDiff2,center.y - yDiff2);
+    e3 = Point2f(center.x + xDiff2,center.y + yDiff2);
+}
+
+
+void  Ellipse::extrema(){
+    double theta2 = fmod(*angle, CV_PI/2.);
+    double cosT = std::cos(theta2), sinT = std::sin(theta2), tanT = std::tan(theta2);
+    double xDiff1 = ((a - b)*(a + b)*sinT)/sqrt((b*b) + (a*a)*(tanT*tanT)); // +ve if a > b
+    double yDiff2 = ((a - b)*(a + b)*sinT)/sqrt((a*a) + (b*b)*(tanT*tanT)); // +ve if a > b
+    double xDiff2 = cosT*sqrt((a*a) + (b*b)*(tanT*tanT));
+    double yDiff1 = cosT*sqrt((b*b) + (a*a)*(tanT*tanT));
+    e0 = Point2f(center.x + xDiff1,center.y + yDiff1);
+    e1 = Point2f(center.x - xDiff1,center.y - yDiff1);
+    e2 = Point2f(center.x - xDiff2,center.y - yDiff2);
+    e3 = Point2f(center.x + xDiff2,center.y + yDiff2);
+    if(b > a){
+        xDiff1 *= -1.;
+        yDiff2 *= -1.;
+    }
+    double xMin, xMax, yMin, yMax;
+    if(xDiff1 > xDiff2){
+        xMax = center.x + xDiff1;
+        xMin = center.x - xDiff1;
+    } else {
+        xMax = center.x + xDiff2;
+        xMin = center.x - xDiff2;
+    }
+    if(yDiff1 > yDiff2){
+        yMax = center.y + yDiff1;
+        yMin = center.y - yDiff1;
+    } else {
+        yMax = center.y + yDiff2;
+        yMin = center.y - yDiff2;
+    }
+    box = Rect(xMin,yMax,xMax-xMin,yMax-yMin);
+}
+
+
+Point2f Ellipse::pointOnEllipseTopFromX(double x){
+    double cosT = std::cos(*angle), sinT = std::sin(*angle);
+    double cos2T = std::cos(2.* *angle), sin2T = std::sin(2.* *angle);
+    double cosT2 = cosT*cosT, sinT2 = sinT*sinT;
+    double denomX = (a*a) + (b*b) + (a-b)*(a+b)*cos2T;
+    double sqrX   = denomX- 2*(center.x - x)*(center.x - x);
+    
+    double y = (2*(a*a)*center.y*cosT2 + a * b * sqrt(2.*sqrX) + 2*(b*b)*center.y*sinT2 + (b-a)*(a+b)*(center.x - x)*sin2T)/denomX;
+    
+    return Point2f(x,y);
+    }
+
+
+Point2f Ellipse::pointOnEllipseBotFromX(double x){
+    double cosT = std::cos(*angle), sinT = std::sin(*angle);
+    double cos2T = std::cos(2.* *angle), sin2T = std::sin(2.* *angle);
+    double cosT2 = cosT*cosT, sinT2 = sinT*sinT;
+    double denomX = (a*a) + (b*b) + (a-b)*(a+b)*cos2T;
+    double sqrX   = denomX- 2*(center.x - x)*(center.x - x);
+    
+    double y = (2*(a*a)*center.y*cosT2 - a * b * sqrt(2.*sqrX) + 2*(b*b)*center.y*sinT2 + (b-a)*(a+b)*(center.x - x)*sin2T)/denomX;
+    
+    return Point2f(x,y);
+}
+
+
+Point2f Ellipse::pointOnEllipseLeftFromY(double y){
+    double cosT = std::cos(*angle), sinT = std::sin(*angle);
+    double cos2T = std::cos(2.* *angle), sin2T = std::sin(2.* *angle);
+    double cosT2 = cosT*cosT, sinT2 = sinT*sinT;
+    double denomY = (a*a) + (b*b) + ((b*b)-(a*a))*cos2T;
+    double sqrY   = denomY - 2*(center.y - y)*(center.y - y) ;
+    
+    double x = 2*center.x*( (b*b)*cosT2 + (a*a)*sinT2 + (a-b)*(a+b)*(center.y - y)*sin2T)/denomY - a * b * sqrt(2.*sqrY) ;
+    
+    return Point2f(x,y);
+}
+
+Point2f Ellipse::pointOnEllipseRightFromY(double y){
+    double cosT = std::cos(*angle), sinT = std::sin(*angle);
+    double cos2T = std::cos(2.* *angle), sin2T = std::sin(2.* *angle);
+    double cosT2 = cosT*cosT, sinT2 = sinT*sinT;
+    double denomY = (a*a) + (b*b) + ((b*b)-(a*a))*cos2T;
+    double sqrY   = denomY - 2*(center.y - y)*(center.y - y) ;
+    
+    double x = 2*center.x*( (b*b)*cosT2 + (a*a)*sinT2 + (a-b)*(a+b)*(center.y - y)*sin2T)/denomY + a * b * sqrt(2.*sqrY) ;
+    
+    return Point2f(x,y);
+}
+
+Point2f Ellipse::intersectionWithLine(Point2f l0,Point2f l1){
+    double cosT = std::cos(*angle), sinT = std::sin(*angle);
+    Point2f ll0 = Point2f((l0.x - center.x) * cosT + (l0.y - center.y) * sinT,
+                          (l0.y - center.y) * cosT - (l0.x - center.x) * sinT);
+    Point2f ll1 = Point2f((l1.x - center.x) * cosT + (l1.y - center.y) * sinT,
+                          (l1.y - center.y) * cosT - (l1.x - center.x) * sinT);
+    Point2f vec = ll1-ll0;
+    double denom = ((b*b)*(vec.x * vec.x) + (a*a)*(vec.y * vec.y));
+    double rt = (b*b)*(vec.x * vec.x) + (a*a)*(vec.y * vec.y) - (vec.y*ll0.x - vec.x*ll0.y)*(vec.y*ll0.x - vec.x*ll0.y);
+    if(rt>0.){
+        double absqrt = a*b*sqrt(rt);
+        double d1 = -1.*((b*b) * vec.x * ll0.x + (a*a) * vec.y * ll0.y + absqrt)/denom;
+        double d2 = (-1.*(b*b) * vec.x * ll0.x - (a*a) * vec.y * ll0.y + absqrt)/denom;
+        Point2f out;
+    if(d1>0){
+        out = l0 + d1 * vec;
+    } else {
+        out = l0 + d2 * vec;
+    }
+        return out;
+    } else {
+        return Point2f(0,0);
+    }
+}
 
 void Ellipse::print(){
-    fprintf (stdout, "ellipse={ {%f, %f},{ %f, %f}, %f };\n",this->center.x, this->center.y, this->a, this->b, *this->angle);
+    fprintf (stdout, "fitLineN={ {%f, %f},{ %f, %f}, %f };\n",this->center.x, this->center.y, this->a, this->b, *this->angle);
 }
 
 template<int src_t> static void findFrameOrientation(Mat img, Point * midPnt, Point * perpVec){
@@ -432,47 +566,42 @@ template<typename T> void meanMedian(std::vector<T> vals, double frac, double * 
     * tol = u > l? u : l;
 }
 
-enum pointClass:CV_8U_TYPE{unclassified, tip, distal, middle, onFrame, abnormality};
+enum pointClass:CV_8U_TYPE{unclassified, tip, distal, middle, onFrame, anomaly};
 
-class fingerTipModel{
+class graveShape{
 private:
 public:
-    Point2f d00, d01, d10, d11;
+    Point2f d00, d01, d10, d11, line0, line1;
     Ellipse curve;
     double theta0, theta1; // The angles from the center of the ellipse to the trapezium edges.
-    double dWidth, mWidth; // The widths of the Distal and Middle finger parts.
-    
-    // Position and orientation of the model in the image.
-    // Updated by supplying edge and midline points found by fillament fill.
-    Point2f pos;
-    double angle;
     
     
-    fingerTipModel(Point2f d00, Point2f d01, Point2f d10, Point2f d11, Ellipse curve);
+    graveShape(Point2f d00, Point2f d01, Point2f d10, Point2f d11, Ellipse curve);
     
     void findThetas();
-    void findWidths();
+    void findAxis();
+    
+    void translate(Point2f shift);
+    void rotate(double theta);
     
     void alignCurveToTrapezium();
-    void alignToEllipseCenter();
-    void allignToAreaCentroid();
     
     void print();
 };
 
 
-void fingerTipModel::print(){
-    fprintf (stdout, "Trapezium={ {%f, %f},{ %f, %f},{ %f, %f},{ %f, %f} };\n",d00.x, d00.y, d01.x, d01.y, d10.x, d10.y, d11.x, d11.y);
-    fprintf (stdout, "ellipse={ {%f, %f},{ %f, %f}, %f };\n",this->curve.center.x, this->curve.center.y, this->curve.a, this->curve.b, *this->curve.angle);
+void graveShape::print(){
+    fprintf (stdout, "trap = { {{%f, %f},{ %f, %f}},{{ %f, %f},{ %f, %f} }};\n",d00.x, d00.y, d01.x, d01.y, d10.x, d10.y, d11.x, d11.y);
+    fprintf (stdout, "ellps = { {%f, %f},{ %f, %f}, %f };\n",this->curve.center.x, this->curve.center.y, this->curve.a, this->curve.b, *this->curve.angle);
 }
 
 
-fingerTipModel::fingerTipModel(Point2f _d00, Point2f _d01, Point2f _d10, Point2f _d11, Ellipse _curve):d00(_d00),d01(_d01),d10(_d10),d11(_d11),curve(_curve){
+graveShape::graveShape(Point2f _d00, Point2f _d01, Point2f _d10, Point2f _d11, Ellipse _curve):d00(_d00),d01(_d01),d10(_d10),d11(_d11),curve(_curve){
     findThetas();
-    findWidths();
+    findAxis();
 };
 
-void fingerTipModel::findThetas(){
+void graveShape::findThetas(){
     Point2f vec;
     vec = d01 - curve.center;
     theta0 = atan2(vec.y, vec.x);
@@ -480,10 +609,125 @@ void fingerTipModel::findThetas(){
     theta1 = atan2(vec.y, vec.x);
 };
 
+
+void graveShape::findAxis(){
+    line0 = (d00+d10)/2;
+    line1 = (d01+d11)/2;
+    line1 = curve.intersectionWithLine(line0, line1);
+};
+
+void graveShape::alignCurveToTrapezium(){
+    // fix ellipse to trapezium pnts.
+    Mat fivePnts(5,2,CV_32F);
+    fivePnts = curve.pointsOnArc(theta0,theta1,5);
+    fivePnts.at<float>(0,0) = d01.x;
+    fivePnts.at<float>(0,1) = d01.y;
+    fivePnts.at<float>(4,0) = d11.x;
+    fivePnts.at<float>(4,1) = d11.y;
+    
+    RotatedRect rect = fitEllipseDirect(fivePnts);
+    curve = Ellipse(rect);
+    curve.setRadians(true);
+    
+};
+
+void graveShape::translate(Point2f shift){
+    curve.center += shift;
+    d00 += shift; d01 += shift;
+    d10 += shift; d11 += shift;
+}
+
+void graveShape::rotate(double theta){
+    Matx<double,2,2> Rot = {std::cos(theta), -1.*std::sin(theta), std::sin(theta), std::cos(theta) };
+    Point2f center = curve.center, temp;
+    translate(-1. * center);
+    *curve.angle += theta;
+    temp.x = Rot(0,0) * d00.x + Rot(0,1) * d00.y;
+    temp.y = Rot(1,0) * d00.x + Rot(1,1) * d00.y;
+    d00 = temp;
+    temp.x = Rot(0,0) * d01.x + Rot(0,1) * d01.y;
+    temp.y = Rot(1,0) * d01.x + Rot(1,1) * d01.y;
+    d01 = temp;
+    temp.x = Rot(0,0) * d10.x + Rot(0,1) * d10.y;
+    temp.y = Rot(1,0) * d10.x + Rot(1,1) * d10.y;
+    d10 = temp;
+    temp.x = Rot(0,0) * d11.x + Rot(0,1) * d11.y;
+    temp.y = Rot(1,0) * d11.x + Rot(1,1) * d11.y;
+    d11 = temp;
+    temp.x = Rot(0,0) * center.x + Rot(0,1) * center.y;
+    temp.y = Rot(1,0) * center.x + Rot(1,1) * center.y;
+    center = temp;
+    translate(center);
+    findThetas();
+}
+
+
+
+class fingerTipModel{
+private:
+public:
+    graveShape mdl, imgMdl;
+  //  Point2f d00, d01, d10, d11, line0, line1;
+  //  Ellipse curve;
+  //  double theta0, theta1; // The angles from the center of the ellipse to the trapezium edges.
+    double dWidth, mWidth; // The widths of the Distal and Middle finger parts.
+    
+    // Position and orientation of the model in the image.
+    // Updated by supplying edge and midline points found by fillament fill.
+    Point2f pos;
+    double angle;
+ //   Point2f t00, t01, t10, t11, tLine0, tLine1;
+ //   Ellipse tCurve;
+    
+    
+    
+    
+    fingerTipModel(Point2f d00, Point2f d01, Point2f d10, Point2f d11, Ellipse curve);
+    
+    void findWidths();
+    
+    void translateModel(Point2f shift);
+    void rotateModel(double theta);
+    
+    void alignCurveToTrapezium();
+    void alignToEllipseCenter();
+    void alignToTrapezium();
+    void allignToAreaCentroid();
+    
+    void print();
+};
+
+
+void fingerTipModel::print(){
+    fprintf (stdout, "pos= {%f, %f};\n",pos.x, pos.y);
+    fprintf (stdout, "angle = %f;\n",angle);
+    fprintf (stdout, "trap = { {{%f, %f},{ %f, %f}},{{ %f, %f},{ %f, %f} }};\n",d00.x, d00.y, d01.x, d01.y, d10.x, d10.y, d11.x, d11.y);
+    fprintf (stdout, "ellps = { {%f, %f},{ %f, %f}, %f };\n",this->curve.center.x, this->curve.center.y, this->curve.a, this->curve.b, *this->curve.angle);
+}
+
+
+fingerTipModel::fingerTipModel(Point2f _d00, Point2f _d01, Point2f _d10, Point2f _d11, Ellipse _curve):mdl(_d00,_d01,_d10,_d11,_curve),imgMdl(_d00,_d01,_d10,_d11,_curve){
+    
+    pos = Point2f(0,0);
+    angle = 0.;
+    
+    
+    findWidths();
+};
+
+
 void fingerTipModel::findWidths(){
-    Point2f vec = ((d00-d10)+(d01-d11))/2.;
+    Point2f vec = ((mdl.d00-mdl.d10)+(mdl.d01-mdl.d11))/2.;
     dWidth = std::sqrt((vec.x * vec.x)+(vec.y * vec.y));
 };
+
+
+void fingerTipModel::updateImageModel(){
+    imgMdl = mdl;
+    imgMdl.rotate(angle);
+    imgMdl.translate(pos);
+}
+
 
 void fingerTipModel::alignCurveToTrapezium(){
     // fix ellipse to trapezium pnts.
@@ -499,6 +743,57 @@ void fingerTipModel::alignCurveToTrapezium(){
     curve.setRadians(true);
     
 };
+
+void fingerTipModel::translateModel(Point2f shift){
+    pos -= shift;
+    curve.center += shift;
+    d00 += shift; d01 += shift;
+    d10 += shift; d11 += shift;
+}
+
+void fingerTipModel::rotateModel(double theta){
+    
+    Matx<double,2,2> Rot = {std::cos(theta), -1.*std::sin(theta), std::sin(theta), std::cos(theta) };
+    Point2f center = curve.center, temp;
+    translateModel(-1. * center);
+    *curve.angle += theta;
+    angle -= theta;
+    temp.x = Rot(0,0) * d00.x + Rot(0,1) * d00.y;
+    temp.y = Rot(1,0) * d00.x + Rot(1,1) * d00.y;
+    d00 = temp;
+    temp.x = Rot(0,0) * d01.x + Rot(0,1) * d01.y;
+    temp.y = Rot(1,0) * d01.x + Rot(1,1) * d01.y;
+    d01 = temp;
+    temp.x = Rot(0,0) * d10.x + Rot(0,1) * d10.y;
+    temp.y = Rot(1,0) * d10.x + Rot(1,1) * d10.y;
+    d10 = temp;
+    temp.x = Rot(0,0) * d11.x + Rot(0,1) * d11.y;
+    temp.y = Rot(1,0) * d11.x + Rot(1,1) * d11.y;
+    d11 = temp;
+    temp.x = Rot(0,0) * center.x + Rot(0,1) * center.y;
+    temp.y = Rot(1,0) * center.x + Rot(1,1) * center.y;
+    center = temp;
+    temp.x = Rot(0,0) * pos.x + Rot(0,1) * pos.y;
+    temp.y = Rot(1,0) * pos.x + Rot(1,1) * pos.y;
+    pos = temp;
+    translateModel(center);
+    findThetas();
+}
+
+void fingerTipModel::alignToEllipseCenter(){
+    translateModel(-1. * curve.center);
+    rotateModel(-1. * (*curve.angle));
+};
+
+void fingerTipModel::alignToTrapezium(){
+    Point2f c0 = (d00+d10)/2., c1 = (d01+d11)/2.;
+    Point2f vec = c1-c0;
+    double theta = atan2(vec.y,vec.x);
+    translateModel(-1. * c1);
+    rotateModel(-1. * theta);
+};
+
+
 
 int classifyPointOnFrame(InputArray _img, InputArray _edgePnts, InputArray _midPnts, InputOutputArray _edgePntsClass, InputOutputArray _midPntsClass){
     
@@ -620,9 +915,9 @@ void classifyPointInitial(Point perpVec, InputArray _edgePnts, InputArray _midPn
             midPntsClass.at<pointClass>(i,0)  = distal;
             distalCount++;
         } else {
-            edgePntsClass.at<pointClass>(i,0) = abnormality;
-            edgePntsClass.at<pointClass>(j,0) = abnormality;
-            midPntsClass.at<pointClass>(i,0)  = abnormality;
+            edgePntsClass.at<pointClass>(i,0) = anomaly;
+            edgePntsClass.at<pointClass>(j,0) = anomaly;
+            midPntsClass.at<pointClass>(i,0)  = anomaly;
             
         }
     }
@@ -1398,15 +1693,12 @@ int main( int argc, char** argv )
         int count = midPnts.rows;
         int rows = LCaCbImg.rows, cols = LCaCbImg.cols;
         
-        
         Mat edgePntsClass(edgePnts.rows,  1, CV_8U);
         edgePntsClass= Mat::zeros(edgePnts.rows,  1, CV_8U);
         
         Mat  midPntsClass(edgePnts.rows/2,1, CV_8U);
         midPntsClass= Mat::zeros(edgePnts.rows/2,  1, CV_8U);
         
-        printImg<CV_8U>(edgePntsClass,"edgePntsClass");
-        printImg<CV_8U>(midPntsClass,"midPntsClass");
         int tipCount = 0, distalCount = 0;
         
        int frameCount = classifyPointOnFrame(LCaCbImg, edgePnts, midPnts, edgePntsClass, midPntsClass);
@@ -1415,6 +1707,38 @@ int main( int argc, char** argv )
             
         printImg<CV_8U>(edgePntsClass,"edgePntsClass");
         printImg<CV_8U>(midPntsClass,"midPntsClass");
+        
+        Mat classImg(LCaCbImg.size(),CV_8UC3);
+        classImg = Mat::zeros(LCaCbImg.size(),CV_8UC3);
+        for (int i=0; i<edgePntsClass.rows; i++) {
+            Point pnt = edgePnts.at<Point>(i,0);
+            pointClass cls = edgePntsClass.at<pointClass>(i,0);
+            Vec3b color = Vec3b(0,0,0);
+            switch (cls) { // unclassified, tip, distal, middle, onFrame, anomaly
+                case unclassified:
+                    color = Vec3b(255,255,255);
+                    break;
+                case tip:
+                    color = Vec3b(255,0,255);
+                    break;
+                case distal:
+                    color = Vec3b(255,255,0);
+                    break;
+                case middle:
+                    color = Vec3b(0,255,255);
+                    break;
+                case onFrame:
+                    color = Vec3b(255,0,0);
+                    break;
+                case anomaly:
+                    color = Vec3b(128,0,0);
+                    break;
+                default:
+                    color = Vec3b(0,0,0);
+                    break;
+            }
+            classImg.at<Vec3b>(pnt) = color;
+        }
         
         Mat distalMidPnts = extractPntsClassifiedAs(distal, midPnts, midPntsClass);
 
@@ -1428,22 +1752,15 @@ int main( int argc, char** argv )
         cv::Matx<double,2,2> endLine{line(1,0),line(1,1),line(2,0),line(2,1)};
         Mat trapFit = trapeziumFit(endLine, distalEdgePnts);
         
-//        // find orientation
-//        double digitTheta = std::atan2((line(2,1)-line(1,1)),(line(2,0)-line(1,0)));
-//        
-//        Mat edgePntsN = transformPoints<int>(edgePnts, Point(line(2,0),line(2,1)), -1.*digitTheta);
-//        Mat  midPntsN = transformPoints<int>(midPnts,  Point(line(2,0),line(2,1)), -1.*digitTheta);
-//        Mat     lineN = transformPoints<double>(line,  Point(line(2,0),line(2,1)), -1.*digitTheta);
-//        
-//        printImg<CV_64FC1>(lineN,"lineN");
-//        printImg<CV_32SC1>(edgePntsN,"edgePntsN");
-//        printImg<CV_32SC1>(midPntsN,"midPntsN");
         
         Mat distalTip = extractPntsClassifiedAs(tip, edgePnts, edgePntsClass);
         
         RotatedRect tipEllipse = fitEllipseDirect(distalTip);
         Ellipse ellipse(tipEllipse);
         ellipse.setRadians(true);
+        Point2f tipPoint = ellipse.intersectionWithLine(Point2f(line(1,0),line(1,1)),Point2f(line(2,0),line(2,1)));
+        fprintf(stdout,"line = {{%f, %f},{%f, %f}}\n",line(1,0),line(1,1),tipPoint.x,tipPoint.y);
+        ellipse.print();
         
         fingerTipModel mdl(Point2f(trapFit.at<float>(0,0),trapFit.at<float>(0,1)),
                            Point2f(trapFit.at<float>(1,0),trapFit.at<float>(1,1)),
@@ -1454,31 +1771,18 @@ int main( int argc, char** argv )
         mdl.print();
         mdl.alignToEllipseCenter();
         mdl.print();
-
+        mdl.alignToTrapezium();
+        mdl.print();
+        
+        Mat arcPnts;
         
         fprintf (stdout, "%s"," ellipsePnts={");
-        for (float i=mdl.theta0; i<mdl.theta1; i += (mdl.theta0-mdl.theta1)/4.) {
-            Point2f pnt = ellipse.pointOnEllipse(double(i));
-            fprintf (stdout, " {%f, %f}",pnt.x, pnt.y);
-            if(i<mdl.theta0-(mdl.theta0-mdl.theta1)/100.){ fprintf (stdout, "%s",", ");}
-        }
-        fprintf (stdout, "%s"," };\n");
+        arcPnts = mdl.curve.pointsOnArc(mdl.theta0, mdl.theta1, 4);
+        printImg<CV_32F>(arcPnts,"ellipse5Pnts");
         
         fprintf (stdout, "%s"," ellipsePnts={");
-        for (float i=mdl.theta1; i<mdl.theta0; i += (mdl.theta0-mdl.theta1)/100.) {
-            Point2f pnt = ellipse.pointOnEllipse(double(i));
-            fprintf (stdout, " {%f, %f}",pnt.x, pnt.y);
-            if(i<mdl.theta0-(mdl.theta0-mdl.theta1)/100.){ fprintf (stdout, "%s",", ");}
-        }
-        fprintf (stdout, "%s"," };\n");
-        
-        fprintf (stdout, "%s"," ellipsePnts={");
-        for (int i=0; i<360; i++) {
-            Point2f pnt = ellipse.pointOnEllipse(double(i));
-            fprintf (stdout, " {%f, %f}",pnt.x, pnt.y);
-            if(i<359){ fprintf (stdout, "%s",", ");}
-        }
-        fprintf (stdout, "%s"," };\n");
+        arcPnts = mdl.curve.pointsOnArc(mdl.theta0, mdl.theta1, 100);
+        printImg<CV_32F>(arcPnts,"ellipsePnts");
         
         
         

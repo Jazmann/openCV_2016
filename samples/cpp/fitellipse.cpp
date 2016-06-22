@@ -1587,10 +1587,10 @@ int main( int argc, char** argv )
         printImg<CV_32SC1>(midPnts,"midPnts");
         
         
-        cv::Mat3b roiMat = LCaCbImg(cv::Rect(88,163,127,60));// topLeft.x topLeft.y Width height
-        cv::Scalar mean;
-        mean =  cv::mean(roiMat);
-        fprintf (stdout, "mean ={%f, %f, %f }\n", mean[0], mean[1], mean[2]);
+    //    cv::Mat3b roiMat = LCaCbImg(cv::Rect(88,163,127,60));// topLeft.x topLeft.y Width height
+    //    cv::Scalar mean;
+    //    mean =  cv::mean(roiMat);
+    //    fprintf (stdout, "mean ={%f, %f, %f }\n", mean[0], mean[1], mean[2]);
         
         namedWindow("RGB Out",1);
         imshow("RGB Out", rgbImg);

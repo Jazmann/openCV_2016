@@ -468,25 +468,36 @@ Point2f Ellipse::pointOnEllipseBotFromX(double x){
 
 
 Point2f Ellipse::pointOnEllipseLeftFromY(double y){
-    double cosT = std::cos(angleRad), sinT = std::sin(angleRad);
-    double cos2T = std::cos(2.* angleRad), sin2T = std::sin(2.* angleRad);
-    double cosT2 = cosT*cosT, sinT2 = sinT*sinT;
-    double denomY = (a*a) + (b*b) + ((b*b)-(a*a))*cos2T;
-    double sqrY   = denomY - 2*(center.y - y)*(center.y - y) ;
+    double x, cosT, cos2T, cosT2, sinT, sin2T, sinT2, denomY, sqrY;
+    cosT = std::cos(angleRad), sinT = std::sin(-1*angleRad);
+    cos2T = std::cos(2.* angleRad), sin2T = std::sin(-2.* angleRad);
+    cosT2 = cosT*cosT, sinT2 = sinT*sinT;
+    denomY = (a*a) + (b*b) + ((b*b)-(a*a))*cos2T;
+    sqrY   = denomY - 2*(center.y - y)*(center.y - y) ;
     
-    double x = 2*center.x*( (b*b)*cosT2 + (a*a)*sinT2 + (a-b)*(a+b)*(center.y - y)*sin2T)/denomY - a * b * sqrt(2.*sqrY) ;
+    if(sqrY>=0.0){
+        x = (2*center.x*((b*b)*cosT2+(a*a)*sinT2)   + (a - b)*(a + b)*(center.y - y)*sin2T - a*b*sqrt(2.*sqrY) )/denomY;
+    } else {
+        x = box.tl().x;
+    }
+    
+  //  double x = 2*center.x*( (b*b)*cosT2 + (a*a)*sinT2 + (a-b)*(a+b)*(center.y - y)*sin2T)/denomY - a * b * sqrt(2.*sqrY) ;
     
     return Point2f(x,y);
 }
 
 Point2f Ellipse::pointOnEllipseRightFromY(double y){
-    double cosT = std::cos(angleRad), sinT = std::sin(angleRad);
-    double cos2T = std::cos(2.* angleRad), sin2T = std::sin(2.* angleRad);
-    double cosT2 = cosT*cosT, sinT2 = sinT*sinT;
-    double denomY = (a*a) + (b*b) + ((b*b)-(a*a))*cos2T;
-    double sqrY   = denomY - 2*(center.y - y)*(center.y - y) ;
-    
-    double x = 2*center.x*( (b*b)*cosT2 + (a*a)*sinT2 + (a-b)*(a+b)*(center.y - y)*sin2T)/denomY + a * b * sqrt(2.*sqrY) ;
+    double x, cosT, cos2T, cosT2, sinT, sin2T, sinT2, denomY, sqrY;
+    cosT  = std::cos(angleRad);     sinT  = std::sin(-1 * angleRad);
+    cos2T = std::cos(2.* angleRad); sin2T = std::sin(-2.* angleRad);
+    cosT2 = cosT*cosT;              sinT2 = sinT*sinT;
+    denomY = (a*a) + (b*b) + ((b*b)-(a*a))*cos2T;
+    sqrY   = denomY - 2*(center.y - y)*(center.y - y) ;
+    if(sqrY>=0.0){
+        x = (2*center.x*((b*b)*cosT2+(a*a)*sinT2)   + (a - b)*(a + b)*(center.y - y)*sin2T + a*b*sqrt(2.*sqrY) )/denomY;
+    } else {
+        x = box.br().x;
+    }
     
     return Point2f(x,y);
 }
@@ -609,7 +620,8 @@ public:
     
     void alignCurveToTrapezium();
     
-    Mat pointsOnTop();
+    Mat pointsOnLeft();
+    Mat pointsOnRight();
     
     void print(const char* name);
 };
@@ -626,10 +638,20 @@ void graveShape::print(const char* name){
     fprintf (stdout, "%sTheta = {%f, %f};\n",name,theta0, theta1);
     fprintf (stdout, "%sOrient = { %d, %d};\n",name,orient.x,orient.y);
     fprintf (stdout, "%sAxis = Line[{{%f, %f},{ %f, %f}}];\n",name,line0.x,line0.y, line1.x, line1.y);
+    Mat mdlPntsL = pointsOnLeft();
+    char buf[100];
+    strcpy(buf, name);
+    strcat(buf, "MdlPntsL");
+    printImg<CV_32F>(mdlPntsL, buf);
+    Mat mdlPntsR = pointsOnRight();
+    char buff[100];
+    strcpy(buff, name);
+    strcat(buff, "MdlPntsR");
+    printImg<CV_32F>(mdlPntsR, buff);
     fprintf (stdout, "Graphics[{FaceForm[None], EdgeForm[Black], \
                        ellipse[%sEllipse],modelToGraphics[{%sTrap, %sEllipse}, {{0, 0}, 0}], \
                        {FaceForm[None], EdgeForm[Black], %sBox}, \
-                       {%sAxis, Green, Point[eL], Point[eR], Point[eT], Point[eB]}}, Frame -> True]\n",name,name,name,name,name);
+                       {%sAxis, Green, Point[eL], Point[eR], Point[eT], Point[eB]}, Map[Point, %sMdlPntsL], Map[Point, %sMdlPntsR]}, Frame -> True]\n",name,name,name,name,name,name,name);
 }
 
 
@@ -757,7 +779,7 @@ void graveShape::rotate(double theta){
     findBoundingBox();
 }
 
-Mat graveShape::pointsOnTop(){
+Mat graveShape::pointsOnLeft(){
     Point2f pnt = d00;
     if(orient.x==0){ // vertical
         float start = d00.y;
@@ -782,11 +804,16 @@ Mat graveShape::pointsOnTop(){
                 out.at<float>(indx,1) = pnt.y;
                 indx++;
             }
-            return out;
+            if(indx==n){
+                return out;
+            } else {
+                out.resize(indx);
+                return out;
+            }
             
         } else { // down
             float end = eB.y;
-            int n = ceil(start-end);
+            int n = ceil(start-end)+1;
             Mat out(n,2,CV_32F);
             int indx=0;
             
@@ -795,16 +822,21 @@ Mat graveShape::pointsOnTop(){
             for(float y=start;y>mid; y--){
                 out.at<float>(indx,0) = x;
                 out.at<float>(indx,1) = y;
-                x += m;
+                x -= m;
                 indx++;
             }
             for(double y=mid;y>end; y--){
-                pnt=curve.pointOnEllipseLeftFromY(y);
+                pnt=curve.pointOnEllipseRightFromY(y);
                 out.at<float>(indx,0) = pnt.x;
                 out.at<float>(indx,1) = pnt.y;
                 indx++;
             }
-            return out;
+            if(indx==n){
+                return out;
+            } else {
+                out.resize(indx);
+                return out;
+            }
             
         }
         
@@ -813,7 +845,7 @@ Mat graveShape::pointsOnTop(){
         float mid   = d01.x;
         if(orient.x>0){ // right
             float end = eR.x;
-            int n = ceil(end-start);
+            int n = ceil(end-start)+1;
             Mat out(n,2,CV_32F);
             int indx=0;
             
@@ -831,11 +863,16 @@ Mat graveShape::pointsOnTop(){
                 out.at<float>(indx,1) = pnt.y;
                 indx++;
             }
-            return out;
+            if(indx==n){
+                return out;
+            } else {
+                out.resize(indx);
+                return out;
+            }
             
         } else { // left
             float end = eL.x;
-            int n = ceil(start-end);
+            int n = ceil(start-end)+1;
             Mat out(n,2,CV_32F);
             int indx=0;
             
@@ -844,7 +881,130 @@ Mat graveShape::pointsOnTop(){
             for(float x=start;x>mid; x--){
                 out.at<float>(indx,0) = x;
                 out.at<float>(indx,1) = y;
+                y -= m;
+                indx++;
+            }
+            for(double x=mid;x>end; x--){
+                pnt=curve.pointOnEllipseBotFromX(x);
+                out.at<float>(indx,0) = pnt.x;
+                out.at<float>(indx,1) = pnt.y;
+                indx++;
+            }
+            if(indx==n){
+                return out;
+            } else {
+                out.resize(indx);
+                return out;
+            }
+            
+        }
+
+    }
+}
+
+Mat graveShape::pointsOnRight(){
+    Point2f pnt = d10;
+    if(orient.x==0){ // vertical
+        float start = d10.y;
+        float mid   = d11.y;
+        if(orient.y>0){ // up
+            float end = eT.y;
+            int n = ceil(end-start)+1;
+            Mat out(n,2,CV_32F);
+            int indx=0;
+            
+            float m = (d11.x - d10.x)/(d11.y - d10.y);
+            float x = d10.x;
+            for(float y=start;y<mid; y++){
+                out.at<float>(indx,0) = x;
+                out.at<float>(indx,1) = y;
+                x += m;
+                indx++;
+            }
+            for(double y=mid;y<end; y++){
+                pnt=curve.pointOnEllipseRightFromY(y);
+                out.at<float>(indx,0) = pnt.x;
+                out.at<float>(indx,1) = pnt.y;
+                indx++;
+            }
+            if(indx==n){
+                return out;
+            } else {
+                out.resize(indx);
+                return out;
+            }
+            
+        } else { // down
+            float end = eB.y;
+            int n = ceil(start-end)+1;
+            Mat out(n,2,CV_32F);
+            int indx=0;
+            
+            float m = (d11.x - d10.x)/(d11.y - d10.y);
+            float x = d10.x;
+            for(float y=start;y>mid; y--){
+                out.at<float>(indx,0) = x;
+                out.at<float>(indx,1) = y;
+                x -= m;
+                indx++;
+            }
+            for(double y=mid;y>end; y--){
+                pnt=curve.pointOnEllipseLeftFromY(y);
+                out.at<float>(indx,0) = pnt.x;
+                out.at<float>(indx,1) = pnt.y;
+                indx++;
+            }
+            if(indx==n){
+                return out;
+            } else {
+                out.resize(indx);
+                return out;
+            }
+            
+        }
+        
+    } else { // horizontal
+        float start = d10.x;
+        float mid   = d11.x;
+        if(orient.x>0){ // right
+            float end = eR.x;
+            int n = ceil(end-start)+1;
+            Mat out(n,2,CV_32F);
+            int indx=0;
+            
+            float m = (d11.y-d10.y)/(d11.x - d10.x);
+            float y = d10.y;
+            for(float x=start;x<mid; x++){
+                out.at<float>(indx,0) = x;
+                out.at<float>(indx,1) = y;
                 y += m;
+                indx++;
+            }
+            for(double x=mid;x<end; x++){
+                pnt=curve.pointOnEllipseBotFromX(x);
+                out.at<float>(indx,0) = pnt.x;
+                out.at<float>(indx,1) = pnt.y;
+                indx++;
+            }
+            if(indx==n){
+                return out;
+            } else {
+                out.resize(indx);
+                return out;
+            }
+            
+        } else { // left
+            float end = eL.x;
+            int n = ceil(start-end)+1;
+            Mat out(n,2,CV_32F);
+            int indx=0;
+            
+            float m = (d11.y-d10.y)/(d11.x - d10.x);
+            float y = d10.y;
+            for(float x=start;x>mid; x--){
+                out.at<float>(indx,0) = x;
+                out.at<float>(indx,1) = y;
+                y -= m;
                 indx++;
             }
             for(double x=mid;x>end; x--){
@@ -853,10 +1013,15 @@ Mat graveShape::pointsOnTop(){
                 out.at<float>(indx,1) = pnt.y;
                 indx++;
             }
-            return out;
+            if(indx==n){
+                return out;
+            } else {
+                out.resize(indx);
+                return out;
+            }
             
         }
-
+        
     }
 }
 
@@ -1816,21 +1981,15 @@ int main( int argc, char** argv )
                        Point2f(70.960808, 209.591858),Point2f(88.138336, 112.804512),
                        Ellipse(52.424313, 72.482826, Point2f(142.548141, 129.361160),  6.282559));
         tip.print("tip");
-        Mat mdlPntsA = tip.pointsOnTop();
-        printImg<CV_32F>(mdlPntsA,"mdlPnts");
         
         tip = graveShape(Point2f(56.318989, 288.310059), Point2f(107.110855, 204.149246),
                          Point2f(-43.342068, 216.992279),Point2f(19.927784, 141.760742),
                        Ellipse(52.424313, 72.482826, Point2f(58.769733, 183.304123),  0.522972));
         tip.print("tip");
-        Mat mdlPntsB = tip.pointsOnTop();
-        printImg<CV_32F>(mdlPntsB,"mdlPnts");
-        
-        for(int i=0; i<12;i++){
-            tip.rotate(CV_PI/6.);
+        int maxRot=24;
+        for(int i=0; i<maxRot;i++){
+            tip.rotate(2*CV_PI/maxRot);
             tip.print("tip");
-            Mat mdlPntsR = tip.pointsOnTop();
-            printImg<CV_32F>(mdlPntsR,"mdlPnts");
         }
     };
     
@@ -1964,7 +2123,7 @@ int main( int argc, char** argv )
         mdl.alignToTrapezium();
         mdl.print();
         
-        Mat mdlPnts = mdl.imgMdl.pointsOnTop();
+        Mat mdlPnts = mdl.imgMdl.pointsOnLeft();
         printImg<CV_32F>(mdlPnts,"mdlPnts");
         
         Mat arcPnts;

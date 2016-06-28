@@ -171,38 +171,6 @@ template<int dataType> void printImg( cv::InputArray _mat, const char* name){
     }
 
 
-//template<int dataType> void printImg( cv::InputArray _mat, const char* name){
-//    Mat mat = _mat.getMat();
-//    CV_Assert(dataType == mat.type());
-//    using typeInfo = cv::Data_Type<dataType>;
-//    const int rows = mat.rows, cols = mat.cols;
-//    const int channels = mat.channels();
-//    char fmt[5];
-//    strncpy(fmt, cv::Data_Type<dataType>::fmt, sizeof(fmt));
-//    
-//    fprintf (stdout,"%s",name);
-//    fprintf (stdout, " ={\n");
-//    for (int r=0; r < rows; r++) {
-//        fprintf (stdout, "{\n");
-//        for (int c=0; c < cols; c++) {
-//            Vec< typename typeInfo::type, typeInfo::channels> RGBColor = mat.at<Vec< typename typeInfo::type, typeInfo::channels>>(Point(r,c));
-//            if (channels > 1) {
-//                fprintf (stdout, "{");
-//                for (int i=1; i<channels; i++) {
-//                    fprintf (stdout, typeInfo::fmt, RGBColor(i-1)); fprintf(stdout, ", ");
-//                }
-//                fprintf (stdout, typeInfo::fmt, RGBColor(channels-1)); fprintf(stdout,  "} ");
-//            } else {
-//                fprintf (stdout, typeInfo::fmt, RGBColor(0));
-//            }
-//            if (c < cols-1){fprintf (stdout, ",");};
-//        }
-//        fprintf (stdout, "\n }");
-//        if (r < rows-1){fprintf (stdout, ",");}
-//    }
-//    fprintf (stdout, "};\n");
-//}
-
 template<int src_t,int dst_t> void printDist( depthConverter<src_t, dst_t> *dis, const char* name){
     
     using srcInfo = cv::Data_Type<src_t>;

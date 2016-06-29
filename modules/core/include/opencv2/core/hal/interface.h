@@ -291,6 +291,21 @@ typedef signed char schar;
 #define CV_SUBMAT_FLAG          (1 << CV_SUBMAT_FLAG_SHIFT)
 #define CV_IS_SUBMAT(flags)     ((flags) & CV_MAT_SUBMAT_FLAG)
 
+#ifndef MIN
+#  define    MIN(a,b)  ((a) > (b) ? (b) : (a))
+#endif
+
+#ifndef MAX
+#  define    MAX(a,b)  ((a) < (b) ? (b) : (a))
+#endif
+
+#ifndef CV_MIN
+#  define CV_MIN(a,b)  ((a) > (b) ? (b) : (a))
+#endif
+
+#ifndef CV_MAX
+#  define CV_MAX(a,b)  ((a) < (b) ? (b) : (a))
+#endif
 
 //! @}
 

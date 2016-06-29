@@ -612,14 +612,14 @@ Cv64suf;
 //#define CV_SUBMAT_FLAG_SHIFT    15
 //#define CV_SUBMAT_FLAG          (1 << CV_SUBMAT_FLAG_SHIFT)
 //#define CV_IS_SUBMAT(flags)     ((flags) & CV_MAT_SUBMAT_FLAG)
-
-#ifndef MIN
-#  define MIN(a,b)  ((a) > (b) ? (b) : (a))
-#endif
-
-#ifndef MAX
-#  define MAX(a,b)  ((a) < (b) ? (b) : (a))
-#endif
+//
+//#ifndef MIN
+//#  define MIN(a,b)  ((a) > (b) ? (b) : (a))
+//#endif
+//
+//#ifndef MAX
+//#  define MAX(a,b)  ((a) < (b) ? (b) : (a))
+//#endif
 
 /****************************************************************************************\
 *          exchange-add operation for atomic operations on reference counters            *

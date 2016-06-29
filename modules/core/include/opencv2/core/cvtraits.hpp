@@ -10,7 +10,15 @@
 #define cvtraits_h
 
 #ifndef __cplusplus
-#  error core.hpp header must be compiled as C++
+#  error cvtraits.hpp header must be compiled as C++
+#endif
+
+#ifndef CV_MIN
+#  define CV_MIN(a,b)  ((a) > (b) ? (b) : (a))
+#endif
+
+#ifndef CV_MAX
+#  define CV_MAX(a,b)  ((a) < (b) ? (b) : (a))
 #endif
 
 template<int t> struct cv_Data_Type{
@@ -568,12 +576,12 @@ namespace cv {
         const static int dataType = t;
     };
     template<int t1,int t2> struct Work_Type : cv_Work_Type<CV_MAT_DEPTH(t1),CV_MAT_DEPTH(t2)>{
-        constexpr static int channels  = MAX(CV_MAT_CN(t1),CV_MAT_CN(t2));
-        const static int dataType = CV_MAKETYPE((cv_Work_Type<CV_MAT_DEPTH(t1),CV_MAT_DEPTH(t2)>::channelType), (MAX(CV_MAT_CN(t1), CV_MAT_CN(t2))) );
+        constexpr static int channels  = CV_MAX(CV_MAT_CN(t1),CV_MAT_CN(t2));
+        const static int dataType = CV_MAKETYPE((cv_Work_Type<CV_MAT_DEPTH(t1),CV_MAT_DEPTH(t2)>::channelType), (CV_MAX(CV_MAT_CN(t1), CV_MAT_CN(t2))) );
     };
     template<int t1,int t2> struct Signed_Work_Type : cv_Signed_Work_Type<CV_MAT_DEPTH(t1),CV_MAT_DEPTH(t2)>{
-        constexpr static int channels  = MAX(CV_MAT_CN(t1),CV_MAT_CN(t2));
-        const static int dataType = CV_MAKETYPE((cv_Signed_Work_Type<CV_MAT_DEPTH(t1),CV_MAT_DEPTH(t2)>::channelType), (MAX(CV_MAT_CN(t1), CV_MAT_CN(t2))) );
+        constexpr static int channels  = CV_MAX(CV_MAT_CN(t1),CV_MAT_CN(t2));
+        const static int dataType = CV_MAKETYPE((cv_Signed_Work_Type<CV_MAT_DEPTH(t1),CV_MAT_DEPTH(t2)>::channelType), (CV_MAX(CV_MAT_CN(t1), CV_MAT_CN(t2))) );
     };
     
 

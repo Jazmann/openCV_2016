@@ -286,6 +286,95 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
         set(sg,_c);
         setup();
     };
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(
+                                        distributeErfParameters<src_t, dst_t> &rhs)
+    {
+        sMax = rhs.sMax;  sMin = rhs.sMin; sRange = rhs.sRange;
+        dMax = rhs.dMax;  dMin = rhs.dMin; dRange = rhs.dRange;
+        
+        uC = rhs.uC; c = rhs.c;
+        uG = rhs.uG; g = rhs.g;
+        uS = rhs.uS; s = rhs.s;
+        
+        ErfA = rhs.ErfA; ErfB = rhs.ErfB; ErfAB = rhs.ErfAB;
+        
+        axisLength = rhs.axisLength;
+        K = rhs.K;         // The aspect ratio
+        kappa = rhs.kappa; // The compression ratio
+        m = rhs.m; uM = rhs.uM;  // \delta in the writeup
+        sDelta = rhs.sDelta; // quantum steps in the src.
+        dDelta = rhs.dDelta; // quantum steps in the destination.
+        
+        uLambda1 = rhs.uLambda1; uLambda2 = rhs.uLambda2;     // The discarded region bounds in the unit range
+         lambda1 = rhs.lambda1;   lambda2 = rhs.lambda2;      // The discarded region bounds in the sMin:sMax range computed for the distribution.
+        Lambda[0] = rhs.Lambda[0]; Lambda[1] = rhs.Lambda[1]; // The discarded region bounds actually used by the distribution.
+        
+        uOmega1  = rhs.uOmega1;  uOmega2  = rhs.uOmega2;  // The preserved 'keep' region bounds in the unit range.
+        omega1   = rhs.omega1;   omega2   = rhs.omega2;   // The preserved 'keep' region bounds in the sMin:sMax range computed for the distribution.
+        uOmegaP1 = rhs.uOmegaP1; uOmegaP2 = rhs.uOmegaP2; // The extended preserved 'keep' region bounds in the unit range.
+        omegaP1  = rhs.omegaP1;  omegaP2  = rhs.omegaP2;  // The extended preserved 'keep' region bounds in the sMin:sMax range computed for the distribution.
+        Omega[0] = rhs.Omega[0]; Omega[1] = rhs.Omega[1]; // The preserved 'keep' region bounds actually used by the distribution.
+
+        TolDiscard = rhs.TolDiscard; TolKeep = rhs.TolKeep; TolDistribute = rhs.TolDistribute;
+        Qdiscard = rhs.Qdiscard;     Qkeep   = rhs.Qkeep;   Qdistribute   = rhs.Qdistribute;
+        disConstant = rhs.disConstant;    // dis(x) = disScale * erf( g * (x - c) ) + disConstant;
+        disScale = rhs.disScale;
+        
+        disMin = rhs.disMin;                           // The minimum value taken by the distribution/
+        linearGrad = rhs.linearGrad;                   // The linear gradient of the distribution pDis(x) = linearGrad x + linearConstant
+        linearConstant = rhs.linearConstant;           // The value added in the linear section of the distribution pDis(x) = x + linearConstant
+        shiftednErfConstant = rhs.shiftednErfConstant; // The height lost by using the linear distribution pDis(x) = dis(x) + shiftednErfConstant
+        disMax = rhs.disMax;                           // The maximun value taken by the distribution.
+        
+        useLookUpTable = rhs.useLookUpTable;
+
+    };
+    
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t> &distributeErfParameters<src_t, dst_t>::operator=(distributeErfParameters<src_t, dst_t> rhs)
+    {
+        sMax = rhs.sMax;  sMin = rhs.sMin; sRange = rhs.sRange;
+        dMax = rhs.dMax;  dMin = rhs.dMin; dRange = rhs.dRange;
+        
+        uC = rhs.uC; c = rhs.c;
+        uG = rhs.uG; g = rhs.g;
+        uS = rhs.uS; s = rhs.s;
+        
+        ErfA = rhs.ErfA; ErfB = rhs.ErfB; ErfAB = rhs.ErfAB;
+        
+        axisLength = rhs.axisLength;
+        K = rhs.K;         // The aspect ratio
+        kappa = rhs.kappa; // The compression ratio
+        m = rhs.m; uM = rhs.uM;  // \delta in the writeup
+        sDelta = rhs.sDelta; // quantum steps in the src.
+        dDelta = rhs.dDelta; // quantum steps in the destination.
+        
+        uLambda1 = rhs.uLambda1; uLambda2 = rhs.uLambda2;     // The discarded region bounds in the unit range
+        lambda1 = rhs.lambda1;   lambda2 = rhs.lambda2;      // The discarded region bounds in the sMin:sMax range computed for the distribution.
+        Lambda[0] = rhs.Lambda[0]; Lambda[1] = rhs.Lambda[1]; // The discarded region bounds actually used by the distribution.
+        
+        uOmega1  = rhs.uOmega1;  uOmega2  = rhs.uOmega2;  // The preserved 'keep' region bounds in the unit range.
+        omega1   = rhs.omega1;   omega2   = rhs.omega2;   // The preserved 'keep' region bounds in the sMin:sMax range computed for the distribution.
+        uOmegaP1 = rhs.uOmegaP1; uOmegaP2 = rhs.uOmegaP2; // The extended preserved 'keep' region bounds in the unit range.
+        omegaP1  = rhs.omegaP1;  omegaP2  = rhs.omegaP2;  // The extended preserved 'keep' region bounds in the sMin:sMax range computed for the distribution.
+        Omega[0] = rhs.Omega[0]; Omega[1] = rhs.Omega[1]; // The preserved 'keep' region bounds actually used by the distribution.
+        
+        TolDiscard = rhs.TolDiscard; TolKeep = rhs.TolKeep; TolDistribute = rhs.TolDistribute;
+        Qdiscard = rhs.Qdiscard;     Qkeep   = rhs.Qkeep;   Qdistribute   = rhs.Qdistribute;
+        disConstant = rhs.disConstant;    // dis(x) = disScale * erf( g * (x - c) ) + disConstant;
+        disScale = rhs.disScale;
+        
+        disMin = rhs.disMin;                           // The minimum value taken by the distribution/
+        linearGrad = rhs.linearGrad;                   // The linear gradient of the distribution pDis(x) = linearGrad x + linearConstant
+        linearConstant = rhs.linearConstant;           // The value added in the linear section of the distribution pDis(x) = x + linearConstant
+        shiftednErfConstant = rhs.shiftednErfConstant; // The height lost by using the linear distribution pDis(x) = dis(x) + shiftednErfConstant
+        disMax = rhs.disMax;                           // The maximun value taken by the distribution.
+        
+        useLookUpTable = rhs.useLookUpTable;
+
+        return *this;
+    }
 
     
 template<int src_t, int dst_t> void distributeErfParameters<src_t, dst_t>::setRange(typename distributeErfParameters::srcType _sMin,
@@ -10684,6 +10773,39 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(){
     setAxisLengths(theta);
     setDistParams(uG, uC);
     setTransformFromAngle(0.0);
+}
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::RGB2Rot<src_t, dst_t>& rhs){
+    dstIndx[0] = rhs.dstIndx[0]; dstIndx[1] = rhs.dstIndx[1]; dstIndx[2] = rhs.dstIndx[2];// indices for the destination 'RGB' channels
+    srcIndx[0] = rhs.srcIndx[0]; srcIndx[1] = rhs.srcIndx[1]; srcIndx[2] = rhs.srcIndx[2];// indices for the source RGB channels
+    L    = rhs.L;    // The rotated axis lengths
+    iL   = rhs.iL;   // The reciprocal of the rotated axis lengths
+    srcL = rhs.srcL; // The required axis lengths
+    
+    lambdaLCaCb = rhs.lambdaLCaCb; // The discard region in the LCaCb space
+    lambdaRGB = rhs.lambdaRGB;     // The discard region in the RGB space
+    alpha = rhs.alpha; beta = rhs.beta;  // The relative importance of the chromatic channels.
+    
+    rR = rhs.rR;
+    
+    rRScale = rhs.rRScale;
+    RMin = rhs.RMin; RMax = rhs.RMax; RRange = rhs.RRange;
+    
+    qRs    = rhs.qRs;
+    qRsMin = rhs.qRsMin; qRsMax = rhs.qRsMax; qRsRange = rhs.qRsRange;
+    
+    S = rhs.S;
+    
+    uWOBOLimits = rhs.uWOBOLimits;
+    qWOBOLimits = rhs.qWOBOLimits;
+    dColorLimits = rhs.dColorLimits;
+    
+    uRMin = rhs.uRMin; uRMax = rhs.uRMax; uRRange = rhs.uRRange;
+    
+    distParam[0] = rhs.distParam[0]; distParam[1] = rhs.distParam[1]; distParam[2] = rhs.distParam[2];
+    LParam = rhs.LParam; CaParam = rhs.CaParam; CbParam = rhs.CbParam;
+    LDist = rhs.LDist;
+    CaDist = rhs.CaDist;
+    CbDist = rhs.CbDist;
 }
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setAxisLengths(double theta){

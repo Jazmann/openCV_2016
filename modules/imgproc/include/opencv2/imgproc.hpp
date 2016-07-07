@@ -882,6 +882,11 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
                                 dstType dMin = dstInfo::min, dstType dMax = dstInfo::max
                                 );
         
+        distributeErfParameters(distributeErfParameters<src_t, dst_t> &rhs);
+        
+        distributeErfParameters& operator=(distributeErfParameters arg);
+
+        
         void init();
         void setRange(srcType, srcType, dstType, dstType);
         void setSrcRange(srcType, srcType);
@@ -1330,6 +1335,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC);
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _g, cv::Vec<double, 3> _c);
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, double* g, double* c);
+        RGB2Rot(RGB2Rot<src_t, dst_t>& rhs);
         
         Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> toWrk(Vec<double, 3> pnt);
         Vec<typename cv::Data_Type<src_t>::type, 3>  toSrc(Vec<double, 3> pnt);

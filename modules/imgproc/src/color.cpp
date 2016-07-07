@@ -10807,7 +10807,43 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::RGB2Rot<sr
     CaDist = rhs.CaDist;
     CbDist = rhs.CbDist;
 }
+template<int src_t, int dst_t>  cv::RGB2Rot<src_t, dst_t>& cv::RGB2Rot<src_t, dst_t>::operator=(cv::RGB2Rot<src_t, dst_t> rhs)
+{
+    
+    dstIndx[0] = rhs.dstIndx[0]; dstIndx[1] = rhs.dstIndx[1]; dstIndx[2] = rhs.dstIndx[2];// indices for the destination 'RGB' channels
+    srcIndx[0] = rhs.srcIndx[0]; srcIndx[1] = rhs.srcIndx[1]; srcIndx[2] = rhs.srcIndx[2];// indices for the source RGB channels
+    L    = rhs.L;    // The rotated axis lengths
+    iL   = rhs.iL;   // The reciprocal of the rotated axis lengths
+    srcL = rhs.srcL; // The required axis lengths
+    
+    lambdaLCaCb = rhs.lambdaLCaCb; // The discard region in the LCaCb space
+    lambdaRGB = rhs.lambdaRGB;     // The discard region in the RGB space
+    alpha = rhs.alpha; beta = rhs.beta;  // The relative importance of the chromatic channels.
+    
+    rR = rhs.rR;
+    
+    rRScale = rhs.rRScale;
+    RMin = rhs.RMin; RMax = rhs.RMax; RRange = rhs.RRange;
+    
+    qRs    = rhs.qRs;
+    qRsMin = rhs.qRsMin; qRsMax = rhs.qRsMax; qRsRange = rhs.qRsRange;
+    
+    S = rhs.S;
+    
+    uWOBOLimits = rhs.uWOBOLimits;
+    qWOBOLimits = rhs.qWOBOLimits;
+    dColorLimits = rhs.dColorLimits;
+    
+    uRMin = rhs.uRMin; uRMax = rhs.uRMax; uRRange = rhs.uRRange;
+    
+    distParam[0] = rhs.distParam[0]; distParam[1] = rhs.distParam[1]; distParam[2] = rhs.distParam[2];
+    LParam = rhs.LParam; CaParam = rhs.CaParam; CbParam = rhs.CbParam;
+    LDist = rhs.LDist;
+    CaDist = rhs.CaDist;
+    CbDist = rhs.CbDist;
 
+    return *this;
+}
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setAxisLengths(double theta){
     double vTheta = CV_PI/6. - std::fmod(theta - CV_PI/6., CV_PI/3.);
     double pTheta = CV_PI/6. - std::fmod(theta,            CV_PI/3.);

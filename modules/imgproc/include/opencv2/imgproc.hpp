@@ -1295,6 +1295,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         using wrkType  = typename RGB2Rot::wrkType;
         using sWrkInfo = typename RGB2Rot::sWrkInfo;
         using sWrkType = typename RGB2Rot::sWrkType;
+        using erfParamType= distributeErfParameters<sWrkInfo::channelType, dstInfo::channelType> ;
         // Values are expressed in three spaces; src, wrk, dst or source, rotated(working) and destination.
         // Values are expressed in two ranges; u, q or unitary and quantized
         
@@ -1327,7 +1328,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         
         Vec<double, dstInfo::channels> uRRange, uRMin, uRMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
         cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)> distParam[3];
-        distributeErfParameters<sWrkInfo::channelType, dstInfo::channelType> LParam, CaParam, CbParam;
+        erfParamType LParam, CaParam, CbParam;
         depthConverter<sWrkInfo::channelType, dstInfo::channelType> *LDist = nullptr, *CaDist = nullptr, *CbDist = nullptr;
         
         RGB2Rot(); // todo set default distribution functions.
@@ -1335,6 +1336,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC);
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _g, cv::Vec<double, 3> _c);
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, double* g, double* c);
+        RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta,  erfParamType _LParam, erfParamType _CaParam, erfParamType _CbParam);
         RGB2Rot(RGB2Rot<src_t, dst_t>& rhs);
         
         RGB2Rot& operator=(RGB2Rot rhs);
@@ -1379,6 +1381,8 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         uchar classifier( bool wobo, bool color) const;
         // Setup routines.
         void setDistParams(cv::Vec<double, 3> , cv::Vec<double, 3>);
+        
+        void setDistParams( erfParamType _LParam, erfParamType _CaParam, erfParamType _CbParam);
         void setAxisLengths(double theta);
         void setRanges();
         void setRGBIndices(int srcBlueIdx, int dstBlueIdx);

@@ -10750,20 +10750,29 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
 };
 
 
-template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _uG, cv::Vec<double, 3> _uC){
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _uSG, cv::Vec<double, 3> _uC){
     // _uC and _uG are assumed to be in the dst axis ordering.
     setRGBIndices(srcBlueIdx, dstBlueIdx);
     setAxisLengths(theta);
-    setDistParams(_uG, _uC);
+    setDistParams(_uSG, _uC);
     setTransformFromAngle(theta);
 };
 
-template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  _uG, std::vector<double> _uC){
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  _uSG, std::vector<double> _uC){
     setRGBIndices(srcBlueIdx, dstBlueIdx);
     cv::Vec<double, 3> uC{_uC[0],_uC[1],_uC[2]};
-    cv::Vec<double, 3> uG{_uG[0],_uG[1],_uG[2]};
+    cv::Vec<double, 3> uSG{_uSG[0],_uSG[1],_uSG[2]};
     setAxisLengths(theta);
-    setDistParams(uG, uC);
+    setDistParams(uSG, uC);
+    setTransformFromAngle(theta);
+};
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta,
+                                                                  distributeErfParameters<sWrkInfo::channelType, dstInfo::channelType> _LParam,
+                                                                  distributeErfParameters<sWrkInfo::channelType, dstInfo::channelType> _CaParam,
+                                                                  distributeErfParameters<sWrkInfo::channelType, dstInfo::channelType> _CbParam){
+    setRGBIndices(srcBlueIdx, dstBlueIdx);
+    setAxisLengths(theta);
+    setDistParams( _LParam, _CaParam, _CbParam);
     setTransformFromAngle(theta);
 };
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(){
@@ -10873,6 +10882,31 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setDistParams(cv:
     CbParam.setRange(RMin[2],RMax[2],dstInfo::min,dstInfo::max);
     
 };
+
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setDistParams(
+                        distributeErfParameters<sWrkInfo::channelType, dstInfo::channelType> _LParam,
+                        distributeErfParameters<sWrkInfo::channelType, dstInfo::channelType> _CaParam,
+                        distributeErfParameters<sWrkInfo::channelType, dstInfo::channelType> _CbParam){
+    
+    LParam = _LParam; CaParam = _CaParam; CbParam = _CbParam;
+    srcL(0) = MIN( LParam.K *  LParam.uM, L(0));
+    srcL(1) = MIN(CaParam.K * CaParam.uM, L(1));
+    srcL(2) = MIN(CbParam.K * CbParam.uM, L(2));
+    // Find the working range
+    for(int i = 0; i < 3; i++){
+        RRange[i] = sWrkType(srcL(i) * (srcInfo::max - srcInfo::min));
+    }
+    RMin[0] = 0;                        RMax[0] = sWrkType(RRange[0]);
+    RMin[1] = sWrkType(-1*RRange[1]/2); RMax[1] = sWrkType(RRange[1]/2);
+    RMin[2] = sWrkType(-1*RRange[2]/2); RMax[2] = sWrkType(RRange[2]/2);
+    
+    // Set the distribution region boundary constants.
+    LParam.setRange(RMin[0],RMax[0],dstInfo::min,dstInfo::max);
+    CaParam.setRange(RMin[1],RMax[1],dstInfo::min,dstInfo::max);
+    CbParam.setRange(RMin[2],RMax[2],dstInfo::min,dstInfo::max);
+    
+};
+
 
 template<int src_t, int dst_t> inline typename cv::Vec<typename cv::Data_Type<dst_t>::type,3> cv::RGB2Rot<src_t, dst_t>::apply(typename cv::Vec<typename cv::Data_Type<src_t>::type,3> src)
 {

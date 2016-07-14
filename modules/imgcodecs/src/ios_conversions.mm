@@ -39,7 +39,6 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-
 #import <UIKit/UIKit.h>
 #import <Accelerate/Accelerate.h>
 #import <AVFoundation/AVFoundation.h>

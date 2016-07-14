@@ -1331,7 +1331,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         erfParamType LParam, CaParam, CbParam;
         depthConverter<sWrkInfo::channelType, dstInfo::channelType> *LDist = nullptr, *CaDist = nullptr, *CbDist = nullptr;
         
-        RGB2Rot(); // todo set default distribution functions.
+        RGB2Rot();
         
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC);
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _g, cv::Vec<double, 3> _c);
@@ -1340,6 +1340,8 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         RGB2Rot(RGB2Rot<src_t, dst_t>& rhs);
         
         RGB2Rot& operator=(RGB2Rot rhs);
+        
+        void suggestNewAngle_relativeImportanceOfTheChannels(double theta );
         
         Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> toWrk(Vec<double, 3> pnt);
         Vec<typename cv::Data_Type<src_t>::type, 3>  toSrc(Vec<double, 3> pnt);

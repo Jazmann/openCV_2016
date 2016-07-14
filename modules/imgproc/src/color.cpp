@@ -10381,11 +10381,24 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::fromRot_(double s
     
     cv::Vec<double,3> rRScaleXiLXpnt, out ;
     
+    fprintf(stdout, "fromRot_({%f,%f,%f}, {%f,%f,%f})\n",src[0],src[1],src[2],dst[0],dst[1],dst[2]);
+    
     rRScaleXiLXpnt(0) = rRScale(0)*iL(0)*(src[0]);
     rRScaleXiLXpnt(1) = rRScale(1)*iL(1)*(src[1]-0.5);
     rRScaleXiLXpnt(2) = rRScale(2)*iL(2)*(src[2]-0.5);
+    
+    fprintf(stdout, "rRScale : {%f,%f,%f}\n",rRScale(0),rRScale(1),rRScale(2));
+    fprintf(stdout, "iL : {%f,%f,%f}\n",iL(0),iL(1),iL(2));
+    fprintf(stdout, "rRScaleXiLXpnt : {%f,%f,%f}\n",rRScaleXiLXpnt(0),rRScaleXiLXpnt(1),rRScaleXiLXpnt(2));
+    
+    
+    fprintf(stdout, "rR : {%f,%f,%f}\n",rR(0,0),rR(0,1),rR(0,2));
+    fprintf(stdout, "     {%f,%f,%f}\n",rR(1,0),rR(1,1),rR(1,2));
+    fprintf(stdout, "     {%f,%f,%f}\n",rR(2,0),rR(2,1),rR(2,2));
+    
     out = rR.t()*rRScaleXiLXpnt;
-    dst = out.val;
+    fprintf(stdout, "out : {%f,%f,%f}\n",out(0),out(1),out(2));
+    dst[0] = out(0); dst[1] = out(1); dst[2] = out(2);
 };
 
 
@@ -10431,10 +10444,19 @@ template<int src_t, int dst_t> cv::Matx<double,3,2> cv::RGB2Rot<src_t, dst_t>:: 
     
     for (int i=0; i<8; i++) {
         cv::Matx<double,1,3> rgb = fromRot_(rngCube.row(i));
+        fprintf(stdout, "rngCube(%d) : {%f,%f,%f}\n",i,rngCube(i,0),rgb(i,1),rgb(i,2));
+        fprintf(stdout, "    rgb(%d) : {%f,%f,%f}\n",i,rgb(0),rgb(1),rgb(2));
         
         for (int j=0; j<3; j++) {
-            if (rngRGB(j,0) > rgb(j)) { rngRGB(j,0) = rgb(j);}
-            if (rngRGB(j,1) < rgb(j)) { rngRGB(j,1) = rgb(j);}
+            fprintf(stdout, "rngCube(%d, %d) : %f\n",i,j,rngCube(i,j));
+            fprintf(stdout, "rgb(    %d, %d) : %f\n",i,j,rgb(j));
+            
+            fprintf(stdout, "rngRGB(%d, %d) >= rgb(%d) : %f >= %f \n",j,0,j,rngRGB(j,0),rgb(j));
+            fprintf(stdout, "rngRGB(%d, %d) <= rgb(%d) : %f <= %f \n",j,1,j,rngRGB(j,1),rgb(j));
+            if (rngRGB(j,0) >= rgb(j)) { rngRGB(j,0) = rgb(j);}
+            if (rngRGB(j,1) <= rgb(j)) { rngRGB(j,1) = rgb(j);}
+            fprintf(stdout, "rngRGB(%d, %d) : %f  \n",j,0,rngRGB(j,0));
+            fprintf(stdout, "rngRGB(%d, %d) : %f\n\n",j,1,rngRGB(j,1));
         }
     }
     for (int j=0; j<3; j++) {
@@ -10625,9 +10647,8 @@ template<int src_t, int dst_t>  uchar cv::RGB2Rot<src_t, dst_t>:: classifier( bo
 }
 
 
-template<int src_t, int dst_t> double cv::RGB2Rot<src_t, dst_t>::suggestNewAngle(double theta )
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::suggestNewAngle_relativeImportanceOfTheChannels(double theta )
 {
-    double theta1 = std::fmod(theta, CV_PI/6.);
     // Find the relative importance of the channels.
     Vec<int,3> lossyElementsQ;
     
@@ -10649,7 +10670,7 @@ template<int src_t, int dst_t> double cv::RGB2Rot<src_t, dst_t>::suggestNewAngle
             }
         }
     }
-    
+
     if (std::fmod(theta, CV_PI/3.) < CV_PI/6.0) { // This is dqEO
         alpha = 2.0 * srcL(1) * maxLoss1;
         beta  = 2.0 * srcL(2) * maxLoss2;
@@ -10657,6 +10678,15 @@ template<int src_t, int dst_t> double cv::RGB2Rot<src_t, dst_t>::suggestNewAngle
         beta  = 2.0 * srcL(1) * maxLoss1;
         alpha = 2.0 * srcL(2) * maxLoss2;
     }
+}
+
+
+template<int src_t, int dst_t> double cv::RGB2Rot<src_t, dst_t>::suggestNewAngle(double theta )
+{
+    double theta1 = std::fmod(theta, CV_PI/6.);
+    
+    // Find the relative importance of the channels.
+    suggestNewAngle_relativeImportanceOfTheChannels(theta);
     
     // Find a starting index.
     double tol = 1.0;
@@ -10671,11 +10701,11 @@ template<int src_t, int dst_t> double cv::RGB2Rot<src_t, dst_t>::suggestNewAngle
     anglePertP = chanPerturbation(indxP, alpha, beta, srcInfo::bitDepth);
     anglePertM = chanPerturbation(indxM, alpha, beta, srcInfo::bitDepth);
     
-    while (anglePertP(1) > tol) {
+    while (anglePertP(1) > tol) {// ToDo : maybe check for infinite loop condition.
         indxP++;
         anglePertP = chanPerturbation(indxP, alpha, beta, srcInfo::bitDepth);
     }
-    while (anglePertM(1) > tol) {
+    while (anglePertM(1) > tol) {// ToDo : maybe check for infinite loop condition.
         indxM--;
         anglePertM = chanPerturbation(indxM, alpha, beta, srcInfo::bitDepth);
     }
@@ -10702,7 +10732,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     lambdaLCaCb(dstIndx[0],1) = LParam.uLambda2; lambdaLCaCb(dstIndx[1],1) = CaParam.uLambda2; lambdaLCaCb(dstIndx[2],1) = CbParam.uLambda2;
     
     lambdaRGB = fromRotRanges(lambdaLCaCb);
-
+    
     double angle = suggestNewAngle( theta );
     
     setIntegerRotationMatrix( angle );
@@ -10978,10 +11008,11 @@ double cv::oPhiB(int l, int n){
 }
 
 cv::Vec<double,2> cv::chanPerturbation(int i, double alpha, double beta, int n){
+    CV_Assert((alpha < -1e-10|| alpha > 1e-10) && (beta < -1e-10|| beta > 1e-10));
     cv::Vec<double,2> out;
     double bI = double((1<<(n-3))); // bI = 2^(n-3)
     int iota = std::floor(7*bI - std::sqrt(i*i - 2*i*bI + 49*bI*bI));
-    double nPhiA, uPhiA, nPhiB, uPhiB;
+    double nPhiA, uPhiA, nPhiB, uPhiB, denom;
     if ( (i+iota) % 2 == 0){
         nPhiA = oPhiA(i+iota+1,n); uPhiA = oPhiA(i+iota,n);
         nPhiB = oPhiB(i-iota-1,n); uPhiB = oPhiB(i-iota,n);
@@ -10989,8 +11020,11 @@ cv::Vec<double,2> cv::chanPerturbation(int i, double alpha, double beta, int n){
         nPhiA = oPhiA(i+iota,n); uPhiA = oPhiA(i+iota+1,n);
         nPhiB = oPhiB(i-iota,n); uPhiB = oPhiB(i-iota-1,n);
     }
-    out(0) = (beta * uPhiB * (uPhiA - nPhiA) + alpha * uPhiA * (nPhiB - uPhiB) )/(beta * (uPhiA - nPhiA) + alpha * (nPhiB - uPhiB));
-    out(1) = (beta * alpha * (uPhiA - uPhiB) )/(beta * (uPhiA - nPhiA) + alpha * (nPhiB - uPhiB));
+    denom = (beta * (uPhiA - nPhiA) + alpha * (nPhiB - uPhiB));
+    CV_Assert((denom < -1e-10 || denom > 1e-10));
+    out(0) = (beta * uPhiB * (uPhiA - nPhiA) + alpha * uPhiA * (nPhiB - uPhiB) )/denom;
+    out(1) = (beta * alpha * (uPhiA - uPhiB) )/denom;
+//    fprintf(stdout,"(%f * %f * (%f - %f) )/(%f * (%f - %f) + %f * (%f - %f))", beta, alpha, uPhiA, uPhiB, beta, uPhiA, nPhiA, alpha, nPhiB, uPhiB);
     return out;
 }
 

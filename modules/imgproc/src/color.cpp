@@ -10381,23 +10381,11 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::fromRot_(double s
     
     cv::Vec<double,3> rRScaleXiLXpnt, out ;
     
-    fprintf(stdout, "fromRot_({%f,%f,%f}, {%f,%f,%f})\n",src[0],src[1],src[2],dst[0],dst[1],dst[2]);
-    
     rRScaleXiLXpnt(0) = rRScale(0)*iL(0)*(src[0]);
     rRScaleXiLXpnt(1) = rRScale(1)*iL(1)*(src[1]-0.5);
     rRScaleXiLXpnt(2) = rRScale(2)*iL(2)*(src[2]-0.5);
     
-    fprintf(stdout, "rRScale : {%f,%f,%f}\n",rRScale(0),rRScale(1),rRScale(2));
-    fprintf(stdout, "iL : {%f,%f,%f}\n",iL(0),iL(1),iL(2));
-    fprintf(stdout, "rRScaleXiLXpnt : {%f,%f,%f}\n",rRScaleXiLXpnt(0),rRScaleXiLXpnt(1),rRScaleXiLXpnt(2));
-    
-    
-    fprintf(stdout, "rR : {%f,%f,%f}\n",rR(0,0),rR(0,1),rR(0,2));
-    fprintf(stdout, "     {%f,%f,%f}\n",rR(1,0),rR(1,1),rR(1,2));
-    fprintf(stdout, "     {%f,%f,%f}\n",rR(2,0),rR(2,1),rR(2,2));
-    
     out = rR.t()*rRScaleXiLXpnt;
-    fprintf(stdout, "out : {%f,%f,%f}\n",out(0),out(1),out(2));
     dst[0] = out(0); dst[1] = out(1); dst[2] = out(2);
 };
 
@@ -10444,19 +10432,10 @@ template<int src_t, int dst_t> cv::Matx<double,3,2> cv::RGB2Rot<src_t, dst_t>:: 
     
     for (int i=0; i<8; i++) {
         cv::Matx<double,1,3> rgb = fromRot_(rngCube.row(i));
-        fprintf(stdout, "rngCube(%d) : {%f,%f,%f}\n",i,rngCube(i,0),rgb(i,1),rgb(i,2));
-        fprintf(stdout, "    rgb(%d) : {%f,%f,%f}\n",i,rgb(0),rgb(1),rgb(2));
         
         for (int j=0; j<3; j++) {
-            fprintf(stdout, "rngCube(%d, %d) : %f\n",i,j,rngCube(i,j));
-            fprintf(stdout, "rgb(    %d, %d) : %f\n",i,j,rgb(j));
-            
-            fprintf(stdout, "rngRGB(%d, %d) >= rgb(%d) : %f >= %f \n",j,0,j,rngRGB(j,0),rgb(j));
-            fprintf(stdout, "rngRGB(%d, %d) <= rgb(%d) : %f <= %f \n",j,1,j,rngRGB(j,1),rgb(j));
             if (rngRGB(j,0) >= rgb(j)) { rngRGB(j,0) = rgb(j);}
             if (rngRGB(j,1) <= rgb(j)) { rngRGB(j,1) = rgb(j);}
-            fprintf(stdout, "rngRGB(%d, %d) : %f  \n",j,0,rngRGB(j,0));
-            fprintf(stdout, "rngRGB(%d, %d) : %f\n\n",j,1,rngRGB(j,1));
         }
     }
     for (int j=0; j<3; j++) {
@@ -10485,15 +10464,8 @@ template<int src_t, int dst_t> cv::Matx<double,3,2> cv::RGB2Rot<src_t, dst_t>:: 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setReducedRotationMatrix(double theta )
 {
     
-    double theta1 = std::fmod(theta, CV_PI/6.);
-    double theta2 = std::fmod(theta, CV_PI/3.);
-    double theta6 = std::fmod(theta, CV_PI);
-    
     double Cos      = std::cos(theta);    double CosPlus  = std::cos(CV_PI/6. + theta);    double CosMinus = std::cos(CV_PI/6. - theta);
     double Sin      = std::sin(theta);    double SinPlus  = std::sin(CV_PI/6. + theta);    double SinMinus = std::sin(CV_PI/6. - theta);
-    
-    double Csc   = 1./std::sin(theta);    double CscPlus  = 1./std::sin(CV_PI/6. + theta);    double CscMinus = 1./std::sin(CV_PI/6. - theta);
-    double Sec   = 1./std::cos(theta);    double SecPlus  = 1./std::cos(CV_PI/6. + theta);    double SecMinus = 1./std::cos(CV_PI/6. - theta);
     
     rR = cv::Matx<double, 3, 3>( 1.,       1.,   1., \
                                 -SinPlus,  Cos, -SinMinus, \
@@ -10528,32 +10500,32 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setIntegerRotatio
             break;
         case 1:
             qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
-                                           U,    Bp,    Bm,\
+                                               U,    Bp,    Bm,\
                                            -1*Am, -1*Ap,  -1*U
                                            );
             break;
         case 2:
             qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
-                                           U,    Am,    Ap,\
-                                           Bm,     U,    Bp
+                                               U,    Am,    Ap,\
+                                              Bm,     U,    Bp
                                            );
             break;
         case 3:
             qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
                                            -1*Bp, -1*Bm,  -1*U,\
-                                           Ap,     U,    Am
+                                              Ap,     U,    Am
                                            );
             break;
         case 4:
             qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
                                            -1*Am, -1*Ap,  -1*U,\
-                                           -1*U, -1*Bp, -1*Bm
+                                            -1*U, -1*Bp, -1*Bm
                                            );
             break;
         case 5:
             qRs = cv::Matx<sWrkType, 3, 3>(    1,     1,     1,\
-                                           Bm,     U,    Bp,\
-                                           -1*U, -1*Am, -1*Ap
+                                              Bm,     U,    Bp,\
+                                            -1*U, -1*Am, -1*Ap
                                            );
             break;
         default:
@@ -11024,7 +10996,6 @@ cv::Vec<double,2> cv::chanPerturbation(int i, double alpha, double beta, int n){
     CV_Assert((denom < -1e-10 || denom > 1e-10));
     out(0) = (beta * uPhiB * (uPhiA - nPhiA) + alpha * uPhiA * (nPhiB - uPhiB) )/denom;
     out(1) = (beta * alpha * (uPhiA - uPhiB) )/denom;
-//    fprintf(stdout,"(%f * %f * (%f - %f) )/(%f * (%f - %f) + %f * (%f - %f))", beta, alpha, uPhiA, uPhiB, beta, uPhiA, nPhiA, alpha, nPhiB, uPhiB);
     return out;
 }
 

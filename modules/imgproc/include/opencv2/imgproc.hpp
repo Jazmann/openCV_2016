@@ -1393,6 +1393,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         void setTransformFromAngle(double theta );
         
         Vec<typename cv::Data_Type<dst_t>::type,3> apply(typename cv::Vec<typename cv::Data_Type<src_t>::type, 3> src);
+//        Vec<typename cv::Data_Type<dst_t>::type,4> apply(typename cv::Vec<typename cv::Data_Type<src_t>::type, 4> src);
         void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
 
     };

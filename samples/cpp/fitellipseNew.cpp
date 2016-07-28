@@ -1968,7 +1968,7 @@ int main( int argc, char** argv )
     // Run FingerModel Test
     if (yesno("Run FingerModel Test?")) {
         
-        cv::CommandLineParser parser(argc, argv, "{help h||}{@image|../JSkinIndexPad.JPG|}");
+        cv::CommandLineParser parser(argc, argv, "{help h||}{@image|../imgJMiddle2.JPG|}");
         if (parser.has("help"))
         {
             help();
@@ -1981,6 +1981,8 @@ int main( int argc, char** argv )
             cout << "Couldn't open image " << filename << "\n";
             return 0;
         }
+        
+        printImg<CV_8UC3>(image,"image");
         
         // Setup color Space
         double theta = 0.902576829326826;

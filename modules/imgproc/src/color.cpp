@@ -1741,10 +1741,15 @@ public:
     {
         const uchar* yS = src_data + static_cast<size_t>(range.start) * src_step;
         uchar* yD = dst_data + static_cast<size_t>(range.start) * dst_step;
+//        fprintf(stdout,"CvtColorLoop_Invoker : yS %s = %d",yS,src_data + static_cast<size_t>(range.start) * src_step);
+//        fprintf(stdout,"CvtColorLoop_Invoker : yD %hhu = %d",yD,src_data +dst_data + static_cast<size_t>(range.start) * dst_step);
 
         for( int i = range.start; i < range.end; ++i, yS += src_step, yD += dst_step )
-            cvt((const _Tp*)yS, (_Tp2*)yD, width);
+        {
+//            fprintf(stdout,"Thread %d : CvtColorLoop_Invoker : starting loop %d\n",getThreadNum(),i);
             cvt(reinterpret_cast<const _Tp*>(yS), reinterpret_cast<_Tp2*>(yD), width);
+//            fprintf(stdout,"Thread %d : CvtColorLoop_Invoker : ending loop %d\n",getThreadNum(),i);
+        }
     }
 
 private:
@@ -1761,11 +1766,11 @@ private:
 template <typename Cvt>
 void CvtColorLoop(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, const Cvt& cvt)
     {
-        fprintf(stdout,"%s\n","In : CvtColorLoop");
+//        fprintf(stdout,"%s\n","In : CvtColorLoop");
     parallel_for_(Range(0, height),
                   CvtColorLoop_Invoker<Cvt>(src_data, src_step, dst_data, dst_step, width, cvt),
                   (width * height) / static_cast<double>(1<<16));
-        fprintf(stdout,"%s\n","Out : CvtColorLoop");
+//        fprintf(stdout,"%s\n","Out : CvtColorLoop");
 }
 
 #if defined (HAVE_IPP) && (IPP_VERSION_X100 >= 700)
@@ -10948,14 +10953,14 @@ template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()
     n *= dstInfo::channels;
     for(int i = 0; i < n; i += dstInfo::channels, src += srcInfo::channels)
     {
-        fprintf(stdout,"RGB2Rot : src{%3hhu, %3hhu, %3hhu} : In  1 : %d\n",src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]], i);
+//        fprintf(stdout,"Thread %d : RGB2Rot : src{%3hhu, %3hhu, %3hhu} : In  1 : %d\n",getThreadNum(),src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]], i);
         
         sWrkType X = src[srcIndx[0]]*qRs(0,0) + src[srcIndx[1]]*qRs(0,1) + src[srcIndx[2]]*qRs(0,2); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
         sWrkType Y = src[srcIndx[0]]*qRs(1,0) + src[srcIndx[1]]*qRs(1,1) + src[srcIndx[2]]*qRs(1,2); // could be used in place of * scale
         sWrkType Z = src[srcIndx[0]]*qRs(2,0) + src[srcIndx[1]]*qRs(2,1) + src[srcIndx[2]]*qRs(2,2); // Find shift which fits RRange into the desired bit depth.
         
-        fprintf(stdout,"RGB2Rot : src{%3hhu, %3hhu, %3hhu} : Out 2 : %d\n",src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]],i);
-        fprintf(stdout,"RGB2Rot : src{%3hhu, %3hhu, %3hhu} : Out 3 : %d : XYZ{%6d, %6d, %6d}\n",src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]],i,X,Y,Z);
+//        fprintf(stdout,"Thread %d : RGB2Rot : src{%3hhu, %3hhu, %3hhu} : Out 2 : %d\n",getThreadNum(),src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]],i);
+//        fprintf(stdout,"Thread %d : RGB2Rot : src{%3hhu, %3hhu, %3hhu} : Out 3 : %d : XYZ{%6d, %6d, %6d}\n",getThreadNum(),src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]],i,X,Y,Z);
         
         (* LDist)(X, dst[i+dstIndx[0]]);
         (*CaDist)(Y, dst[i+dstIndx[1]]);
@@ -10971,7 +10976,7 @@ template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()
         int d1 = dst[i+dstIndx[1]];
         int d2 = dst[i+dstIndx[2]];
         int d3 = dst[i+3];
-        fprintf(stdout,"RGB2Rot : src{%3d, %3d, %3d} : Out 4 : %d : dst{%3d, %3d, %3d, %3d}\n",s0,s1,s2,i,d0,d1, d2,d3);
+ //       fprintf(stdout,"Thread %d : RGB2Rot : src{%3d, %3d, %3d} : Out 4 : %d : dst{%3d, %3d, %3d, %3d}\n",getThreadNum(),s0,s1,s2,i,d0,d1, d2,d3);
  //       fprintf(stdout,"RGB2Rot : src{%3hhu, %3hhu, %3hhu} : Out 4 : %d : dst{%3hhu, %3hhu, %3hhu, %3hhu}\n",src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]],i,dst[i+dstIndx[0]],dst[i+dstIndx[1]], dst[i+dstIndx[2]],dst[i+3]);
     }
     
@@ -11043,7 +11048,7 @@ template class cv::colorSpaceConverter<CV_8UC4,CV_8UC4>;
 
 template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
 {
-    fprintf(stdout,"%s\n","In : cv::convertColor");
+//    fprintf(stdout,"%s\n","In : cv::convertColor");
     cv::Mat src = _src.getMat(), dst;
     cv::Size sz = src.size();
     int scn = src.channels(), depth = src.depth();
@@ -11060,7 +11065,7 @@ template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::Ou
     } else {
         CV_Error( CV_StsBadArg, "Unsupported image depth" );
     }
-    fprintf(stdout,"%s\n","Out : cv::convertColor");
+//    fprintf(stdout,"%s\n","Out : cv::convertColor");
     
 }
 

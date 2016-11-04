@@ -110,6 +110,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     add_extra_compiler_option(-Wno-narrowing)
     add_extra_compiler_option(-Wno-delete-non-virtual-dtor)
     add_extra_compiler_option(-Wno-unnamed-type-template-args)
+    add_extra_compiler_option(-Wno-comment)
   endif()
   add_extra_compiler_option(-fdiagnostics-show-option)
 
@@ -243,6 +244,11 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   if(ENABLE_COVERAGE)
     set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} --coverage")
     set(OPENCV_EXTRA_CXX_FLAGS "${OPENCV_EXTRA_CXX_FLAGS} --coverage")
+  endif()
+
+  if(ENABLE_INSTRUMENTATION)
+    set(OPENCV_EXTRA_CXX_FLAGS "${OPENCV_EXTRA_CXX_FLAGS} --std=c++11")
+    set(WITH_VTK OFF) # There are issues with VTK 6.0
   endif()
 
   set(OPENCV_EXTRA_FLAGS_RELEASE "${OPENCV_EXTRA_FLAGS_RELEASE} -DNDEBUG")
@@ -396,4 +402,8 @@ if(NOT OPENCV_FP16_DISABLE)
     message(STATUS "FP16: Compiler support is available")
     set(HAVE_FP16 1)
   endif()
+endif()
+
+if(APPLE AND NOT CMAKE_CROSSCOMPILING AND NOT DEFINED ENV{LDFLAGS} AND EXISTS "/usr/local/lib")
+  link_directories("/usr/local/lib")
 endif()

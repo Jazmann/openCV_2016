@@ -92,6 +92,8 @@ static MergeFunc getMergeFunc(int depth)
 
 void cv::split(const Mat& src, Mat* mv)
 {
+    CV_INSTRUMENT_REGION()
+
     int k, depth = src.depth(), cn = src.channels();
     if( cn == 1 )
     {
@@ -184,6 +186,8 @@ static bool ocl_split( InputArray _m, OutputArrayOfArrays _mv )
 
 void cv::split(InputArray _m, OutputArrayOfArrays _mv)
 {
+    CV_INSTRUMENT_REGION()
+
     CV_OCL_RUN(_m.dims() <= 2 && _mv.isUMatVector(),
                ocl_split(_m, _mv))
 
@@ -209,6 +213,8 @@ void cv::split(InputArray _m, OutputArrayOfArrays _mv)
 
 void cv::merge(const Mat* mv, size_t n, OutputArray _dst)
 {
+    CV_INSTRUMENT_REGION()
+
     CV_Assert( mv && n > 0 );
 
     int depth = mv[0].depth();
@@ -353,6 +359,8 @@ static bool ocl_merge( InputArrayOfArrays _mv, OutputArray _dst )
 
 void cv::merge(InputArrayOfArrays _mv, OutputArray _dst)
 {
+    CV_INSTRUMENT_REGION()
+
     CV_OCL_RUN(_mv.isUMatVector() && _dst.isUMat(),
                ocl_merge(_mv, _dst))
 
@@ -450,6 +458,8 @@ static MixChannelsFunc getMixchFunc(int depth)
 
 void cv::mixChannels( const Mat* src, size_t nsrcs, Mat* dst, size_t ndsts, const int* fromTo, size_t npairs )
 {
+    CV_INSTRUMENT_REGION()
+
     if( npairs == 0 )
         return;
     CV_Assert( src && nsrcs > 0 && dst && ndsts > 0 && fromTo && npairs > 0 );
@@ -626,6 +636,8 @@ static bool ocl_mixChannels(InputArrayOfArrays _src, InputOutputArrayOfArrays _d
 void cv::mixChannels(InputArrayOfArrays src, InputOutputArrayOfArrays dst,
                  const int* fromTo, size_t npairs)
 {
+    CV_INSTRUMENT_REGION()
+
     if (npairs == 0 || fromTo == NULL)
         return;
 
@@ -655,6 +667,8 @@ void cv::mixChannels(InputArrayOfArrays src, InputOutputArrayOfArrays dst,
 void cv::mixChannels(InputArrayOfArrays src, InputOutputArrayOfArrays dst,
                      const std::vector<int>& fromTo)
 {
+    CV_INSTRUMENT_REGION()
+
     if (fromTo.empty())
         return;
 
@@ -683,6 +697,8 @@ void cv::mixChannels(InputArrayOfArrays src, InputOutputArrayOfArrays dst,
 
 void cv::extractChannel(InputArray _src, OutputArray _dst, int coi)
 {
+    CV_INSTRUMENT_REGION()
+
     int type = _src.type(), depth = CV_MAT_DEPTH(type), cn = CV_MAT_CN(type);
     CV_Assert( 0 <= coi && coi < cn );
     int ch[] = { coi, 0 };
@@ -704,6 +720,8 @@ void cv::extractChannel(InputArray _src, OutputArray _dst, int coi)
 
 void cv::insertChannel(InputArray _src, InputOutputArray _dst, int coi)
 {
+    CV_INSTRUMENT_REGION()
+
     int stype = _src.type(), sdepth = CV_MAT_DEPTH(stype), scn = CV_MAT_CN(stype);
     int dtype = _dst.type(), ddepth = CV_MAT_DEPTH(dtype), dcn = CV_MAT_CN(dtype);
     CV_Assert( _src.sameSize(_dst) && sdepth == ddepth );
@@ -4378,39 +4396,13 @@ const unsigned int kShiftSignificand    = 13;
 const unsigned int kMaskFp16Significand = 0x3ff;
 const unsigned int kBiasFp16Exponent    = 15;
 const unsigned int kBiasFp32Exponent    = 127;
-
-union fp32Int32
-{
-    int i;
-    float f;
-    struct _fp32Format
-    {
-        unsigned int significand : 23;
-        unsigned int exponent    : 8;
-        unsigned int sign        : 1;
-    } fmt;
-};
 #endif
-
-union fp16Int16
-{
-    short i;
-#if ( defined (__arm__) || defined (__aarch64__) ) && ( defined (__GNUC__) && ( ( ( 4 <= __GNUC__ ) && ( 7 <= __GNUC__ ) ) || ( 5 <= __GNUC__ ) ) )
-    __fp16 h;
-#endif
-    struct _fp16Format
-    {
-        unsigned int significand : 10;
-        unsigned int exponent    : 5;
-        unsigned int sign        : 1;
-    } fmt;
-};
 
 #if ( defined (__arm__) || defined (__aarch64__) ) && ( defined (__GNUC__) && ( ( ( 4 <= __GNUC__ ) && ( 7 <= __GNUC__ ) ) || ( 5 <= __GNUC__ ) ) )
 static float convertFp16SW(short fp16)
 {
     // Fp16 -> Fp32
-    fp16Int16 a;
+    Cv16suf a;
     a.i = fp16;
     return (float)a.h;
 }
@@ -4418,12 +4410,12 @@ static float convertFp16SW(short fp16)
 static float convertFp16SW(short fp16)
 {
     // Fp16 -> Fp32
-    fp16Int16 b;
+    Cv16suf b;
     b.i = fp16;
     int exponent    = b.fmt.exponent - kBiasFp16Exponent;
     int significand = b.fmt.significand;
 
-    fp32Int32 a;
+    Cv32suf a;
     a.i = 0;
     a.fmt.sign = b.fmt.sign; // sign bit
     if( exponent == 16 )
@@ -4472,7 +4464,7 @@ static float convertFp16SW(short fp16)
 static short convertFp16SW(float fp32)
 {
     // Fp32 -> Fp16
-    fp16Int16 a;
+    Cv16suf a;
     a.h = (__fp16)fp32;
     return a.i;
 }
@@ -4480,12 +4472,12 @@ static short convertFp16SW(float fp32)
 static short convertFp16SW(float fp32)
 {
     // Fp32 -> Fp16
-    fp32Int32 a;
+    Cv32suf a;
     a.f = fp32;
     int exponent    = a.fmt.exponent - kBiasFp32Exponent;
     int significand = a.fmt.significand;
 
-    fp16Int16 result;
+    Cv16suf result;
     result.i = 0;
     unsigned int absolute = a.i & 0x7fffffff;
     if( 0x477ff000 <= absolute )
@@ -4558,20 +4550,7 @@ static short convertFp16SW(float fp32)
 
 // template for FP16 HW conversion function
 template<typename T, typename DT> static void
-cvtScaleHalf_( const T* src, size_t sstep, DT* dst, size_t dstep, Size size)
-{
-    sstep /= sizeof(src[0]);
-    dstep /= sizeof(dst[0]);
-
-    for( ; size.height--; src += sstep, dst += dstep )
-    {
-        int x = 0;
-
-        for ( ; x < size.width; x++ )
-        {
-        }
-    }
-}
+cvtScaleHalf_( const T* src, size_t sstep, DT* dst, size_t dstep, Size size);
 
 template<> void
 cvtScaleHalf_<float, short>( const float* src, size_t sstep, short* dst, size_t dstep, Size size)
@@ -4579,32 +4558,24 @@ cvtScaleHalf_<float, short>( const float* src, size_t sstep, short* dst, size_t 
     sstep /= sizeof(src[0]);
     dstep /= sizeof(dst[0]);
 
-    if( checkHardwareSupport(CV_FP16) )
+    if( checkHardwareSupport(CV_CPU_FP16) )
     {
         for( ; size.height--; src += sstep, dst += dstep )
         {
             int x = 0;
 
-            if ( ( (intptr_t)dst & 0xf ) == 0 && ( (intptr_t)src & 0xf ) == 0 )
+#if defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86) || defined(i386)
+            if ( ( (intptr_t)dst & 0xf ) == 0 )
+#endif
             {
 #if CV_FP16
                 for ( ; x <= size.width - 4; x += 4)
                 {
-#if defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86) || defined(i386)
-                    __m128 v_src = _mm_load_ps(src + x);
+                    v_float32x4 v_src = v_load(src + x);
 
-                    __m128i v_dst = _mm_cvtps_ph(v_src, 0);
+                    v_float16x4 v_dst = v_cvt_f16(v_src);
 
-                    _mm_storel_epi64((__m128i *)(dst + x), v_dst);
-#elif defined __GNUC__ && (defined __arm__ || defined __aarch64__)
-                    float32x4_t v_src = *(float32x4_t*)(src + x);
-
-                    float16x4_t v_dst = vcvt_f16_f32(v_src);
-
-                    *(float16x4_t*)(dst + x) = v_dst;
-#else
-#error "Configuration error"
-#endif
+                    v_store_f16(dst + x, v_dst);
                 }
 #endif
             }
@@ -4633,32 +4604,24 @@ cvtScaleHalf_<short, float>( const short* src, size_t sstep, float* dst, size_t 
     sstep /= sizeof(src[0]);
     dstep /= sizeof(dst[0]);
 
-    if( checkHardwareSupport(CV_FP16) )
+    if( checkHardwareSupport(CV_CPU_FP16) )
     {
         for( ; size.height--; src += sstep, dst += dstep )
         {
             int x = 0;
 
-            if ( ( (intptr_t)dst & 0xf ) == 0 && ( (intptr_t)src & 0xf ) == 0 && checkHardwareSupport(CV_CPU_FP16) )
+#if defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86) || defined(i386)
+            if ( ( (intptr_t)src & 0xf ) == 0 )
+#endif
             {
 #if CV_FP16
                 for ( ; x <= size.width - 4; x += 4)
                 {
-#if defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86) || defined(i386)
-                    __m128i v_src = _mm_loadl_epi64((__m128i*)(src+x));
+                    v_float16x4 v_src = v_load_f16(src + x);
 
-                    __m128 v_dst = _mm_cvtph_ps(v_src);
+                    v_float32x4 v_dst = v_cvt_f32(v_src);
 
-                    _mm_store_ps((dst + x), v_dst);
-#elif defined __GNUC__ && (defined __arm__ || defined __aarch64__)
-                    float16x4_t v_src = *(float16x4_t*)(src + x);
-
-                    float32x4_t v_dst = vcvt_f32_f16(v_src);
-
-                    *(float32x4_t*)(dst + x) = v_dst;
-#else
-#error "Configuration error"
-#endif
+                    v_store(dst + x, v_dst);
                 }
 #endif
             }
@@ -4772,7 +4735,7 @@ static void cvtScaleAbs##suffix( const stype* src, size_t sstep, const uchar*, s
 static void cvtScaleHalf##suffix( const stype* src, size_t sstep, const uchar*, size_t, \
 dtype* dst, size_t dstep, Size size, double*) \
 { \
-    cvtScaleHalf##_<stype,dtype>(src, sstep, dst, dstep, size); \
+    cvtScaleHalf_<stype,dtype>(src, sstep, dst, dstep, size); \
 }
 
 #define DEF_CVT_SCALE_FUNC(suffix, stype, dtype, wtype) \
@@ -4789,7 +4752,7 @@ IF_CV_##stype##_EXISTS(  IF_CV_##dtype##_EXISTS( DEF_CVT_SCALE_FUNC(suffix,  CV_
 static void cvt##suffix( const stype* src, size_t sstep, const uchar*, size_t, \
                          dtype* dst, size_t dstep, Size size, double*) \
 { \
-    CV_IPP_RUN(src && dst, ippiConvert_##ippFavor(src, (int)sstep, dst, (int)dstep, ippiSize(size.width, size.height)) >= 0)\
+    CV_IPP_RUN(src && dst, CV_INSTRUMENT_FUN_IPP(ippiConvert_##ippFavor, src, (int)sstep, dst, (int)dstep, ippiSize(size.width, size.height)) >= 0) \
     cvt_(src, sstep, dst, dstep, size); \
 }
 
@@ -4797,7 +4760,7 @@ static void cvt##suffix( const stype* src, size_t sstep, const uchar*, size_t, \
 static void cvt##suffix( const stype* src, size_t sstep, const uchar*, size_t, \
                          dtype* dst, size_t dstep, Size size, double*) \
 { \
-    CV_IPP_RUN(src && dst, ippiConvert_##ippFavor(src, (int)sstep, dst, (int)dstep, ippiSize(size.width, size.height), ippRndFinancial, 0) >= 0)\
+    CV_IPP_RUN(src && dst, CV_INSTRUMENT_FUN_IPP(ippiConvert_##ippFavor, src, (int)sstep, dst, (int)dstep, ippiSize(size.width, size.height), ippRndFinancial, 0) >= 0) \
     cvt_(src, sstep, dst, dstep, size); \
 }
 #else
@@ -5334,6 +5297,8 @@ static bool ocl_convertScaleAbs( InputArray _src, OutputArray _dst, double alpha
 
 void cv::convertScaleAbs( InputArray _src, OutputArray _dst, double alpha, double beta )
 {
+    CV_INSTRUMENT_REGION()
+
     CV_OCL_RUN(_src.dims() <= 2 && _dst.isUMat(),
                ocl_convertScaleAbs(_src, _dst, alpha, beta))
 
@@ -5364,6 +5329,8 @@ void cv::convertScaleAbs( InputArray _src, OutputArray _dst, double alpha, doubl
 
 void cv::convertFp16( InputArray _src, OutputArray _dst)
 {
+    CV_INSTRUMENT_REGION()
+
     Mat src = _src.getMat();
     int ddepth = 0;
 
@@ -5376,6 +5343,7 @@ void cv::convertFp16( InputArray _src, OutputArray _dst)
         ddepth = CV_32F;
         break;
     default:
+        CV_Error(Error::StsUnsupportedFormat, "Unsupported input depth");
         return;
     }
 
@@ -5405,6 +5373,8 @@ void cv::convertFp16( InputArray _src, OutputArray _dst)
 
 void cv::Mat::convertTo(OutputArray _dst, int _type, double alpha, double beta) const
 {
+    CV_INSTRUMENT_REGION()
+
     bool noScale = fabs(alpha-1) < DBL_EPSILON && fabs(beta) < DBL_EPSILON;
 
     if( _type < 0 )
@@ -5613,7 +5583,7 @@ public:
         CV_DbgAssert(lutcn == 3 || lutcn == 4);
         if (lutcn == 3)
         {
-            IppStatus status = ippiCopy_8u_C3P3R(lut.ptr(), (int)lut.step[0], lutTable, (int)lut.step[0], sz256);
+            IppStatus status = CV_INSTRUMENT_FUN_IPP(ippiCopy_8u_C3P3R, lut.ptr(), (int)lut.step[0], lutTable, (int)lut.step[0], sz256);
             if (status < 0)
             {
                 setIppErrorStatus();
@@ -5623,7 +5593,7 @@ public:
         }
         else if (lutcn == 4)
         {
-            IppStatus status = ippiCopy_8u_C4P4R(lut.ptr(), (int)lut.step[0], lutTable, (int)lut.step[0], sz256);
+            IppStatus status = CV_INSTRUMENT_FUN_IPP(ippiCopy_8u_C4P4R, lut.ptr(), (int)lut.step[0], lutTable, (int)lut.step[0], sz256);
             if (status < 0)
             {
                 setIppErrorStatus();
@@ -5656,7 +5626,7 @@ public:
 
         if (lutcn == 3)
         {
-            if (ippiLUTPalette_8u_C3R(
+            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u_C3R,
                     src.ptr(), (int)src.step[0], dst.ptr(), (int)dst.step[0],
                     ippiSize(dst.size()), lutTable, 8) >= 0)
             {
@@ -5666,7 +5636,7 @@ public:
         }
         else if (lutcn == 4)
         {
-            if (ippiLUTPalette_8u_C4R(
+            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u_C4R,
                     src.ptr(), (int)src.step[0], dst.ptr(), (int)dst.step[0],
                     ippiSize(dst.size()), lutTable, 8) >= 0)
             {
@@ -5685,6 +5655,8 @@ private:
 
 static bool ipp_lut(Mat &src, Mat &lut, Mat &dst)
 {
+    CV_INSTRUMENT_REGION_IPP()
+
     int lutcn = lut.channels();
 
     if(src.dims > 2)
@@ -5770,6 +5742,8 @@ private:
 
 void cv::LUT( InputArray _src, InputArray _lut, OutputArray _dst )
 {
+    CV_INSTRUMENT_REGION()
+
     int cn = _src.channels(), depth = _src.depth();
     int lutcn = _lut.channels();
 
@@ -5917,6 +5891,8 @@ static bool ocl_normalize( InputArray _src, InputOutputArray _dst, InputArray _m
 void cv::normalize( InputArray _src, InputOutputArray _dst, double a, double b,
                     int norm_type, int rtype, InputArray _mask )
 {
+    CV_INSTRUMENT_REGION()
+
     double scale = 1, shift = 0;
     if( norm_type == CV_MINMAX )
     {

@@ -11246,11 +11246,19 @@ template int cv::runReachLongest<CV_8UC4>(cv::InputArray _src, Point* start, Poi
 
 template<int src_t> void cv::fillamentFill(cv::InputArray _src, OutputArray _edgePnts, OutputArray _midPnts, Point start, Point end)
 {
+    // Assuming the points are given as row column. This is not the openCV standard which is {column,row} ie (x,y) with an inverted y.
+    // This should be fixed for submission but runReach and such will also have to be fixed.
+    // Maybe move to a int row, int col style for this order and wrap this in an overloaded openCV style Point method.
+    // Should the output also be openCV Point style?
+    
     using srcType = typename cv_Data_Type<src_t>::type;
     
     cv::Mat src = _src.getMat();
     
-    LineIterator iterator(src, start, end, 8, true);
+    LineIterator iterator(src, Point(start.y,start.x), Point(end.y,end.x), 8, false);
+//    fprintf(stdout, "start = { %d, %d } = { %d, %d };\n",start.x,start.y,iterator.pos().y,iterator.pos().x);
+//    fprintf(stdout, "end = { %d, %d };\n",end.x,end.y);
+//    fprintf(stdout, "count = %d;\n",iterator.count);
     
     int count = iterator.count;
     // Allocate output Arrays.
@@ -11266,17 +11274,76 @@ template<int src_t> void cv::fillamentFill(cv::InputArray _src, OutputArray _edg
     Point_<int> para; para.x = round(uPathVec.x); para.y = round(uPathVec.y);
     vec1.x =      para.y; vec1.y = -1 * para.x; // Rotate by -Pi/2
     vec2.x = -1 * para.y; vec2.y =      para.x; // Rotate by  Pi/2
+////    fprintf(stdout,"%s", "aStart={};\n");
+//    if(para.x == 0 && para.y == 1){ // Right
+//        for( int i = 0; i < count; i++, ++iterator )
+//        {
+//            Point aStart = Point(iterator.pos().y,iterator.pos().x);
+// //           fprintf(stdout, "AppendTo[aStart, { %d, %d }];\n",aStart.x,aStart.y);
+//            Point top = runReach<CV_8UC4>(_src, aStart, vec1);
+//            Point bot = runReach<CV_8UC4>(_src, aStart, vec2);
+//            edgePnts.at<CV_32S_TYPE>(i,0) = top.x; edgePnts.at<CV_32S_TYPE>(i,1) = top.y;
+//            edgePnts.at<CV_32S_TYPE>(2*count-i-1,0) = bot.x; edgePnts.at<CV_32S_TYPE>(2*count-i-1,1) = bot.y;
+//            midPnts.at<CV_32S_TYPE>(i,0) = (top.x+bot.x)/2;
+//            midPnts.at<CV_32S_TYPE>(i,1) = (top.y+bot.y)/2;
+//        }
+//
+//        
+//    } else if(para.x ==  0 && para.y == -1){ // Left
+//        for( int i = 0; i < count; i++, ++iterator )
+//        {
+//            Point aStart = Point(iterator.pos().y,iterator.pos().x);
+// //           fprintf(stdout, "AppendTo[aStart, { %d, %d }];\n",aStart.x,aStart.y);
+//            Point top = runReach<CV_8UC4>(_src, aStart, vec1);
+//            Point bot = runReach<CV_8UC4>(_src, aStart, vec2);
+//            edgePnts.at<CV_32S_TYPE>(i,0) = top.x; edgePnts.at<CV_32S_TYPE>(i,1) = top.y;
+//            edgePnts.at<CV_32S_TYPE>(2*count-i-1,0) = bot.x; edgePnts.at<CV_32S_TYPE>(2*count-i-1,1) = bot.y;
+//            midPnts.at<CV_32S_TYPE>(i,0) = (top.x+bot.x)/2;
+//            midPnts.at<CV_32S_TYPE>(i,1) = (top.y+bot.y)/2;
+//        }
+//
+//    } else if(para.x ==  1 && para.y ==  0){ // Down
+//        for( int i = 0; i < count; i++, ++iterator )
+//        {
+//            Point aStart = Point(iterator.pos().y,iterator.pos().x);
+////            fprintf(stdout, "AppendTo[aStart, { %d, %d }];\n",aStart.x,aStart.y);
+//            Point top = runReach<CV_8UC4>(_src, aStart, vec1);
+//            Point bot = runReach<CV_8UC4>(_src, aStart, vec2);
+//            edgePnts.at<CV_32S_TYPE>(i,0) = top.x; edgePnts.at<CV_32S_TYPE>(i,1) = top.y;
+//            edgePnts.at<CV_32S_TYPE>(2*count-i-1,0) = bot.x; edgePnts.at<CV_32S_TYPE>(2*count-i-1,1) = bot.y;
+//            midPnts.at<CV_32S_TYPE>(i,0) = (top.x+bot.x)/2;
+//            midPnts.at<CV_32S_TYPE>(i,1) = (top.y+bot.y)/2;
+//        }
+//
+//    } else if(para.x == -1 && para.y ==  0){ // Up
+//        for( int i = 0; i < count; i++, ++iterator )
+//        {
+//            Point aStart = Point(iterator.pos().y,iterator.pos().x);
+////            fprintf(stdout, "AppendTo[aStart, { %d, %d }];\n",aStart.x,aStart.y);
+//            Point top = runReach<CV_8UC4>(_src, aStart, vec1);
+//            Point bot = runReach<CV_8UC4>(_src, aStart, vec2);
+//            edgePnts.at<CV_32S_TYPE>(count-i-1,0) = top.x; edgePnts.at<CV_32S_TYPE>(count-i-1,1) = top.y;
+//            edgePnts.at<CV_32S_TYPE>(count+i,0) = bot.x; edgePnts.at<CV_32S_TYPE>(count+i,1) = bot.y;
+//            midPnts.at<CV_32S_TYPE>(i,0) = (top.x+bot.x)/2;
+//            midPnts.at<CV_32S_TYPE>(i,1) = (top.y+bot.y)/2;
+//        }
+//
+//    } else {
+//        // Error.
+//    }
+    
     for( int i = 0; i < count; i++, ++iterator )
     {
-        Point aStart = iterator.pos();
-        Point top = runReach<CV_8UC4>(_src, aStart, vec1);
-        Point bot = runReach<CV_8UC4>(_src, aStart, vec2);
+        Point aStart = Point(iterator.pos().y,iterator.pos().x);
+        //           fprintf(stdout, "AppendTo[aStart, { %d, %d }];\n",aStart.x,aStart.y);
+        Point top = runReach<src_t>(_src, aStart, vec1);
+        Point bot = runReach<src_t>(_src, aStart, vec2);
         edgePnts.at<CV_32S_TYPE>(i,0) = top.x; edgePnts.at<CV_32S_TYPE>(i,1) = top.y;
         edgePnts.at<CV_32S_TYPE>(2*count-i-1,0) = bot.x; edgePnts.at<CV_32S_TYPE>(2*count-i-1,1) = bot.y;
         midPnts.at<CV_32S_TYPE>(i,0) = (top.x+bot.x)/2;
         midPnts.at<CV_32S_TYPE>(i,1) = (top.y+bot.y)/2;
     }
-    
+
     }
 
 template void cv::fillamentFill<CV_8UC1>(cv::InputArray _src, OutputArray _edgePnts, OutputArray _midPnts, Point start, Point end);

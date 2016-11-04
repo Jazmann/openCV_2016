@@ -133,15 +133,7 @@ static void fitLine2D_wods( const Point2f* points, int count, float *weights, fl
     
 
     static double perpDistToline( float *line, Point2f pnt){
-        
-        fprintf(stdout, "pnt =  { %f, %f };\n",pnt.x,pnt.y);
-        fprintf(stdout, "cLine = {%f, %f, %f, %f};\n", line[0], line[1], line[2], line[3]);
-        double out = (line[1]*(-line[2] + pnt.x) + line[0]*(line[3] - pnt.y))/(line[0]*std::sqrt(1 + (line[1]*line[1])/(line[0]*line[0])));
-        
-        fprintf(stdout, "out =  %f\n", out);
-        fprintf(stdout, "%s","perpDistToline[{{cLine[[3]], cLine[[4]]}, {cLine[[3]] + 10 cLine[[1]], cLine[[4]] + 10 cLine[[2]]}}, pnt][[1, 1]]\n");
-        
-        return (line[1]*(-line[2] + pnt.x) + line[0]*(line[3] - pnt.y))/(line[0]*std::sqrt(1 + (line[1]*line[1])/(line[0]*line[0])));
+        return  (line[1]*(-line[2] + pnt.x) + line[0]*(line[3] - pnt.y))/(line[0]*std::sqrt(1 + (line[1]*line[1])/(line[0]*line[0])));
     }
     
     static double distBetweenPoints(Point2f a, Point2f b){

@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef __OPENCV_IMGPROC_HPP__
-#define __OPENCV_IMGPROC_HPP__
+#ifndef OPENCV_IMGPROC_HPP
+#define OPENCV_IMGPROC_HPP
 
 #include "opencv2/core.hpp"
 #include "opencv2/core/cvtraits.hpp"
@@ -247,7 +247,7 @@ enum MorphTypes{
     MORPH_BLACKHAT = 6, //!< "black hat"
                         //!< \f[\texttt{dst} = \mathrm{blackhat} ( \texttt{src} , \texttt{element} )= \mathrm{close} ( \texttt{src} , \texttt{element} )- \texttt{src}\f]
     MORPH_HITMISS  = 7  //!< "hit and miss"
-                        //!<   .- Only supported for CV_8UC1 binary images. Tutorial can be found in [this page](http://opencv-code.com/tutorials/hit-or-miss-transform-in-opencv/)
+                        //!<   .- Only supported for CV_8UC1 binary images. Tutorial can be found in [this page](https://web.archive.org/web/20160316070407/http://opencv-code.com/tutorials/hit-or-miss-transform-in-opencv/)
 };
 
 //! shape of the structuring element
@@ -2015,6 +2015,8 @@ CV_EXPORTS_W Mat getStructuringElement(int shape, Size ksize, Point anchor = Poi
 The function smoothes an image using the median filter with the \f$\texttt{ksize} \times
 \texttt{ksize}\f$ aperture. Each channel of a multi-channel image is processed independently.
 In-place operation is supported.
+
+@note The median filter uses BORDER_REPLICATE internally to cope with border pixels, see cv::BorderTypes
 
 @param src input 1-, 3-, or 4-channel image; when ksize is 3 or 5, the image depth should be
 CV_8U, CV_16U, or CV_32F, for larger aperture sizes, it can only be CV_8U.

@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef __OPENCV_VIDEOIO_H__
-#define __OPENCV_VIDEOIO_H__
+#ifndef OPENCV_VIDEOIO_H
+#define OPENCV_VIDEOIO_H
 
 #include "opencv2/core/core_c.h"
 
@@ -122,7 +122,9 @@ enum
     CV_CAP_GPHOTO2 = 1700,
     CV_CAP_GSTREAMER = 1800, // GStreamer
     CV_CAP_FFMPEG = 1900,    // FFMPEG
-    CV_CAP_IMAGES = 2000     // OpenCV Image Sequence (e.g. img_%02d.jpg)
+    CV_CAP_IMAGES = 2000,    // OpenCV Image Sequence (e.g. img_%02d.jpg)
+
+    CV_CAP_ARAVIS = 2100     // Aravis GigE SDK
 };
 
 /** @brief start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*)
@@ -407,6 +409,7 @@ enum
     CV_CAP_PROP_XI_SENSOR_FEATURE_SELECTOR                      = 585, // Selects the current feature which is accessible by XI_PRM_SENSOR_FEATURE_VALUE.
     CV_CAP_PROP_XI_SENSOR_FEATURE_VALUE                         = 586, // Allows access to sensor feature value currently selected by XI_PRM_SENSOR_FEATURE_SELECTOR.
 
+
     // Properties for Android cameras
     CV_CAP_PROP_ANDROID_FLASH_MODE = 8001,
     CV_CAP_PROP_ANDROID_FOCUS_MODE = 8002,
@@ -581,4 +584,4 @@ CVAPI(void) cvReleaseVideoWriter( CvVideoWriter** writer );
 }
 #endif
 
-#endif //__OPENCV_VIDEOIO_H__
+#endif //OPENCV_VIDEOIO_H

@@ -44,6 +44,7 @@
 #include "precomp.hpp"
 #include "opencv2/core/cvdef.h"
 #include "opencl_kernels_core.hpp"
+#include "opencv2/core/hal/intrin.hpp"
 
 #ifdef __APPLE__
 #undef CV_NEON
@@ -4390,7 +4391,7 @@ struct Cvt_SIMD<float, int>
 
 #endif
 
-#if !( ( defined (__arm__) || defined (__aarch64__) ) && ( defined (__GNUC__) && ( ( ( 4 <= __GNUC__ ) && ( 7 <= __GNUC__ ) ) || ( 5 <= __GNUC__ ) ) ) )
+#if !CV_FP16_TYPE
 // const numbers for floating points format
 const unsigned int kShiftSignificand    = 13;
 const unsigned int kMaskFp16Significand = 0x3ff;
@@ -4398,7 +4399,7 @@ const unsigned int kBiasFp16Exponent    = 15;
 const unsigned int kBiasFp32Exponent    = 127;
 #endif
 
-#if ( defined (__arm__) || defined (__aarch64__) ) && ( defined (__GNUC__) && ( ( ( 4 <= __GNUC__ ) && ( 7 <= __GNUC__ ) ) || ( 5 <= __GNUC__ ) ) )
+#if CV_FP16_TYPE
 static float convertFp16SW(short fp16)
 {
     // Fp16 -> Fp32
@@ -4460,7 +4461,7 @@ static float convertFp16SW(short fp16)
 }
 #endif
 
-#if ( defined (__arm__) || defined (__aarch64__) ) && ( defined (__GNUC__) && ( ( ( 4 <= __GNUC__ ) && ( 7 <= __GNUC__ ) ) || ( 5 <= __GNUC__ ) ) )
+#if CV_FP16_TYPE
 static short convertFp16SW(float fp32)
 {
     // Fp32 -> Fp16
@@ -4568,7 +4569,7 @@ cvtScaleHalf_<float, short>( const float* src, size_t sstep, short* dst, size_t 
             if ( ( (intptr_t)dst & 0xf ) == 0 )
 #endif
             {
-#if CV_FP16
+#if CV_FP16 && CV_SIMD128
                 for ( ; x <= size.width - 4; x += 4)
                 {
                     v_float32x4 v_src = v_load(src + x);
@@ -4614,7 +4615,7 @@ cvtScaleHalf_<short, float>( const short* src, size_t sstep, float* dst, size_t 
             if ( ( (intptr_t)src & 0xf ) == 0 )
 #endif
             {
-#if CV_FP16
+#if CV_FP16 && CV_SIMD128
                 for ( ; x <= size.width - 4; x += 4)
                 {
                     v_float16x4 v_src = v_load_f16(src + x);

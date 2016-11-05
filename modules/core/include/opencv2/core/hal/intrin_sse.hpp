@@ -42,8 +42,8 @@
 //
 //M*/
 
-#ifndef __OPENCV_HAL_SSE_HPP__
-#define __OPENCV_HAL_SSE_HPP__
+#ifndef OPENCV_HAL_SSE_HPP
+#define OPENCV_HAL_SSE_HPP
 
 #include <algorithm>
 
@@ -739,6 +739,18 @@ inline v_float64x2 v_invsqrt(const v_float64x2& x)
     return v_float64x2(_mm_div_pd(v_1, _mm_sqrt_pd(x.val)));
 }
 
+#define OPENCV_HAL_IMPL_SSE_ABS_INT_FUNC(_Tpuvec, _Tpsvec, func, suffix, subWidth) \
+inline _Tpuvec v_abs(const _Tpsvec& x) \
+{ return _Tpuvec(_mm_##func##_ep##suffix(x.val, _mm_sub_ep##subWidth(_mm_setzero_si128(), x.val))); }
+
+OPENCV_HAL_IMPL_SSE_ABS_INT_FUNC(v_uint8x16, v_int8x16, min, u8, i8)
+OPENCV_HAL_IMPL_SSE_ABS_INT_FUNC(v_uint16x8, v_int16x8, max, i16, i16)
+inline v_uint32x4 v_abs(const v_int32x4& x)
+{
+    __m128i s = _mm_srli_epi32(x.val, 31);
+    __m128i f = _mm_srai_epi32(x.val, 31);
+    return v_uint32x4(_mm_add_epi32(_mm_xor_si128(x.val, f), s));
+}
 inline v_float32x4 v_abs(const v_float32x4& x)
 { return v_float32x4(_mm_and_ps(x.val, _mm_castsi128_ps(_mm_set1_epi32(0x7fffffff)))); }
 inline v_float64x2 v_abs(const v_float64x2& x)
@@ -1411,6 +1423,15 @@ inline void v_load_deinterleave(const float* ptr, v_float32x4& a, v_float32x4& b
 
     a.val = _mm_shuffle_ps(u0, u1, mask_lo); // a0 a1 a2 a3
     b.val = _mm_shuffle_ps(u0, u1, mask_hi); // b0 b1 ab b3
+}
+
+inline void v_store_interleave( short* ptr, const v_int16x8& a, const v_int16x8& b )
+{
+    __m128i t0, t1;
+    t0 = _mm_unpacklo_epi16(a.val, b.val);
+    t1 = _mm_unpackhi_epi16(a.val, b.val);
+    _mm_storeu_si128((__m128i*)(ptr), t0);
+    _mm_storeu_si128((__m128i*)(ptr + 8), t1);
 }
 
 inline void v_store_interleave( uchar* ptr, const v_uint8x16& a, const v_uint8x16& b,

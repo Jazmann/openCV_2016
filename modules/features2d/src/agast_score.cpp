@@ -98,27 +98,27 @@ int agast_cornerScore<AgastFeatureDetector::OAST_9_16>(const uchar* ptr, const i
     int bmax = 255;
     int b_test = (bmax + bmin) / 2;
 
-    REGISTER short offset0 = (short) pixel[0];
-    REGISTER short offset1 = (short) pixel[1];
-    REGISTER short offset2 = (short) pixel[2];
-    REGISTER short offset3 = (short) pixel[3];
-    REGISTER short offset4 = (short) pixel[4];
-    REGISTER short offset5 = (short) pixel[5];
-    REGISTER short offset6 = (short) pixel[6];
-    REGISTER short offset7 = (short) pixel[7];
-    REGISTER short offset8 = (short) pixel[8];
-    REGISTER short offset9 = (short) pixel[9];
-    REGISTER short offset10 = (short) pixel[10];
-    REGISTER short offset11 = (short) pixel[11];
-    REGISTER short offset12 = (short) pixel[12];
-    REGISTER short offset13 = (short) pixel[13];
-    REGISTER short offset14 = (short) pixel[14];
-    REGISTER short offset15 = (short) pixel[15];
+    short offset0 = (short) pixel[0];
+    short offset1 = (short) pixel[1];
+    short offset2 = (short) pixel[2];
+    short offset3 = (short) pixel[3];
+    short offset4 = (short) pixel[4];
+    short offset5 = (short) pixel[5];
+    short offset6 = (short) pixel[6];
+    short offset7 = (short) pixel[7];
+    short offset8 = (short) pixel[8];
+    short offset9 = (short) pixel[9];
+    short offset10 = (short) pixel[10];
+    short offset11 = (short) pixel[11];
+    short offset12 = (short) pixel[12];
+    short offset13 = (short) pixel[13];
+    short offset14 = (short) pixel[14];
+    short offset15 = (short) pixel[15];
 
     while(true)
     {
-        REGISTER const int cb = *ptr + b_test;
-        REGISTER const int c_b = *ptr - b_test;
+        const int cb = *ptr + b_test;
+        const int c_b = *ptr - b_test;
         if(ptr[offset0] > cb)
           if(ptr[offset2] > cb)
             if(ptr[offset4] > cb)
@@ -2173,23 +2173,23 @@ int agast_cornerScore<AgastFeatureDetector::AGAST_7_12d>(const uchar* ptr, const
     int bmax = 255;
     int b_test = (bmax + bmin)/2;
 
-    REGISTER short offset0 = (short) pixel[0];
-    REGISTER short offset1 = (short) pixel[1];
-    REGISTER short offset2 = (short) pixel[2];
-    REGISTER short offset3 = (short) pixel[3];
-    REGISTER short offset4 = (short) pixel[4];
-    REGISTER short offset5 = (short) pixel[5];
-    REGISTER short offset6 = (short) pixel[6];
-    REGISTER short offset7 = (short) pixel[7];
-    REGISTER short offset8 = (short) pixel[8];
-    REGISTER short offset9 = (short) pixel[9];
-    REGISTER short offset10 = (short) pixel[10];
-    REGISTER short offset11 = (short) pixel[11];
+    short offset0 = (short) pixel[0];
+    short offset1 = (short) pixel[1];
+    short offset2 = (short) pixel[2];
+    short offset3 = (short) pixel[3];
+    short offset4 = (short) pixel[4];
+    short offset5 = (short) pixel[5];
+    short offset6 = (short) pixel[6];
+    short offset7 = (short) pixel[7];
+    short offset8 = (short) pixel[8];
+    short offset9 = (short) pixel[9];
+    short offset10 = (short) pixel[10];
+    short offset11 = (short) pixel[11];
 
     while(true)
     {
-        REGISTER const int cb = *ptr + b_test;
-        REGISTER const int c_b = *ptr - b_test;
+        const int cb = *ptr + b_test;
+        const int c_b = *ptr - b_test;
         if(ptr[offset0] > cb)
           if(ptr[offset5] > cb)
             if(ptr[offset2] > cb)
@@ -3385,23 +3385,23 @@ int agast_cornerScore<AgastFeatureDetector::AGAST_7_12s>(const uchar* ptr, const
     int bmax = 255;
     int b_test = (bmax + bmin)/2;
 
-    REGISTER short offset0 = (short) pixel[0];
-    REGISTER short offset1 = (short) pixel[1];
-    REGISTER short offset2 = (short) pixel[2];
-    REGISTER short offset3 = (short) pixel[3];
-    REGISTER short offset4 = (short) pixel[4];
-    REGISTER short offset5 = (short) pixel[5];
-    REGISTER short offset6 = (short) pixel[6];
-    REGISTER short offset7 = (short) pixel[7];
-    REGISTER short offset8 = (short) pixel[8];
-    REGISTER short offset9 = (short) pixel[9];
-    REGISTER short offset10 = (short) pixel[10];
-    REGISTER short offset11 = (short) pixel[11];
+    short offset0 = (short) pixel[0];
+    short offset1 = (short) pixel[1];
+    short offset2 = (short) pixel[2];
+    short offset3 = (short) pixel[3];
+    short offset4 = (short) pixel[4];
+    short offset5 = (short) pixel[5];
+    short offset6 = (short) pixel[6];
+    short offset7 = (short) pixel[7];
+    short offset8 = (short) pixel[8];
+    short offset9 = (short) pixel[9];
+    short offset10 = (short) pixel[10];
+    short offset11 = (short) pixel[11];
 
     while(true)
     {
-        REGISTER const int cb = *ptr + b_test;
-        REGISTER const int c_b = *ptr - b_test;
+        const int cb = *ptr + b_test;
+        const int c_b = *ptr - b_test;
         if(ptr[offset0] > cb)
           if(ptr[offset5] > cb)
             if(ptr[offset2] < c_b)
@@ -9019,19 +9019,19 @@ int agast_cornerScore<AgastFeatureDetector::AGAST_5_8>(const uchar* ptr, const i
     int bmax = 255;
     int b_test = (bmax + bmin)/2;
 
-    REGISTER short offset0 = (short) pixel[0];
-    REGISTER short offset1 = (short) pixel[1];
-    REGISTER short offset2 = (short) pixel[2];
-    REGISTER short offset3 = (short) pixel[3];
-    REGISTER short offset4 = (short) pixel[4];
-    REGISTER short offset5 = (short) pixel[5];
-    REGISTER short offset6 = (short) pixel[6];
-    REGISTER short offset7 = (short) pixel[7];
+    short offset0 = (short) pixel[0];
+    short offset1 = (short) pixel[1];
+    short offset2 = (short) pixel[2];
+    short offset3 = (short) pixel[3];
+    short offset4 = (short) pixel[4];
+    short offset5 = (short) pixel[5];
+    short offset6 = (short) pixel[6];
+    short offset7 = (short) pixel[7];
 
     while(true)
     {
-        REGISTER const int cb = *ptr + b_test;
-        REGISTER const int c_b = *ptr - b_test;
+        const int cb = *ptr + b_test;
+        const int c_b = *ptr - b_test;
         if(ptr[offset0] > cb)
           if(ptr[offset2] > cb)
             if(ptr[offset3] > cb)
@@ -9377,11 +9377,11 @@ int agast_cornerScore<AgastFeatureDetector::AGAST_5_8>(const uchar* ptr, const i
 
 int agast_tree_search(const uint32_t table_struct32[], int pixel_[], const unsigned char* const ptr, int threshold)
 {
-    REGISTER const int cb = *ptr + threshold;
-    REGISTER const int c_b = *ptr - threshold;
-    REGISTER int index;
-    REGISTER int offset;
-    REGISTER int cmpresult;
+    const int cb = *ptr + threshold;
+    const int c_b = *ptr - threshold;
+    int index;
+    int offset;
+    int cmpresult;
     index = 0;
     while ((table_struct32[index]>>16)!=0)
     {

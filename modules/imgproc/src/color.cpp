@@ -11047,9 +11047,9 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::fromRot(double sr
     
     cv::Vec<double,3> rRScaleXiLXpnt, rot;
     
-    rRScaleXiLXpnt(0) = rRScale(0)*iL(0)*(src[dstIndx[0]]);
-    rRScaleXiLXpnt(1) = rRScale(1)*iL(1)*(src[dstIndx[1]]-0.5);
-    rRScaleXiLXpnt(2) = rRScale(2)*iL(2)*(src[dstIndx[2]]-0.5);
+    rRScaleXiLXpnt(0) = rRScale(0)*L(0)*(src[dstIndx[0]]);
+    rRScaleXiLXpnt(1) = rRScale(1)*L(1)*(src[dstIndx[1]]-0.5);
+    rRScaleXiLXpnt(2) = rRScale(2)*L(2)*(src[dstIndx[2]]-0.5);
     rot = rR.t()*rRScaleXiLXpnt;
     dst[srcIndx[0]] = rot(0); dst[srcIndx[1]] = rot(1); dst[srcIndx[2]] = rot(2);
 };
@@ -11109,9 +11109,10 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::fromRot_(double s
     
     cv::Vec<double,3> rRScaleXiLXpnt, out ;
     
-    rRScaleXiLXpnt(0) = rRScale(0)*iL(0)*(src[0]);
-    rRScaleXiLXpnt(1) = rRScale(1)*iL(1)*(src[1]-0.5);
-    rRScaleXiLXpnt(2) = rRScale(2)*iL(2)*(src[2]-0.5);
+    rRScaleXiLXpnt(0) = rRScale(0)*L(0)*(src[0]);
+    rRScaleXiLXpnt(1) = rRScale(1)*L(1)*(src[1]-0.5);
+    rRScaleXiLXpnt(2) = rRScale(2)*L(2)*(src[2]-0.5);
+//    fprintf(stdout, "rRScaleXiLXpnt = {%f, %f, %f}\n", rRScaleXiLXpnt(0),  rRScaleXiLXpnt(1), rRScaleXiLXpnt(2)  );
     
     out = rR.t()*rRScaleXiLXpnt;
     dst[0] = out(0); dst[1] = out(1); dst[2] = out(2);
@@ -11263,9 +11264,9 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setIntegerRotatio
                                            );
     };
     int n=srcInfo::bitDepth;
-    qRsMin   = *new cv::Vec<wrkType,3>(             0, (1<<(n-2))-(1<<(2*n-2)), (1<<(n-2))-(1<<(2*n-2)) );
-    qRsMax   = *new cv::Vec<wrkType,3>(  3*((1<<n)-1), (1<<(2*n-2))-(1<<(n-2)), (1<<(2*n-2))-(1<<(n-2)) );
-    qRsRange = *new cv::Vec<wrkType,3>(  3*((1<<n)-1), (1<<(n-1))*((1<<n)-1),   (1<<(n-1))*((1<<n)-1) );
+    qRsMin   = *new cv::Vec<sWrkType,3>(             0, (1<<(n-2))-(1<<(2*n-2)), (1<<(n-2))-(1<<(2*n-2)) );
+    qRsMax   = *new cv::Vec< wrkType,3>(  3*((1<<n)-1), (1<<(2*n-2))-(1<<(n-2)), (1<<(2*n-2))-(1<<(n-2)) );
+    qRsRange = *new cv::Vec< wrkType,3>(  3*((1<<n)-1), (1<<(n-1))*((1<<n)-1),   (1<<(n-1))*((1<<n)-1) );
     
     S(0) = srcL(0)*(1.0/3.0);
     S(1) = srcL(1)*(1.0/(1<<(n-1)));
@@ -11274,7 +11275,9 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setIntegerRotatio
 }
 
 template<int src_t, int dst_t> typename cv::Matx<double,6,3> cv::RGB2Rot<src_t, dst_t>:: WOBOpath( cv::Vec<double,3> pnt_ ){
+//    fprintf(stdout,"Thread %d : RGB2Rot : WOBOpathIn = {%f, %f, %f}\n",getThreadNum(), pnt_(0),pnt_(1),pnt_(2));
     Vec<double,3> pnt = fromRot(pnt_);
+//    fprintf(stdout,"Thread %d : RGB2Rot : WOBOpathPnt = {%f, %f, %f}\n",getThreadNum(), pnt(0),pnt(1),pnt(2));
     cv::Matx<double,6,3> rgbPath, out;
     cv::Vec<int,3> order;
     if (pnt(0)<pnt(1)) {
@@ -11301,7 +11304,8 @@ template<int src_t, int dst_t> typename cv::Matx<double,6,3> cv::RGB2Rot<src_t, 
             }
         }
     }
-    int a = pnt(order(0)), b = pnt(order(1)), c = pnt(order(2));
+    double a = pnt(order(0)), b = pnt(order(1)), c = pnt(order(2));
+//    fprintf(stdout,"Thread %d : RGB2Rot : WOBOpath : {a,b,c} = {%f, %f, %f} = {%f, %f, %f}\n",getThreadNum(), a, b, c, pnt(order(0)), pnt(order(1)), pnt(order(2)));
     rgbPath(0,order(0)) = 0.;        rgbPath(0,order(1)) = 0.;        rgbPath(0,order(2)) = 0.;
     rgbPath(1,order(0)) = 0.;        rgbPath(1,order(1)) = 0.;        rgbPath(1,order(2)) = c - b;
     rgbPath(2,order(0)) = 0.;        rgbPath(2,order(1)) = b - a;     rgbPath(2,order(2)) = c - a;
@@ -11325,13 +11329,16 @@ template<int src_t, int dst_t> double cv::RGB2Rot<src_t, dst_t>:: WOBOslack( dou
     }
 }
 
-//template<int src_t, int dst_t> bool cv::RGB2Rot<src_t, dst_t>:: WOBO( double L, double Ca, double Cb){
-//  return (uWOBOLimits(0,0) > L  || L  > uWOBOLimits(0,1)) &&
-//         (uWOBOLimits(1,0) < Ca && Ca < uWOBOLimits(1,1)) &&
-//         (uWOBOLimits(2,0) < Cb && Cb < uWOBOLimits(2,1));
-//}
+template<int src_t, int dst_t> bool cv::RGB2Rot<src_t, dst_t>:: uWOBO( double L, double Ca, double Cb){
+  return (uWOBOLimits(0,0) > L  || L  > uWOBOLimits(0,1)) &&
+         (uWOBOLimits(1,0) < Ca && Ca < uWOBOLimits(1,1)) &&
+         (uWOBOLimits(2,0) < Cb && Cb < uWOBOLimits(2,1));
+}
 
-template<int src_t, int dst_t> bool cv::RGB2Rot<src_t, dst_t>:: WOBO( sWrkType L, sWrkType Ca, sWrkType Cb) const {
+template<int src_t, int dst_t> bool cv::RGB2Rot<src_t, dst_t>:: qWOBO( sWrkType L, sWrkType Ca, sWrkType Cb) const {
+//    fprintf(stdout,"Thread %d : %hd > %hd || %hd > %hd \n",getThreadNum(), qWOBOLimits(0,0), L, L, qWOBOLimits(0,1));
+//    fprintf(stdout,"Thread %d : %hd < %hd < %hd \n",getThreadNum(), qWOBOLimits(1,0), Ca, qWOBOLimits(1,1));
+//    fprintf(stdout,"Thread %d : %hd < %hd < %hd \n",getThreadNum(), qWOBOLimits(2,0), Cb, qWOBOLimits(2,1));
     return (qWOBOLimits(0,0) > L  || L  > qWOBOLimits(0,1)) &&
            (qWOBOLimits(1,0) < Ca && Ca < qWOBOLimits(1,1)) &&
            (qWOBOLimits(2,0) < Cb && Cb < qWOBOLimits(2,1));
@@ -11451,10 +11458,64 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     cv::Vec<double,3> cornerC{ LParam.uC, CaParam.uLambda1, CbParam.uLambda2 };
     cv::Vec<double,3> cornerD{ LParam.uC, CaParam.uLambda2, CbParam.uLambda2 };
     
+//    fprintf(stdout,"Thread %d : RGB2Rot : cornerA = {%f, %f, %f}\n",getThreadNum(), cornerA(0),cornerA(1),cornerA(2));
+//    fprintf(stdout,"Thread %d : RGB2Rot : cornerB = {%f, %f, %f}\n",getThreadNum(), cornerB(0),cornerB(1),cornerB(2));
+//    fprintf(stdout,"Thread %d : RGB2Rot : cornerC = {%f, %f, %f}\n",getThreadNum(), cornerC(0),cornerC(1),cornerC(2));
+//    fprintf(stdout,"Thread %d : RGB2Rot : cornerD = {%f, %f, %f}\n",getThreadNum(), cornerD(0),cornerD(1),cornerD(2));
+    
     Matx<double,6,3> WOBOpathA = WOBOpath(cornerA), WOBOpathB = WOBOpath(cornerB), WOBOpathC = WOBOpath(cornerC), WOBOpathD = WOBOpath(cornerD);
-    Vec<double,3> pathMins{1.,1.,1.}, pathMaxs{0.,0.,0.};
+    
+    
+//    fprintf(stdout,"Thread %d : RGB2Rot : WOBOpathA = {{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f}}\n",getThreadNum(), \
+//            WOBOpathA(0,0),WOBOpathA(0,1),WOBOpathA(0,2), \
+//            WOBOpathA(1,0),WOBOpathA(1,1),WOBOpathA(1,2), \
+//            WOBOpathA(2,0),WOBOpathA(2,1),WOBOpathA(2,2), \
+//            WOBOpathA(3,0),WOBOpathA(3,1),WOBOpathA(3,2), \
+//            WOBOpathA(4,0),WOBOpathA(4,1),WOBOpathA(4,2), \
+//            WOBOpathA(5,0),WOBOpathA(5,1),WOBOpathA(5,2) \
+//            );
+//    
+//    fprintf(stdout,"Thread %d : RGB2Rot : WOBOpathB = {{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f}}\n",getThreadNum(), \
+//            WOBOpathB(0,0),WOBOpathB(0,1),WOBOpathB(0,2), \
+//            WOBOpathB(1,0),WOBOpathB(1,1),WOBOpathB(1,2), \
+//            WOBOpathB(2,0),WOBOpathB(2,1),WOBOpathB(2,2), \
+//            WOBOpathB(3,0),WOBOpathB(3,1),WOBOpathB(3,2), \
+//            WOBOpathB(4,0),WOBOpathB(4,1),WOBOpathB(4,2), \
+//            WOBOpathB(5,0),WOBOpathB(5,1),WOBOpathB(5,2) \
+//            );
+//    
+//    fprintf(stdout,"Thread %d : RGB2Rot : WOBOpathC = {{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f}}\n",getThreadNum(), \
+//            WOBOpathC(0,0),WOBOpathC(0,1),WOBOpathC(0,2), \
+//            WOBOpathC(1,0),WOBOpathC(1,1),WOBOpathC(1,2), \
+//            WOBOpathC(2,0),WOBOpathC(2,1),WOBOpathC(2,2), \
+//            WOBOpathC(3,0),WOBOpathC(3,1),WOBOpathC(3,2), \
+//            WOBOpathC(4,0),WOBOpathC(4,1),WOBOpathC(4,2), \
+//            WOBOpathC(5,0),WOBOpathC(5,1),WOBOpathC(5,2) \
+//            );
+//    
+//    fprintf(stdout,"Thread %d : RGB2Rot : WOBOpathD = {{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f},{%f, %f, %f}}\n",getThreadNum(), \
+//            WOBOpathD(0,0),WOBOpathD(0,1),WOBOpathD(0,2), \
+//            WOBOpathD(1,0),WOBOpathD(1,1),WOBOpathD(1,2), \
+//            WOBOpathD(2,0),WOBOpathD(2,1),WOBOpathD(2,2), \
+//            WOBOpathD(3,0),WOBOpathD(3,1),WOBOpathD(3,2), \
+//            WOBOpathD(4,0),WOBOpathD(4,1),WOBOpathD(4,2), \
+//            WOBOpathD(5,0),WOBOpathD(5,1),WOBOpathD(5,2) \
+//            );
+    Vec<double,3> pathMins{0.,1.,1.}, pathMaxs{1.,0.,0.};
+    // We need to find the L values above and below the mid point luminocity.
+    // This makes the min and max for the luminocity reversed.
+    if(pathMaxs(0)>WOBOpathA(3,0)){  pathMaxs(0)=WOBOpathA(3,0); }
+    if(pathMaxs(0)>WOBOpathB(3,0)){  pathMaxs(0)=WOBOpathB(3,0); }
+    if(pathMaxs(0)>WOBOpathC(3,0)){  pathMaxs(0)=WOBOpathC(3,0); }
+    if(pathMaxs(0)>WOBOpathD(3,0)){  pathMaxs(0)=WOBOpathD(3,0); }
+    
+    if(pathMins(0)<WOBOpathA(2,0)){  pathMins(0)=WOBOpathA(2,0); }
+    if(pathMins(0)<WOBOpathB(2,0)){  pathMins(0)=WOBOpathB(2,0); }
+    if(pathMins(0)<WOBOpathC(2,0)){  pathMins(0)=WOBOpathC(2,0); }
+    if(pathMins(0)<WOBOpathD(2,0)){  pathMins(0)=WOBOpathD(2,0); }
+
     for (int i=0; i<=5; i++) {
-        for (int j=0; j<3; j++) {
+        for (int j=1; j<3; j++) {
             if(pathMins(j)>WOBOpathA(i,j)){  pathMins(j)=WOBOpathA(i,j); }
             if(pathMins(j)>WOBOpathB(i,j)){  pathMins(j)=WOBOpathB(i,j); }
             if(pathMins(j)>WOBOpathC(i,j)){  pathMins(j)=WOBOpathC(i,j); }
@@ -11466,13 +11527,36 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
         }
     }
     
-    for (int j=0; j<3; j++) {
+//    fprintf(stdout,"Thread %d : RGB2Rot : pathMins = {%f, %f, %f}\n",getThreadNum(), pathMins(0),pathMins(1),pathMins(2));
+//    fprintf(stdout,"Thread %d : RGB2Rot : pathMaxs = {%f, %f, %f}\n",getThreadNum(), pathMaxs(0),pathMaxs(1),pathMaxs(2));
+//    fprintf(stdout,"Thread %d : RGB2Rot : qRsRange = {%hu, %hu, %hu}\n",getThreadNum(), qRsRange(0),qRsRange(1),qRsRange(2));
+//    fprintf(stdout,"Thread %d : RGB2Rot : qRsMin = {%hu, %hu, %hu}\n",getThreadNum(), qRsMin(0),qRsMin(1),qRsMin(2));
+    
+    uWOBOLimits(0,0) = pathMins(0);
+    uWOBOLimits(0,1) = pathMaxs(0);
+    for (int j=1; j<3; j++) {
         uWOBOLimits(j,0) = WOBOslack(pathMins(j));
         uWOBOLimits(j,1) = WOBOslack(pathMaxs(j));
+    }
+
+    for (int j=0; j<3; j++) {
         qWOBOLimits(j,0) =  qRsRange(j) * uWOBOLimits(j,0) +  qRsMin(j);
         qWOBOLimits(j,1) =  qRsRange(j) * uWOBOLimits(j,1) +  qRsMin(j);
         
     }
+    
+//    fprintf(stdout,"Thread %d : RGB2Rot : uWOBOLimits = {{%f, %f},{%f, %f},{%f, %f}}\n",getThreadNum(), \
+//            uWOBOLimits(0,0),uWOBOLimits(0,1), \
+//            uWOBOLimits(1,0),uWOBOLimits(1,1), \
+//            uWOBOLimits(2,0),uWOBOLimits(2,1)
+//            );
+//    
+//    fprintf(stdout,"Thread %d : RGB2Rot : qWOBOLimits = {{%hd, %hd},{%hd, %hd},{%hd, %hd}}\n",getThreadNum(), \
+//            qWOBOLimits(0,0),qWOBOLimits(0,1), \x
+//            qWOBOLimits(1,0),qWOBOLimits(1,1), \
+//            qWOBOLimits(2,0),qWOBOLimits(2,1)
+//            );
+    
     // Set Color Limits.
     dColorLimits = *new Matx<dstType,2,2> {CaParam.disMin+1, CaParam.disMax-1, \
                                            CbParam.disMin+1, CbParam.disMax-1};
@@ -11488,7 +11572,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
     setTransformFromAngle(theta);
 };
 
-template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  _uSG, std::vector<double> _uC){
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double> _uSG, std::vector<double> _uC){
     setRGBIndices(srcBlueIdx, dstBlueIdx);
     cv::Vec<double, 3> uC{_uC[0],_uC[1],_uC[2]};
     cv::Vec<double, 3> uSG{_uSG[0],_uSG[1],_uSG[2]};
@@ -11538,7 +11622,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::RGB2Rot<sr
     qWOBOLimits = rhs.qWOBOLimits;
     dColorLimits = rhs.dColorLimits;
     
-    uRMin = rhs.uRMin; uRMax = rhs.uRMax; uRRange = rhs.uRRange;
+//    uRMin = rhs.uRMin; uRMax = rhs.uRMax; uRRange = rhs.uRRange;
     
     distParam[0] = rhs.distParam[0]; distParam[1] = rhs.distParam[1]; distParam[2] = rhs.distParam[2];
     LParam = rhs.LParam; CaParam = rhs.CaParam; CbParam = rhs.CbParam;
@@ -11573,7 +11657,7 @@ template<int src_t, int dst_t>  cv::RGB2Rot<src_t, dst_t>& cv::RGB2Rot<src_t, ds
     qWOBOLimits = rhs.qWOBOLimits;
     dColorLimits = rhs.dColorLimits;
     
-    uRMin = rhs.uRMin; uRMax = rhs.uRMax; uRRange = rhs.uRRange;
+//    uRMin = rhs.uRMin; uRMax = rhs.uRMax; uRRange = rhs.uRRange;
     
     distParam[0] = rhs.distParam[0]; distParam[1] = rhs.distParam[1]; distParam[2] = rhs.distParam[2];
     LParam = rhs.LParam; CaParam = rhs.CaParam; CbParam = rhs.CbParam;
@@ -11586,15 +11670,13 @@ template<int src_t, int dst_t>  cv::RGB2Rot<src_t, dst_t>& cv::RGB2Rot<src_t, ds
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setAxisLengths(double theta){
     double vTheta = CV_PI/6. - std::fmod(theta - CV_PI/6., CV_PI/3.);
     double pTheta = CV_PI/6. - std::fmod(theta,            CV_PI/3.);
-    L = Vec<double, 3>(std::sqrt(3), \
+    L = Vec<double, 3>(std::sqrt(3.0 ), \
                        (std::sqrt(1.5)) * std::sin(vTheta) + (std::sqrt(2.0)) * std::cos(vTheta), \
                        (std::sqrt(1.5)) * std::sin(pTheta) + (std::sqrt(2.0)) * std::cos(pTheta));
     iL = Vec<double, 3>(1.0/L(0), 1.0/L(1), 1.0/L(2));
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setDistParams(cv::Vec<double, 3> uSG, cv::Vec<double, 3> uC){
-    
-    
      LParam.init();   LParam.set(uSG(0), uC(0));   LParam.setup();  srcL(0) = MIN( LParam.K *  LParam.uM, L(0));
     CaParam.init();  CaParam.set(uSG(1), uC(1));  CaParam.setup();  srcL(1) = MIN(CaParam.K * CaParam.uM, L(1));
     CbParam.init();  CbParam.set(uSG(2), uC(2));  CbParam.setup();  srcL(2) = MIN(CbParam.K * CbParam.uM, L(2));
@@ -11651,22 +11733,22 @@ template<int src_t, int dst_t> inline typename cv::Vec<typename cv::Data_Type<ds
     return dst;
 }
 
-//template<int src_t, int dst_t> inline typename cv::Vec<typename cv::Data_Type<dst_t>::type,4> cv::RGB2Rot<src_t, dst_t>::apply(typename cv::Vec<typename cv::Data_Type<src_t>::type,4> src)
-//{
-//    typename cv::Vec<typename cv::Data_Type<dst_t>::type,4> dst{0,0,0,0};
-//    sWrkType X = src[srcIndx[0]]*qRs(0,0) + src[srcIndx[1]]*qRs(0,1) + src[srcIndx[2]]*qRs(0,2); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
-//    sWrkType Y = src[srcIndx[0]]*qRs(1,0) + src[srcIndx[1]]*qRs(1,1) + src[srcIndx[2]]*qRs(1,2); // could be used in place of * scale
-//    sWrkType Z = src[srcIndx[0]]*qRs(2,0) + src[srcIndx[1]]*qRs(2,1) + src[srcIndx[2]]*qRs(2,2); // Find shift which fits RRange into the desired bit depth.
-//    
-//    (* LDist)(X, dst[dstIndx[0]]);
-//    (*CaDist)(Y, dst[dstIndx[1]]);
-//    (*CbDist)(Z, dst[dstIndx[2]]);
-//    
-//    if(dstInfo::channels > 3){
-//        dst[3] = dstType(classifier( WOBO(X,Y,Z), color(dst[dstIndx[1]],dst[dstIndx[2]])));
-//    }
-//    return dst;
-//}
+template<int src_t, int dst_t> inline typename cv::Vec<typename cv::Data_Type<dst_t>::type,4> cv::RGB2Rot<src_t, dst_t>::apply(typename cv::Vec<typename cv::Data_Type<src_t>::type,4> src)
+{
+    typename cv::Vec<typename cv::Data_Type<dst_t>::type,4> dst{0,0,0,0};
+    sWrkType X = src[srcIndx[0]]*qRs(0,0) + src[srcIndx[1]]*qRs(0,1) + src[srcIndx[2]]*qRs(0,2); // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+    sWrkType Y = src[srcIndx[0]]*qRs(1,0) + src[srcIndx[1]]*qRs(1,1) + src[srcIndx[2]]*qRs(1,2); // could be used in place of * scale
+    sWrkType Z = src[srcIndx[0]]*qRs(2,0) + src[srcIndx[1]]*qRs(2,1) + src[srcIndx[2]]*qRs(2,2); // Find shift which fits RRange into the desired bit depth.
+    
+    (* LDist)(X, dst[dstIndx[0]]);
+    (*CaDist)(Y, dst[dstIndx[1]]);
+    (*CbDist)(Z, dst[dstIndx[2]]);
+    
+    if(dstInfo::channels > 3){
+        dst[3] = dstType(classifier( qWOBO(X,Y,Z), color(dst[dstIndx[1]],dst[dstIndx[2]])));
+    }
+    return dst;
+}
 
 
 template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const
@@ -11688,7 +11770,10 @@ template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()
         (*CbDist)(Z, dst[i+dstIndx[2]]);
         
         if(dstInfo::channels > 3){
-           dst[i+3] = dstType(classifier( WOBO(X,Y,Z), color(dst[i+dstIndx[1]],dst[i+dstIndx[2]])));
+//            fprintf(stdout,"Thread %d : RGB2Rot : src{%3hhu, %3hhu, %3hhu} : XYZ{%6d, %6d, %6d}\n",getThreadNum(),src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]],X,Y,Z);
+//            fprintf(stdout,"Thread %d : classifier( qWOBO(%6d, %6d, %6d), color(%3hhu, %3hhu))\n",getThreadNum(), X, Y, Z, dst[i+dstIndx[1]], dst[i+dstIndx[2]]);
+//            fprintf(stdout,"Thread %d : classifier( %d, color(%d)) = %d\n",getThreadNum(), qWOBO(X,Y,Z), color(dst[i+dstIndx[1]],dst[i+dstIndx[2]]), classifier( qWOBO(X,Y,Z), color(dst[i+dstIndx[1]],dst[i+dstIndx[2]])));
+           dst[i+3] = dstType(classifier( qWOBO(X,Y,Z), color(dst[i+dstIndx[1]],dst[i+dstIndx[2]])));
         }
         int s0 = src[srcIndx[0]];
         int s1 = src[srcIndx[1]];
@@ -11697,8 +11782,8 @@ template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()
         int d1 = dst[i+dstIndx[1]];
         int d2 = dst[i+dstIndx[2]];
         int d3 = dst[i+3];
- //       fprintf(stdout,"Thread %d : RGB2Rot : src{%3d, %3d, %3d} : Out 4 : %d : dst{%3d, %3d, %3d, %3d}\n",getThreadNum(),s0,s1,s2,i,d0,d1, d2,d3);
- //       fprintf(stdout,"RGB2Rot : src{%3hhu, %3hhu, %3hhu} : Out 4 : %d : dst{%3hhu, %3hhu, %3hhu, %3hhu}\n",src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]],i,dst[i+dstIndx[0]],dst[i+dstIndx[1]], dst[i+dstIndx[2]],dst[i+3]);
+//        fprintf(stdout,"Thread %d : RGB2Rot : src{%3d, %3d, %3d} : Out 4 : %d : dst{%3d, %3d, %3d, %3d}\n",getThreadNum(),s0,s1,s2,i,d0,d1, d2,d3);
+//        fprintf(stdout,"Thread %d : RGB2Rot : src{%3hhu, %3hhu, %3hhu} : Out 4 : %d : dst{%3hhu, %3hhu, %3hhu, %3hhu}\n",getThreadNum(),src[srcIndx[0]],src[srcIndx[1]],src[srcIndx[2]],i,dst[i+dstIndx[0]],dst[i+dstIndx[1]], dst[i+dstIndx[2]],dst[i+3]);
     }
     
 }

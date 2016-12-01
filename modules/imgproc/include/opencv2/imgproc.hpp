@@ -1325,7 +1325,8 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         cv::Matx<sWrkType, 3, 3> qRs{1,0,0, \
                                      0,1,0, \
                                      0,0,1};
-        cv::Vec<wrkType,3> qRsMin, qRsMax, qRsRange;
+        cv::Vec<sWrkType,3> qRsMin;
+        cv::Vec<wrkType,3>  qRsMax, qRsRange;
         cv::Vec<double,3> S;
 
         
@@ -1333,7 +1334,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         cv::Matx<sWrkType,3,2> qWOBOLimits;
         Matx<dstType,2,2> dColorLimits;
         
-        Vec<double, dstInfo::channels> uRRange, uRMin, uRMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
+//        Vec<double, dstInfo::channels> uRRange, uRMin, uRMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
         cv::distributeErfParameters<CV_MAT_DEPTH(src_t), CV_MAT_DEPTH(dst_t)> distParam[3];
         erfParamType LParam, CaParam, CbParam;
         depthConverter<sWrkInfo::channelType, dstInfo::channelType> *LDist = nullptr, *CaDist = nullptr, *CbDist = nullptr;
@@ -1353,15 +1354,13 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         Vec<typename cv::Signed_Work_Type<src_t, dst_t>::type, 3> toWrk(Vec<double, 3> pnt);
         Vec<typename cv::Data_Type<src_t>::type, 3>  toSrc(Vec<double, 3> pnt);
         Vec<typename cv::Data_Type<dst_t>::type, 3>  toDst(Vec<double, 3> pnt);
-     //   Vec<double, 3> fromRot(Vec<double, 3> pnt); // LCaCb to RGB unit range with channel ordering.
-     //   Vec<double, 3>   toRot(Vec<double, 3> pnt); // RGB to LCaCb unit range with channel ordering.
         
-        Matx<double, 1, 3> fromRot(Matx<double, 1, 3> pnt); // LCaCb to RGB unit range ignoring channel ordering.
+        Matx<double, 1, 3> fromRot(Matx<double, 1, 3> pnt); // LCaCb to RGB unit range with channel ordering.
         Matx<double, 3, 1> fromRot(Matx<double, 3, 1> pnt);
         Vec<double, 3>     fromRot(Vec<double, 3> pnt);
         void fromRot(double src[3], double dst[3]);  // Internal conversion function
         
-        Matx<double, 1, 3> toRot(Matx<double, 1, 3> pnt); // RGB to LCaCb unit range ignoring channel ordering.
+        Matx<double, 1, 3> toRot(Matx<double, 1, 3> pnt); // RGB to LCaCb unit range with channel ordering.
         Matx<double, 3, 1> toRot(Matx<double, 3, 1> pnt);
         Vec<double, 3>     toRot(Vec<double, 3> pnt);
         void toRot(double src[3], double dst[3]);  // Internal conversion function
@@ -1384,8 +1383,8 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         // WOBO and quarternary classifier routines
         Matx<double,6,3> WOBOpath( cv::Vec<double,3> pnt ); // Takes a LCaCb point and returns the path taken with changing luminocity.
         double WOBOslack( double val );
-//        bool WOBO( double L, double Ca, double Cb);
-        bool WOBO( sWrkType L, sWrkType Ca, sWrkType Cb) const;
+        bool uWOBO( double L, double Ca, double Cb);
+        bool qWOBO( sWrkType L, sWrkType Ca, sWrkType Cb) const;
         bool color(dstType Ca, dstType Cb) const;
         uchar classifier( bool wobo, bool color) const;
         // Setup routines.
@@ -1400,7 +1399,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         void setTransformFromAngle(double theta );
         
         Vec<typename cv::Data_Type<dst_t>::type,3> apply(typename cv::Vec<typename cv::Data_Type<src_t>::type, 3> src);
-//        Vec<typename cv::Data_Type<dst_t>::type,4> apply(typename cv::Vec<typename cv::Data_Type<src_t>::type, 4> src);
+        Vec<typename cv::Data_Type<dst_t>::type,4> apply(typename cv::Vec<typename cv::Data_Type<src_t>::type, 4> src);
         void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
 
     };
